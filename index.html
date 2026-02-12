@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>聖杯戦争ADV RPG</title>
+    <link rel="stylesheet" href="styles/main.css" />
+  </head>
+  <body>
+    <div class="app-bg"></div>
+    <main class="app" aria-live="polite">
+      <header class="app-header">
+        <h1>聖杯戦争ADV RPG</h1>
+        <p class="subtitle">真名を隠し、選択で運命を切り拓け</p>
+      </header>
+
+      <section class="layout">
+        <aside class="status-panel card">
+          <h2>戦況</h2>
+          <dl>
+            <div>
+              <dt>日数</dt>
+              <dd id="status-day">-</dd>
+            </div>
+            <div>
+              <dt>マスターHP</dt>
+              <dd id="status-master-hp">-</dd>
+            </div>
+            <div>
+              <dt>サーヴァントHP</dt>
+              <dd id="status-servant-hp">-</dd>
+            </div>
+            <div>
+              <dt>筋力 / 耐久 / 敏捷</dt>
+              <dd id="status-str-dur-agi">-</dd>
+            </div>
+            <div>
+              <dt>魔力 / 幸運 / 宝具</dt>
+              <dd id="status-mana-luck-np">-</dd>
+            </div>
+            <div>
+              <dt>真名秘匿</dt>
+              <dd id="status-true-name">-</dd>
+            </div>
+          </dl>
+          <button id="restart-button" class="secondary" type="button">最初から</button>
+        </aside>
+
+        <section class="story card">
+          <div class="scene-meta">
+            <span id="scene-phase" class="badge">-</span>
+            <span id="scene-title" class="scene-title">-</span>
+          </div>
+          <article id="scene-text" class="scene-text"></article>
+          <div id="choices" class="choices"></div>
+        </section>
+
+        <aside class="log-panel card">
+          <h2>戦闘ログ</h2>
+          <ul id="battle-log"></ul>
+        </aside>
+      </section>
+    </main>
+
+    <script type="module" src="src/game.js"></script>
+  </body>
+</html>
