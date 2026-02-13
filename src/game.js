@@ -11,6 +11,10 @@ const dom = {
   servantParams: document.querySelector("#status-servant-params"),
   catalyst: document.querySelector("#status-catalyst"),
   trueName: document.querySelector("#status-true-name"),
+  exposure: document.querySelector("#status-exposure"),
+  enemies: document.querySelector("#status-enemies"),
+  rescue: document.querySelector("#status-rescue"),
+  ending: document.querySelector("#status-ending"),
   scenePhase: document.querySelector("#scene-phase"),
   sceneTitle: document.querySelector("#scene-title"),
   sceneText: document.querySelector("#scene-text"),
@@ -73,6 +77,10 @@ function renderStatus(state) {
 
   dom.catalyst.textContent = state.summon.catalyst || "未選択";
   dom.trueName.textContent = state.servant.trueNameRevealed ? "露見" : "秘匿";
+  dom.exposure.textContent = `${state.flags.trueNameExposure} / 3`;
+  dom.enemies.textContent = String(state.factions.filter((f) => f.alive).length);
+  dom.rescue.textContent = state.flags.rescueUsed ? "使用済み" : "未使用";
+  dom.ending.textContent = state.flags.endingType || "未判定";
 }
 
 function renderScene(state, scene) {
@@ -90,9 +98,7 @@ function renderScene(state, scene) {
     button.textContent = choice.label;
     button.addEventListener("click", () => {
       store.update((draft) => {
-        if (choice.effect) {
-          choice.effect(draft);
-        }
+        if (choice.effect) choice.effect(draft);
       });
       currentSceneId = typeof choice.next === "function" ? choice.next(store.getState()) : choice.next;
       if (currentSceneId === "title") {
@@ -106,10 +112,10 @@ function renderScene(state, scene) {
 
 function renderLog(state) {
   dom.battleLog.innerHTML = "";
-  state.log.slice(-20).forEach((entry) => {
+  state.log.slice(-24).forEach((entry) => {
     const li = document.createElement("li");
     li.textContent = entry;
-    if (entry.includes("敗北") || entry.includes("失敗")) {
+    if (entry.includes("敗北") || entry.includes("失敗") || entry.includes("反撃")) {
       li.classList.add("critical");
     }
     dom.battleLog.appendChild(li);
