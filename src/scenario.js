@@ -405,3 +405,9 @@ function simulateSkirmish(state) {
   state.master.mana = Math.max(0, state.master.mana - 16);
   state.log.push(`小競り合い敗北（${power} vs ${enemy}）。撤退。`);
 }
+
+function randomInt(min, max) {
+  const lower = Math.ceil(min);
+  const upper = Math.floor(max);
+  return Math.floor(Math.random() * (upper - lower + 1)) + lower;
+}
