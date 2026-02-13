@@ -177,6 +177,12 @@ export const SCENES = {
     text: "魔力回路が断たれ、契約は霧散する。救済導線も既に使い切っていた。",
     choices: [{ label: "タイトルへ戻る", next: "title" }],
   },
+  sprint1Complete: {
+    phase: "進捗",
+    title: "Sprint 1 到達点",
+    text: "Sprint 1 の到達条件（召喚〜契約導入）が完了。\n次はSprint 2で判定エンジン強化と夜戦ループを実装する。",
+    choices: [{ label: "最初から確認し直す", next: "title" }],
+  },
 };
 
 function applyMasterBuild(state, buildType) {
@@ -382,6 +388,20 @@ function toClassKey(className) {
   return map[className] || "saber";
 }
 
-function randomInt(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+function simulateSkirmish(state) {
+  const build = MASTER_BUILDS[state.master.buildType] || {};
+  const base = state.servant.params.筋力 + state.servant.params.敏捷 + (build.生存 || 0);
+  const enemy = 7 + Math.floor(Math.random() * 6);
+  const power = base + Math.floor(Math.random() * 6);
+
+  if (power >= enemy) {
+    state.day += 1;
+    state.master.mana = Math.max(0, state.master.mana - 10);
+    state.log.push(`小競り合い勝利（${power} vs ${enemy}）。`);
+    return;
+  }
+
+  state.master.hp = Math.max(1, state.master.hp - 18);
+  state.master.mana = Math.max(0, state.master.mana - 16);
+  state.log.push(`小競り合い敗北（${power} vs ${enemy}）。撤退。`);
 }
