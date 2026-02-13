@@ -11,37 +11,23 @@
     <main class="app" aria-live="polite">
       <header class="app-header">
         <h1>聖杯戦争ADV RPG</h1>
-        <p class="subtitle">真名を隠し、選択で運命を切り拓け</p>
+        <p class="subtitle">Sprint 1: 召喚〜契約導入（GDD準拠）</p>
       </header>
 
       <section class="layout">
         <aside class="status-panel card">
-          <h2>戦況</h2>
+          <h2>状態</h2>
           <dl>
-            <div>
-              <dt>日数</dt>
-              <dd id="status-day">-</dd>
-            </div>
-            <div>
-              <dt>マスターHP</dt>
-              <dd id="status-master-hp">-</dd>
-            </div>
-            <div>
-              <dt>サーヴァントHP</dt>
-              <dd id="status-servant-hp">-</dd>
-            </div>
-            <div>
-              <dt>筋力 / 耐久 / 敏捷</dt>
-              <dd id="status-str-dur-agi">-</dd>
-            </div>
-            <div>
-              <dt>魔力 / 幸運 / 宝具</dt>
-              <dd id="status-mana-luck-np">-</dd>
-            </div>
-            <div>
-              <dt>真名秘匿</dt>
-              <dd id="status-true-name">-</dd>
-            </div>
+            <div><dt>日数</dt><dd id="status-day">-</dd></div>
+            <div><dt>フェーズ</dt><dd id="status-phase">-</dd></div>
+            <div><dt>マスターHP</dt><dd id="status-master-hp">-</dd></div>
+            <div><dt>マスター魔力</dt><dd id="status-master-mana">-</dd></div>
+            <div><dt>主人公ビルド</dt><dd id="status-master-build">-</dd></div>
+            <div><dt>令呪残数</dt><dd id="status-command-spells">-</dd></div>
+            <div><dt>触媒</dt><dd id="status-catalyst">-</dd></div>
+            <div><dt>サーヴァントクラス</dt><dd id="status-servant-class">-</dd></div>
+            <div><dt>パラメータ</dt><dd id="status-servant-params">-</dd></div>
+            <div><dt>真名秘匿</dt><dd id="status-true-name">-</dd></div>
           </dl>
           <button id="restart-button" class="secondary" type="button">最初から</button>
         </aside>
@@ -56,7 +42,7 @@
         </section>
 
         <aside class="log-panel card">
-          <h2>戦闘ログ</h2>
+          <h2>進行ログ</h2>
           <ul id="battle-log"></ul>
         </aside>
       </section>
