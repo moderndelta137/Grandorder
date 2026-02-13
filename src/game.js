@@ -2,11 +2,19 @@ import { INITIAL_STATE, SCENES } from "./scenario.js";
 
 const dom = {
   day: document.querySelector("#status-day"),
+  phase: document.querySelector("#status-phase"),
   masterHp: document.querySelector("#status-master-hp"),
-  servantHp: document.querySelector("#status-servant-hp"),
-  strDurAgi: document.querySelector("#status-str-dur-agi"),
-  manaLuckNp: document.querySelector("#status-mana-luck-np"),
+  masterMana: document.querySelector("#status-master-mana"),
+  masterBuild: document.querySelector("#status-master-build"),
+  commandSpells: document.querySelector("#status-command-spells"),
+  servantClass: document.querySelector("#status-servant-class"),
+  servantParams: document.querySelector("#status-servant-params"),
+  catalyst: document.querySelector("#status-catalyst"),
   trueName: document.querySelector("#status-true-name"),
+  exposure: document.querySelector("#status-exposure"),
+  enemies: document.querySelector("#status-enemies"),
+  rescue: document.querySelector("#status-rescue"),
+  ending: document.querySelector("#status-ending"),
   scenePhase: document.querySelector("#scene-phase"),
   sceneTitle: document.querySelector("#scene-title"),
   sceneText: document.querySelector("#scene-text"),
@@ -15,19 +23,34 @@ const dom = {
   restartButton: document.querySelector("#restart-button"),
 };
 
-let state = newState();
+let store = createStore(INITIAL_STATE);
 let currentSceneId = "title";
 
 dom.restartButton.addEventListener("click", () => {
-  state = newState();
+  store.reset();
   currentSceneId = "title";
   render();
 });
 
 render();
 
+function createStore(initial) {
+  let state = structuredClone(initial);
+  return {
+    getState: () => state,
+    update(updater) {
+      updater(state);
+    },
+    reset() {
+      state = structuredClone(initial);
+    },
+  };
+}
+
 function render() {
+  const state = store.getState();
   const scene = SCENES[currentSceneId];
+
   if (!scene) {
     dom.sceneTitle.textContent = "シーンエラー";
     dom.sceneText.textContent = `未定義のシーン: ${currentSceneId}`;
@@ -35,25 +58,35 @@ function render() {
     return;
   }
 
-  renderStatus();
-  renderScene(scene);
-  renderLog();
+  renderStatus(state);
+  renderScene(state, scene);
+  renderLog(state);
 }
 
-function renderStatus() {
+function renderStatus(state) {
   dom.day.textContent = `${state.day}日目`;
-  dom.masterHp.textContent = clampFloor(state.masterHp);
-  dom.servantHp.textContent = clampFloor(state.servantHp);
+  dom.phase.textContent = state.phase;
+  dom.masterHp.textContent = floorClamp(state.master.hp);
+  dom.masterMana.textContent = floorClamp(state.master.mana);
+  dom.masterBuild.textContent = state.master.buildType || "未選択";
+  dom.commandSpells.textContent = `${state.master.commandSpells}画`;
 
-  const stats = state.servantStats;
-  dom.strDurAgi.textContent = `${stats.筋力} / ${stats.耐久} / ${stats.敏捷}`;
-  dom.manaLuckNp.textContent = `${stats.魔力} / ${stats.幸運} / ${stats.宝具}`;
-  dom.trueName.textContent = state.flags.trueNameExposed ? "露見" : "維持";
+  dom.servantClass.textContent = state.servant.className;
+  const p = state.servant.params;
+  dom.servantParams.textContent = `${p.筋力}/${p.耐久}/${p.敏捷} | ${p.魔力}/${p.幸運}/${p.宝具}`;
+
+  dom.catalyst.textContent = state.summon.catalyst || "未選択";
+  dom.trueName.textContent = state.servant.trueNameRevealed ? "露見" : "秘匿";
+  dom.exposure.textContent = `${state.flags.trueNameExposure} / 3`;
+  dom.enemies.textContent = String(state.factions.filter((f) => f.alive).length);
+  dom.rescue.textContent = state.flags.rescueUsed ? "使用済み" : "未使用";
+  dom.ending.textContent = state.flags.endingType || "未判定";
 }
 
-function renderScene(scene) {
+function renderScene(state, scene) {
   dom.scenePhase.textContent = scene.phase;
   dom.sceneTitle.textContent = scene.title;
+  state.phase = scene.phase;
 
   const text = typeof scene.text === "function" ? scene.text(state) : scene.text;
   dom.sceneText.textContent = text;
@@ -63,42 +96,32 @@ function renderScene(scene) {
     const button = document.createElement("button");
     button.type = "button";
     button.textContent = choice.label;
-
     button.addEventListener("click", () => {
-      if (choice.effect) {
-        choice.effect(state);
-      }
-      state.masterHp = clampFloor(state.masterHp);
-      state.servantHp = clampFloor(state.servantHp);
-      currentSceneId = typeof choice.next === "function" ? choice.next(state) : choice.next;
-
+      store.update((draft) => {
+        if (choice.effect) choice.effect(draft);
+      });
+      currentSceneId = typeof choice.next === "function" ? choice.next(store.getState()) : choice.next;
       if (currentSceneId === "title") {
-        state = newState();
+        store.reset();
       }
-
       render();
     });
-
     dom.choices.appendChild(button);
   });
 }
 
-function renderLog() {
+function renderLog(state) {
   dom.battleLog.innerHTML = "";
-  state.log.slice(-18).forEach((entry) => {
+  state.log.slice(-24).forEach((entry) => {
     const li = document.createElement("li");
     li.textContent = entry;
-    if (entry.includes("失敗") || entry.includes("死亡")) {
+    if (entry.includes("敗北") || entry.includes("失敗") || entry.includes("反撃")) {
       li.classList.add("critical");
     }
     dom.battleLog.appendChild(li);
   });
 }
 
-function newState() {
-  return structuredClone(INITIAL_STATE);
-}
-
-function clampFloor(value) {
+function floorClamp(value) {
   return Math.max(0, Math.floor(value));
 }
