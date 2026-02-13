@@ -1,227 +1,261 @@
+const MASTER_BUILDS = {
+  血統型: { 魔力: 2, 交渉: -1, 生存: 0, 情報: 0 },
+  現場型: { 魔力: -1, 交渉: 0, 生存: 2, 情報: 0 },
+  研究型: { 魔力: 0, 交渉: 0, 生存: -1, 情報: 2 },
+};
+
+const CATALYSTS = {
+  聖剣の残滓: { saber: 4, lancer: 1, archer: 1 },
+  古びた外套の切れ端: { rider: 4, assassin: 1, lancer: 1 },
+  異国の魔導書断片: { caster: 4, archer: 1, berserker: 1 },
+  朽ちた城門の礫: { archer: 2, saber: 2, berserker: 2, lancer: 1 },
+};
+
+const FSN_SERVANTS = [
+  {
+    trueName: "アルトリア・ペンドラゴン",
+    className: "セイバー",
+    altClasses: ["ランサー"],
+    stats: { 筋力: 4, 耐久: 4, 敏捷: 4, 魔力: 4, 幸運: 3, 宝具: 5 },
+  },
+  {
+    trueName: "エミヤ",
+    className: "アーチャー",
+    altClasses: ["キャスター"],
+    stats: { 筋力: 3, 耐久: 3, 敏捷: 4, 魔力: 4, 幸運: 3, 宝具: 4 },
+  },
+  {
+    trueName: "クー・フーリン",
+    className: "ランサー",
+    altClasses: ["バーサーカー"],
+    stats: { 筋力: 4, 耐久: 3, 敏捷: 5, 魔力: 3, 幸運: 4, 宝具: 4 },
+  },
+  {
+    trueName: "メドゥーサ",
+    className: "ライダー",
+    altClasses: ["アサシン"],
+    stats: { 筋力: 3, 耐久: 3, 敏捷: 5, 魔力: 3, 幸運: 4, 宝具: 4 },
+  },
+  {
+    trueName: "メディア",
+    className: "キャスター",
+    altClasses: ["アサシン"],
+    stats: { 筋力: 1, 耐久: 2, 敏捷: 3, 魔力: 5, 幸運: 4, 宝具: 4 },
+  },
+  {
+    trueName: "佐々木小次郎",
+    className: "アサシン",
+    altClasses: ["セイバー"],
+    stats: { 筋力: 3, 耐久: 3, 敏捷: 5, 魔力: 1, 幸運: 2, 宝具: 3 },
+  },
+  {
+    trueName: "ヘラクレス",
+    className: "バーサーカー",
+    altClasses: ["アーチャー"],
+    stats: { 筋力: 5, 耐久: 5, 敏捷: 3, 魔力: 2, 幸運: 2, 宝具: 5 },
+  },
+];
+
 export const INITIAL_STATE = {
   day: 1,
-  masterHp: 100,
-  servantHp: 100,
-  servantStats: {
-    筋力: 3,
-    耐久: 4,
-    敏捷: 3,
-    魔力: 5,
-    幸運: 2,
-    宝具: 4,
+  phase: "導入",
+  master: {
+    name: "名無しの魔術師",
+    hp: 100,
+    mana: 100,
+    buildType: null,
+    commandSpells: 3,
+  },
+  servant: {
+    className: "未契約",
+    trueName: "？？？",
+    trueNameRevealed: false,
+    params: { 筋力: 0, 耐久: 0, 敏捷: 0, 魔力: 0, 幸運: 0, 宝具: 0 },
+  },
+  summon: {
+    catalyst: null,
+    sourceServant: null,
+    classShifted: false,
   },
   flags: {
-    trueNameExposed: false,
-    usedNoblePhantasm: false,
-    canResummon: false,
-    allyTrust: 0,
+    trueNameExposure: 0,
+    rescueUsed: false,
   },
-  log: ["聖杯戦争、開幕。"],
+  log: ["召喚準備を開始した。"],
 };
 
 export const SCENES = {
   title: {
     phase: "導入",
-    title: "契約の夜",
-    text: "深夜、魔法陣が脈動し、サーヴァントが現界する。\n『我が真名は明かせぬ。勝利まで主従として戦おう』",
+    title: "召喚の前夜",
+    text: "冬の深夜。工房の灯りだけが揺れている。\nあなたは聖杯戦争に挑むマスターとして、召喚儀式を開始する。",
+    choices: [{ label: "主人公ビルドを決める", next: "buildSelect" }],
+  },
+  buildSelect: {
+    phase: "導入",
+    title: "魔術師としての基盤",
+    text: "自分の戦い方を定める。これは以後の判定補正に影響する。",
     choices: [
       {
-        label: "真名を問わず、即座に同盟を誓う",
-        effect: (state) => {
-          state.flags.allyTrust += 1;
-          state.log.push("サーヴァントとの信頼が高まった。");
-        },
-        next: "dayAction",
+        label: "血統型（魔力高）",
+        effect: (state) => applyMasterBuild(state, "血統型"),
+        next: "catalystSelect",
       },
       {
-        label: "真名を執拗に追及する",
-        effect: (state) => {
-          state.flags.trueNameExposed = true;
-          state.log.push("真名秘匿が破られた。敵に弱点を悟られる危険が増す。");
-        },
-        next: "dayAction",
+        label: "現場型（生存高）",
+        effect: (state) => applyMasterBuild(state, "現場型"),
+        next: "catalystSelect",
+      },
+      {
+        label: "研究型（情報高）",
+        effect: (state) => applyMasterBuild(state, "研究型"),
+        next: "catalystSelect",
       },
     ],
   },
-  dayAction: {
-    phase: "昼",
-    title: "情報戦",
-    text: "昼の市街。あなたは行動を決断する。\n夜戦に備えるか、敵マスターを探るか。",
+  catalystSelect: {
+    phase: "召喚",
+    title: "触媒の選択",
+    text: "触媒を選び、英霊召喚を実行する。触媒と資質で召喚結果が変化する。",
     choices: [
       {
-        label: "工房で魔力補給と防御結界の再調整",
-        effect: (state) => {
-          state.masterHp = Math.min(100, state.masterHp + 10);
-          state.log.push("防御結界を強化。マスターHPが回復した。");
-        },
-        next: "nightBattle",
+        label: "聖剣の残滓を使用する",
+        effect: (state) => pickCatalyst(state, "聖剣の残滓"),
+        next: "summonResult",
       },
       {
-        label: "敵の拠点を偵察し、先手を狙う",
-        effect: (state) => {
-          state.flags.allyTrust += 1;
-          state.log.push("偵察成功。奇襲の機会を得た。");
-        },
-        next: "nightBattle",
+        label: "古びた外套の切れ端を使用する",
+        effect: (state) => pickCatalyst(state, "古びた外套の切れ端"),
+        next: "summonResult",
+      },
+      {
+        label: "異国の魔導書断片を使用する",
+        effect: (state) => pickCatalyst(state, "異国の魔導書断片"),
+        next: "summonResult",
+      },
+      {
+        label: "朽ちた城門の礫を使用する",
+        effect: (state) => pickCatalyst(state, "朽ちた城門の礫"),
+        next: "summonResult",
       },
     ],
   },
-  nightBattle: {
-    phase: "夜戦",
-    title: "邂逅、火花",
-    text: "夜の高架橋で敵陣営と接敵。\n宝具を切るか、堅実に立ち回るか――。",
-    choices: [
-      {
-        label: "宝具を解放して一気に決める",
-        effect: (state) => {
-          const outcome = runBattle(state, true);
-          state.log.push(outcome.message);
-        },
-        next: (state) => resolvePostBattleScene(state),
-      },
-      {
-        label: "スキル連携で堅実に削る",
-        effect: (state) => {
-          const outcome = runBattle(state, false);
-          state.log.push(outcome.message);
-        },
-        next: (state) => resolvePostBattleScene(state),
-      },
-    ],
-  },
-  resummon: {
-    phase: "転機",
-    title: "再契約の機会",
-    text: "サーヴァントは消滅した。しかし令呪に残る微かな縁が、新たな契約を許す。",
-    choices: [
-      {
-        label: "再召喚を行う（最後の賭け）",
-        effect: (state) => {
-          state.servantHp = 70;
-          state.flags.canResummon = false;
-          state.log.push("新たなサーヴァントと再契約した。戦線復帰。");
-        },
-        next: "climax",
-      },
-      {
-        label: "単独で撤退し、戦略を練り直す",
-        effect: (state) => {
-          state.masterHp -= 20;
-          state.log.push("撤退には成功したが、追撃を受け負傷した。");
-        },
-        next: (state) => (state.masterHp <= 0 ? "gameOver" : "climax"),
-      },
-    ],
-  },
-  climax: {
-    phase: "終局",
-    title: "最後の聖杯問答",
-    text: "残る陣営は二つ。あなたの選択が勝敗だけでなく、願いの価値を決める。",
-    choices: [
-      {
-        label: "市街地被害を抑えつつ、敵マスターを無力化",
-        effect: (state) => {
-          const score = evaluateFinal(state) + 1;
-          state.flags.endingScore = score;
-          state.log.push("理性を保った戦いを選んだ。");
-        },
-        next: "ending",
-      },
-      {
-        label: "短期決戦で敵サーヴァントを討ち取る",
-        effect: (state) => {
-          const score = evaluateFinal(state);
-          state.flags.endingScore = score;
-          state.log.push("勝利優先の苛烈な選択を取った。");
-        },
-        next: "ending",
-      },
-    ],
-  },
-  ending: {
-    phase: "結末",
-    title: "聖杯の審判",
+  summonResult: {
+    phase: "召喚",
+    title: "契約成立",
     text: (state) => {
-      const score = state.flags.endingScore ?? 0;
-      if (score >= 4) {
-        return "あなたは聖杯戦争を制し、願いを叶える資格を得た。\nだが真名秘匿を守った者だけが知る代償を胸に、夜明けを見上げる。";
-      }
-      return "あなたは最終局面で敗れ、聖杯は遠のいた。\nそれでも選択の記憶は、次の戦いへの意志として残る。";
+      const source = state.summon.sourceServant;
+      const classLabel = state.servant.className;
+      const shifted = state.summon.classShifted
+        ? "（原典と異なるクラスで現界）"
+        : "（原典準拠クラスで現界）";
+      return `令呪が刻まれ、サーヴァントが応じる。\nクラス: ${classLabel} ${shifted}\n真名: ？？？\n\n※内部設定: ${source} を召喚済み。`;
     },
     choices: [
       {
-        label: "もう一度、聖杯戦争に挑む",
-        next: "title",
+        label: "契約を受諾し、第一夜へ進む",
+        effect: (state) => state.log.push("主従契約を締結。第一夜に向けて出撃準備。"),
+        next: "firstNight",
       },
     ],
   },
-  gameOver: {
-    phase: "敗北",
-    title: "マスター死亡",
-    text: "魔力回路が断たれ、契約は霧散する。\nマスター死亡により、この聖杯戦争はここで終わる。",
+  firstNight: {
+    phase: "第一夜",
+    title: "接敵前偵察",
+    text: (state) =>
+      `敵性反応を感知。魔力流は不安定だが、戦闘は回避可能ではない。\n現在クラス: ${state.servant.className} / 令呪残数: ${state.master.commandSpells}`,
     choices: [
       {
-        label: "タイトルへ戻る",
-        next: "title",
+        label: "慎重に撤退し、情報を優先する",
+        effect: (state) => {
+          state.day += 1;
+          state.master.mana = Math.min(100, state.master.mana + 8);
+          state.log.push("撤退成功。情報優位を確保。次夜へ。",);
+        },
+        next: "sprint1Complete",
+      },
+      {
+        label: "短時間で交戦し、戦力を測る",
+        effect: (state) => simulateSkirmish(state),
+        next: "sprint1Complete",
       },
     ],
+  },
+  sprint1Complete: {
+    phase: "進捗",
+    title: "Sprint 1 到達点",
+    text: "Sprint 1 の到達条件（召喚〜契約導入）が完了。\n次はSprint 2で判定エンジン強化と夜戦ループを実装する。",
+    choices: [{ label: "最初から確認し直す", next: "title" }],
   },
 };
 
-function runBattle(state, useNoblePhantasm) {
-  const enemyPower = 8 + randomInt(0, 6) + (state.flags.trueNameExposed ? 2 : 0);
-  const servantBase =
-    state.servantStats.筋力 +
-    state.servantStats.敏捷 +
-    state.servantStats.耐久 +
-    state.flags.allyTrust;
+function applyMasterBuild(state, buildType) {
+  state.master.buildType = buildType;
+  state.log.push(`主人公ビルドを ${buildType} に確定。`);
+}
 
-  let playerPower = servantBase + randomInt(0, 6);
-  if (useNoblePhantasm && !state.flags.usedNoblePhantasm) {
-    playerPower += state.servantStats.宝具 + 4;
-    state.flags.usedNoblePhantasm = true;
+function pickCatalyst(state, catalystName) {
+  state.summon.catalyst = catalystName;
+  const servant = summonServant(catalystName, state.master.buildType);
+
+  state.summon.sourceServant = servant.trueName;
+  state.summon.classShifted = servant.classShifted;
+
+  state.servant.className = servant.className;
+  state.servant.trueName = "？？？";
+  state.servant.trueNameRevealed = false;
+  state.servant.params = servant.stats;
+
+  state.log.push(`触媒「${catalystName}」を使用。${state.servant.className} が現界。`);
+}
+
+function summonServant(catalystName, buildType) {
+  const weights = CATALYSTS[catalystName] || {};
+  const scored = FSN_SERVANTS.map((s) => {
+    const classKey = toClassKey(s.className);
+    const buildBonus = buildType === "血統型" && s.stats.魔力 >= 4 ? 1 : 0;
+    return {
+      servant: s,
+      score: (weights[classKey] || 1) + buildBonus + Math.random() * 1.2,
+    };
+  }).sort((a, b) => b.score - a.score);
+
+  const picked = structuredClone(scored[0].servant);
+  const classShifted = Math.random() < 0.35;
+  if (classShifted && picked.altClasses.length > 0) {
+    picked.className = picked.altClasses[0];
   }
+  picked.classShifted = classShifted;
+  return picked;
+}
 
-  if (useNoblePhantasm && state.flags.usedNoblePhantasm && playerPower < enemyPower) {
-    state.masterHp -= 15;
-  }
+function toClassKey(className) {
+  const map = {
+    セイバー: "saber",
+    アーチャー: "archer",
+    ランサー: "lancer",
+    ライダー: "rider",
+    キャスター: "caster",
+    アサシン: "assassin",
+    バーサーカー: "berserker",
+  };
+  return map[className] || "saber";
+}
 
-  if (playerPower >= enemyPower) {
-    state.log.push(`判定成功（${playerPower} vs ${enemyPower}）。`);
+function simulateSkirmish(state) {
+  const build = MASTER_BUILDS[state.master.buildType] || {};
+  const base = state.servant.params.筋力 + state.servant.params.敏捷 + (build.生存 || 0);
+  const enemy = 7 + Math.floor(Math.random() * 6);
+  const power = base + Math.floor(Math.random() * 6);
+
+  if (power >= enemy) {
     state.day += 1;
-    return { result: "win", message: "夜戦に勝利し、敵陣営を後退させた。" };
+    state.master.mana = Math.max(0, state.master.mana - 10);
+    state.log.push(`小競り合い勝利（${power} vs ${enemy}）。`);
+    return;
   }
 
-  const dmgToMaster = randomInt(12, 24);
-  const dmgToServant = randomInt(28, 42);
-  state.masterHp -= dmgToMaster;
-  state.servantHp -= dmgToServant;
-  if (state.servantHp <= 0) {
-    state.flags.canResummon = true;
-  }
-  state.log.push(`判定失敗（${playerPower} vs ${enemyPower}）。`);
-  return { result: "lose", message: "敵の反撃を受け、戦線が崩れた。" };
-}
-
-function resolvePostBattleScene(state) {
-  if (state.masterHp <= 0) {
-    return "gameOver";
-  }
-  if (state.servantHp <= 0 && state.flags.canResummon) {
-    return "resummon";
-  }
-  return "climax";
-}
-
-function evaluateFinal(state) {
-  let score = 0;
-  if (state.masterHp > 35) score += 1;
-  if (state.servantHp > 0) score += 1;
-  if (!state.flags.trueNameExposed) score += 1;
-  if (state.flags.usedNoblePhantasm) score += 1;
-  return score;
-}
-
-function randomInt(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+  state.master.hp = Math.max(1, state.master.hp - 18);
+  state.master.mana = Math.max(0, state.master.mana - 16);
+  state.log.push(`小競り合い敗北（${power} vs ${enemy}）。撤退。`);
 }
