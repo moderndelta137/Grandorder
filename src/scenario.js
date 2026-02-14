@@ -21,6 +21,167 @@ const FSN_SERVANTS = [
   { trueName: "ヘラクレス", className: "バーサーカー", altClasses: ["アーチャー"], stats: { 筋力: 5, 耐久: 5, 敏捷: 3, 魔力: 2, 幸運: 2, 宝具: 5 } },
 ];
 
+const SERVANT_COMBAT_EFFECTS = {
+  "アルトリア・ペンドラゴン": {
+    passiveLabel: "直感A",
+    npLabel: "約束された勝利の剣",
+    passive: { bonus: 2, damage: 8 },
+    np: { damage: 20 },
+  },
+  エミヤ: {
+    passiveLabel: "千里眼",
+    npLabel: "無限の剣製",
+    passive: { bonus: 1, enemyPower: -1 },
+    np: { bonus: 1, exposureDelta: -1 },
+  },
+  "クー・フーリン": {
+    passiveLabel: "戦闘続行",
+    npLabel: "刺し穿つ死棘の槍",
+    passive: { lowHpBonus: 3, backlashMaster: -4 },
+    np: { bonus: 2 },
+  },
+  "メドゥーサ": {
+    passiveLabel: "騎乗・機動戦",
+    npLabel: "騎英の手綱",
+    passive: { retreatBonus: 3, manaCost: -1 },
+    np: { damage: 10 },
+  },
+  "メディア": {
+    passiveLabel: "高速神言",
+    npLabel: "破戒すべき全ての符",
+    passive: { manaCost: -3 },
+    np: { bonus: 2, damage: 5, exposureDelta: -1 },
+  },
+  "佐々木小次郎": {
+    passiveLabel: "宗和の心得",
+    npLabel: "燕返し",
+    passive: { enemyPower: -2 },
+    np: { bonus: 3 },
+  },
+  "ヘラクレス": {
+    passiveLabel: "狂化・耐久",
+    npLabel: "射殺す百頭",
+    passive: { bonus: 1, backlashMaster: -6 },
+    np: { damage: 15, backlashMaster: -4 },
+  },
+};
+
+export const SERVANT_PROFILES = {
+  "アルトリア・ペンドラゴン": {
+    alignment: "秩序・善",
+    classAbilities: [
+      { name: "対魔力", rank: "A", desc: "大半の現代魔術を大幅に軽減し、正面衝突に強い。" },
+      { name: "騎乗", rank: "B", desc: "移動戦・追撃で安定した戦術展開が可能。" },
+    ],
+    skills: [
+      { name: "直感A", desc: "戦場で最適解を掴み、攻防の判断精度が上がる。" },
+      { name: "魔力放出A", desc: "瞬間的に火力を引き上げ、強襲時の決定力を増す。" },
+    ],
+    noblePhantasm: {
+      name: "約束された勝利の剣",
+      rank: "A++",
+      desc: "高威力の対軍宝具。真名解放は戦局を一変させるが情報露見リスクを伴う。",
+    },
+  },
+  エミヤ: {
+    alignment: "中立・中庸",
+    classAbilities: [
+      { name: "対魔力", rank: "D", desc: "簡易的な魔術妨害に耐性を持つ。" },
+      { name: "単独行動", rank: "B", desc: "マスター支援が薄い局面でも行動を継続できる。" },
+    ],
+    skills: [
+      { name: "千里眼", desc: "敵挙動の先読みで被弾リスクを抑える。" },
+      { name: "心眼（真）", desc: "不利局面でも勝機を拾う防御的技量。" },
+    ],
+    noblePhantasm: {
+      name: "無限の剣製",
+      rank: "E〜A+",
+      desc: "投影兵装を展開して継続戦闘能力を高める固有結界型宝具。",
+    },
+  },
+  "クー・フーリン": {
+    alignment: "秩序・中庸",
+    classAbilities: [
+      { name: "対魔力", rank: "C", desc: "近代魔術を受け流しつつ前線維持が可能。" },
+      { name: "戦闘続行", rank: "A", desc: "致命傷級でも短時間戦闘継続する粘り強さを持つ。" },
+    ],
+    skills: [
+      { name: "ルーン魔術", desc: "状況に応じて攻守補助を付与する。" },
+      { name: "仕切り直し", desc: "不利局面の立て直しに長ける。" },
+    ],
+    noblePhantasm: {
+      name: "刺し穿つ死棘の槍",
+      rank: "B",
+      desc: "因果逆転の一撃。回避困難で終盤の切り札として機能する。",
+    },
+  },
+  "メドゥーサ": {
+    alignment: "混沌・善",
+    classAbilities: [
+      { name: "対魔力", rank: "B", desc: "高水準の魔術耐性で撤退戦にも強い。" },
+      { name: "騎乗", rank: "A+", desc: "機動戦・追撃・離脱を高精度で実行できる。" },
+    ],
+    skills: [
+      { name: "魔眼", desc: "視線制圧で敵の行動を鈍らせる。" },
+      { name: "怪力", desc: "近接戦での瞬間火力を強化する。" },
+    ],
+    noblePhantasm: {
+      name: "騎英の手綱",
+      rank: "A+",
+      desc: "機動力と突破力を兼ね備えた突撃宝具。敵陣を崩す能力が高い。",
+    },
+  },
+  "メディア": {
+    alignment: "中立・悪",
+    classAbilities: [
+      { name: "陣地作成", rank: "A", desc: "工房・神殿化により魔術性能を大幅に底上げする。" },
+      { name: "道具作成", rank: "A", desc: "戦術に応じた魔術礼装を素早く用意できる。" },
+    ],
+    skills: [
+      { name: "高速神言", desc: "詠唱短縮で魔力効率を大きく改善する。" },
+      { name: "金羊の皮", desc: "限定的な守護術式で被害を緩和する。" },
+    ],
+    noblePhantasm: {
+      name: "破戒すべき全ての符",
+      rank: "C",
+      desc: "契約・術式を断ち切る対魔術宝具。情報戦にも強く影響する。",
+    },
+  },
+  "佐々木小次郎": {
+    alignment: "中立・中庸",
+    classAbilities: [
+      { name: "気配遮断", rank: "C", desc: "一撃離脱と奇襲展開に適性を持つ。" },
+      { name: "宗和の心得", rank: "B", desc: "間合い管理に優れ、対一での安定度が高い。" },
+    ],
+    skills: [
+      { name: "心眼（偽）", desc: "経験則に基づく読みで敵の意図を外す。" },
+      { name: "透化", desc: "短時間の気配希薄化で初動を取りやすい。" },
+    ],
+    noblePhantasm: {
+      name: "燕返し",
+      rank: "C",
+      desc: "同時三連斬撃。近接域で高い決定力を持つ。",
+    },
+  },
+  "ヘラクレス": {
+    alignment: "混沌・狂",
+    classAbilities: [
+      { name: "狂化", rank: "B", desc: "理性と引き換えに圧倒的身体能力を獲得する。" },
+      { name: "神性", rank: "A", desc: "神話由来の高い存在強度を有する。" },
+    ],
+    skills: [
+      { name: "勇猛", desc: "威圧を無効化し、攻撃意思を維持する。" },
+      { name: "心眼（偽）", desc: "本能的な危機回避により生存力を高める。" },
+    ],
+    noblePhantasm: {
+      name: "射殺す百頭",
+      rank: "A",
+      desc: "多重攻撃型の対軍宝具。押し切り性能が非常に高い。",
+    },
+  },
+};
+
+
 export const INITIAL_STATE = {
   day: 1,
   phase: "導入",
@@ -235,7 +396,13 @@ function resolveBattle(state, action) {
     return;
   }
 
-  const result = runCheck(state, enemy, action);
+  let actionForCheck = action;
+  if (action.includes("np") && state.servant.npUsedThisBattle) {
+    state.log.push("宝具はこの戦闘では既に解放済み。通常攻撃に切り替え。",);
+    actionForCheck = action.startsWith("final") ? "final_normal" : "normal";
+  }
+
+  const result = runCheck(state, enemy, actionForCheck);
   if (result.win) {
     enemy.hp -= result.damage;
     state.log.push(`${enemy.className} へ ${result.damage} ダメージ。`);
@@ -250,8 +417,9 @@ function resolveBattle(state, action) {
     state.log.push(`反撃で被害。マスターHP -${result.backlashMaster}。`);
   }
 
-  if (action.includes("np")) {
-    state.flags.trueNameExposure = Math.min(3, state.flags.trueNameExposure + 1);
+  if (actionForCheck.includes("np")) {
+    const exposureDelta = Math.max(0, 1 + (result.exposureDelta || 0));
+    state.flags.trueNameExposure = Math.min(3, state.flags.trueNameExposure + exposureDelta);
     state.servant.npUsedThisBattle = true;
     if (state.flags.trueNameExposure >= 3) {
       state.servant.trueNameRevealed = true;
@@ -259,11 +427,11 @@ function resolveBattle(state, action) {
     }
   }
 
-  if (action.startsWith("command") || action === "final_command") {
+  if (actionForCheck.startsWith("command") || actionForCheck === "final_command") {
     state.master.commandSpells = Math.max(0, state.master.commandSpells - 1);
   }
 
-  if (action === "command_escape") {
+  if (actionForCheck === "command_escape") {
     state.log.push("令呪で強制離脱。敵撃破はできなかった。",);
   }
 
@@ -281,24 +449,38 @@ function resolveBattle(state, action) {
 function runCheck(state, enemy, action) {
   const build = MASTER_BUILDS[state.master.buildType] || { 生存: 0, 情報: 0, 魔力: 0 };
   const base = state.servant.params.筋力 + state.servant.params.敏捷 + state.servant.params.耐久;
-  const enemyPower = classPower(enemy.className) + randomInt(1, 6) + (state.servant.trueNameRevealed ? 2 : 0);
 
-  let bonus = state.battle.tacticalAdvantage + (build.生存 || 0);
-  let manaCost = 8;
-  let damage = 35;
+  const passiveMod = getServantCombatModifier(state, "passive", action);
+  const npMod = action.includes("np") ? getServantCombatModifier(state, "np", action) : emptyModifier();
+  const mod = mergeModifiers(passiveMod, npMod);
+
+  const enemyPower = classPower(enemy.className) + randomInt(1, 6) + (state.servant.trueNameRevealed ? 2 : 0) + mod.enemyPower;
+
+  let bonus = state.battle.tacticalAdvantage + (build.生存 || 0) + mod.bonus;
+  let manaCost = Math.max(1, 8 + mod.manaCost);
+  let damage = 35 + mod.damage;
+
+  mod.logs.forEach((entry) => state.log.push(entry));
 
   if (action === "retreat") {
-    const retreatSuccess = base + randomInt(1, 6) + bonus >= enemyPower;
+    const retreatSuccess = base + randomInt(1, 6) + bonus + mod.retreatBonus >= enemyPower;
     if (retreatSuccess) {
-      return { win: true, damage: 0, manaCost: 4, backlashMaster: 0, backlashMana: 0 };
+      return { win: true, damage: 0, manaCost: 4, backlashMaster: 0, backlashMana: 0, exposureDelta: mod.exposureDelta };
     }
-    return { win: false, damage: 0, manaCost: 5, backlashMaster: 14, backlashMana: 10 };
+    return {
+      win: false,
+      damage: 0,
+      manaCost: 5,
+      backlashMaster: Math.max(0, 14 + mod.backlashMaster),
+      backlashMana: 10,
+      exposureDelta: mod.exposureDelta,
+    };
   }
 
   if (action.includes("np")) {
     bonus += state.servant.params.宝具 + 2;
-    damage = 60;
-    manaCost = 20;
+    damage += 25;
+    manaCost = Math.max(1, 20 + mod.manaCost);
   }
 
   if (action.includes("command")) {
@@ -306,8 +488,8 @@ function runCheck(state, enemy, action) {
       state.log.push("令呪が尽きている。通常行動として処理。",);
     } else {
       bonus += 4;
-      damage = 75;
-      manaCost = 12;
+      damage += 15;
+      manaCost = Math.max(1, 12 + mod.manaCost);
     }
   }
 
@@ -318,8 +500,63 @@ function runCheck(state, enemy, action) {
     damage += 10;
   }
 
-  if (win) return { win: true, damage, manaCost, backlashMaster: 0, backlashMana: 0 };
-  return { win: false, damage: 0, manaCost, backlashMaster: randomInt(12, 22), backlashMana: randomInt(8, 16) };
+  if (win) return { win: true, damage, manaCost, backlashMaster: 0, backlashMana: 0, exposureDelta: mod.exposureDelta };
+  return {
+    win: false,
+    damage: 0,
+    manaCost,
+    backlashMaster: Math.max(0, randomInt(12, 22) + mod.backlashMaster),
+    backlashMana: randomInt(8, 16),
+    exposureDelta: mod.exposureDelta,
+  };
+}
+
+function emptyModifier() {
+  return { bonus: 0, damage: 0, manaCost: 0, enemyPower: 0, backlashMaster: 0, retreatBonus: 0, exposureDelta: 0, logs: [] };
+}
+
+function mergeModifiers(a, b) {
+  return {
+    bonus: a.bonus + b.bonus,
+    damage: a.damage + b.damage,
+    manaCost: a.manaCost + b.manaCost,
+    enemyPower: a.enemyPower + b.enemyPower,
+    backlashMaster: a.backlashMaster + b.backlashMaster,
+    retreatBonus: a.retreatBonus + b.retreatBonus,
+    exposureDelta: a.exposureDelta + b.exposureDelta,
+    logs: [...a.logs, ...b.logs],
+  };
+}
+
+function getServantCombatModifier(state, mode, action) {
+  const sourceName = state.servant.sourceName;
+  const effect = SERVANT_COMBAT_EFFECTS[sourceName];
+  if (!effect) return emptyModifier();
+
+  const base = mode === "np" ? effect.np : effect.passive;
+  if (!base) return emptyModifier();
+
+  const modifier = {
+    bonus: base.bonus || 0,
+    damage: base.damage || 0,
+    manaCost: base.manaCost || 0,
+    enemyPower: base.enemyPower || 0,
+    backlashMaster: base.backlashMaster || 0,
+    retreatBonus: base.retreatBonus || 0,
+    exposureDelta: base.exposureDelta || 0,
+    logs: [],
+  };
+
+  if (base.lowHpBonus && state.master.hp <= 50) modifier.bonus += base.lowHpBonus;
+
+  if (mode === "passive" && effect.passiveLabel) {
+    modifier.logs.push(`固有スキル「${effect.passiveLabel}」が機能。`);
+  }
+  if (mode === "np" && effect.npLabel && action.includes("np")) {
+    modifier.logs.push(`宝具「${effect.npLabel}」を解放。`);
+  }
+
+  return modifier;
 }
 
 function postBattleScene(state) {
@@ -404,4 +641,10 @@ function simulateSkirmish(state) {
   state.master.hp = Math.max(1, state.master.hp - 18);
   state.master.mana = Math.max(0, state.master.mana - 16);
   state.log.push(`小競り合い敗北（${power} vs ${enemy}）。撤退。`);
+}
+
+function randomInt(min, max) {
+  const lower = Math.ceil(min);
+  const upper = Math.floor(max);
+  return Math.floor(Math.random() * (upper - lower + 1)) + lower;
 }

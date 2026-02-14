@@ -1,4 +1,4 @@
-import { INITIAL_STATE, SCENES } from "./scenario.js";
+import { INITIAL_STATE, SCENES, SERVANT_PROFILES } from "./scenario.js";
 
 const dom = {
   day: document.querySelector("#status-day"),
@@ -21,15 +21,52 @@ const dom = {
   choices: document.querySelector("#choices"),
   battleLog: document.querySelector("#battle-log"),
   restartButton: document.querySelector("#restart-button"),
+  openServantSheet: document.querySelector("#open-servant-sheet"),
+  servantSheet: document.querySelector("#servant-sheet"),
+  closeServantSheet: document.querySelector("#close-servant-sheet"),
+  sheetTabs: document.querySelectorAll(".sheet-tab"),
+  sheetClass: document.querySelector("#sheet-class"),
+  sheetMaster: document.querySelector("#sheet-master"),
+  sheetTrueName: document.querySelector("#sheet-true-name"),
+  sheetAlignment: document.querySelector("#sheet-alignment"),
+  sheetStats: document.querySelector("#sheet-stats"),
+  sheetClassAbilities: document.querySelector("#sheet-class-abilities"),
+  sheetSkills: document.querySelector("#sheet-skills"),
+  sheetNpName: document.querySelector("#sheet-np-name"),
+  sheetNpRank: document.querySelector("#sheet-np-rank"),
+  sheetNpDesc: document.querySelector("#sheet-np-desc"),
 };
 
 let store = createStore(INITIAL_STATE);
 let currentSceneId = "title";
+let activeSheetTab = "overview";
 
 dom.restartButton.addEventListener("click", () => {
   store.reset();
   currentSceneId = "title";
   render();
+});
+
+dom.openServantSheet.addEventListener("click", () => {
+  dom.servantSheet.classList.add("open");
+  dom.servantSheet.setAttribute("aria-hidden", "false");
+  renderServantSheet(store.getState());
+});
+
+dom.closeServantSheet.addEventListener("click", closeServantSheet);
+
+dom.servantSheet.addEventListener("click", (event) => {
+  const target = event.target;
+  if (target instanceof HTMLElement && target.dataset.closeSheet === "true") {
+    closeServantSheet();
+  }
+});
+
+dom.sheetTabs.forEach((tab) => {
+  tab.addEventListener("click", () => {
+    activeSheetTab = tab.dataset.tab || "overview";
+    updateSheetTabs();
+  });
 });
 
 render();
@@ -61,6 +98,7 @@ function render() {
   renderStatus(state);
   renderScene(state, scene);
   renderLog(state);
+  if (dom.servantSheet.classList.contains("open")) renderServantSheet(state);
 }
 
 function renderStatus(state) {
@@ -120,6 +158,75 @@ function renderLog(state) {
     }
     dom.battleLog.appendChild(li);
   });
+}
+
+function closeServantSheet() {
+  dom.servantSheet.classList.remove("open");
+  dom.servantSheet.setAttribute("aria-hidden", "true");
+}
+
+function updateSheetTabs() {
+  dom.sheetTabs.forEach((tab) => {
+    const isActive = tab.dataset.tab === activeSheetTab;
+    tab.classList.toggle("active", isActive);
+  });
+
+  ["overview", "skills", "np"].forEach((tabName) => {
+    const panel = document.querySelector(`#sheet-tab-${tabName}`);
+    if (!panel) return;
+    panel.classList.toggle("active", tabName === activeSheetTab);
+  });
+}
+
+function renderServantSheet(state) {
+  const profile = SERVANT_PROFILES[state.servant.sourceName] || null;
+  const p = state.servant.params;
+
+  dom.sheetClass.textContent = state.servant.className || "未契約";
+  dom.sheetMaster.textContent = state.master.name || "名無しの魔術師";
+  dom.sheetTrueName.textContent = state.servant.trueNameRevealed ? state.servant.sourceName || "不明" : "？？？（秘匿）";
+  dom.sheetAlignment.textContent = profile?.alignment || "不明";
+
+  const statLabels = ["筋力", "耐久", "敏捷", "魔力", "幸運", "宝具"];
+  dom.sheetStats.innerHTML = "";
+  statLabels.forEach((key) => {
+    const value = p[key] || 0;
+    const row = document.createElement("div");
+    row.className = "sheet-stat";
+    row.innerHTML = `<span>${key}</span><div class="sheet-bar"><i style="width:${Math.max(0, Math.min(100, value * 20))}%"></i></div><strong>${toParamRank(value)}</strong>`;
+    dom.sheetStats.appendChild(row);
+  });
+
+  dom.sheetClassAbilities.innerHTML = "";
+  (profile?.classAbilities || []).forEach((item) => {
+    const li = document.createElement("li");
+    li.innerHTML = `<h4>${item.name} : ${item.rank}</h4><p>${item.desc}</p>`;
+    dom.sheetClassAbilities.appendChild(li);
+  });
+  if (!dom.sheetClassAbilities.children.length) {
+    dom.sheetClassAbilities.innerHTML = "<li><p>契約成立後にクラス能力が表示されます。</p></li>";
+  }
+
+  dom.sheetSkills.innerHTML = "";
+  (profile?.skills || []).forEach((item) => {
+    const li = document.createElement("li");
+    li.innerHTML = `<h4>${item.name}</h4><p>${item.desc}</p>`;
+    dom.sheetSkills.appendChild(li);
+  });
+  if (!dom.sheetSkills.children.length) {
+    dom.sheetSkills.innerHTML = "<li><p>契約成立後に固有スキルが表示されます。</p></li>";
+  }
+
+  dom.sheetNpName.textContent = profile?.noblePhantasm?.name || "未確認";
+  dom.sheetNpRank.textContent = profile?.noblePhantasm?.rank ? `ランク: ${profile.noblePhantasm.rank}` : "ランク: -";
+  dom.sheetNpDesc.textContent = profile?.noblePhantasm?.desc || "契約成立後に宝具情報が表示されます。";
+
+  updateSheetTabs();
+}
+
+function toParamRank(value) {
+  const map = { 5: "A", 4: "B", 3: "C", 2: "D", 1: "E", 0: "-" };
+  return map[Math.max(0, Math.min(5, Math.floor(value)))] || "-";
 }
 
 function floorClamp(value) {
