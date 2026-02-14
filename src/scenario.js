@@ -1,4 +1,4 @@
-import { ENEMY_INTEL_RULES, FSN_SERVANTS, SERVANT_CHECK_TAG_SKILLS, SERVANT_COMBAT_EFFECTS } from "./data/generatedData.js";
+import { CLASS_AFFINITY_TABLE, ENEMY_INTEL_RULES, FSN_SERVANTS, SERVANT_CHECK_TAG_SKILLS, SERVANT_COMBAT_EFFECTS } from "./data/generatedData.js";
 
 const MASTER_BUILDS = {
   血統型: { 魔力: 2, 交渉: -1, 生存: 0, 情報: 0 },
@@ -19,6 +19,16 @@ const CHAPTERS = {
   4: { title: "第4章 断層『河川決戦』", objective: "公開戦闘の被害を抑えつつ強敵を脱落させる。", motif: "河川/橋梁での対軍宝具級衝突" },
   5: { title: "第5章 収束『裏切りと露見』", objective: "同盟の真偽を見極め、終盤構図を固定する。", motif: "同盟崩壊と真名露見" },
   6: { title: "第6章 終章『聖杯到達』", objective: "願いの是非を選び、最終決戦を完遂する。", motif: "聖杯選択の倫理決断" },
+};
+
+const CLASS_POWER_WEIGHTS = {
+  セイバー: { 筋力: 0.3, 耐久: 0.25, 敏捷: 0.2, 魔力: 0.15, 幸運: 0.1, 宝具: 0.55 },
+  アーチャー: { 筋力: 0.22, 耐久: 0.15, 敏捷: 0.28, 魔力: 0.2, 幸運: 0.15, 宝具: 0.5 },
+  ランサー: { 筋力: 0.25, 耐久: 0.2, 敏捷: 0.3, 魔力: 0.1, 幸運: 0.15, 宝具: 0.48 },
+  ライダー: { 筋力: 0.2, 耐久: 0.18, 敏捷: 0.27, 魔力: 0.15, 幸運: 0.2, 宝具: 0.52 },
+  キャスター: { 筋力: 0.08, 耐久: 0.12, 敏捷: 0.14, 魔力: 0.38, 幸運: 0.28, 宝具: 0.6 },
+  アサシン: { 筋力: 0.14, 耐久: 0.12, 敏捷: 0.34, 魔力: 0.12, 幸運: 0.28, 宝具: 0.45 },
+  バーサーカー: { 筋力: 0.38, 耐久: 0.3, 敏捷: 0.14, 魔力: 0.06, 幸運: 0.12, 宝具: 0.58 },
 };
 
 export const SERVANT_PROFILES = {
@@ -484,7 +494,8 @@ function resolveBattle(state, action) {
 
 function runCheck(state, enemy, action) {
   const build = MASTER_BUILDS[state.master.buildType] || { 生存: 0, 情報: 0, 魔力: 0 };
-  const base = state.servant.params.筋力 + state.servant.params.敏捷 + state.servant.params.耐久;
+  const playerBase = calcClassWeightedPower(state.servant.params, state.servant.className);
+  const enemyBase = calcClassWeightedPower(enemy.params, enemy.className);
 
   const checkTags = getCheckTags(action, enemy);
   const passiveMod = getServantCombatModifier(state, "passive", action);
@@ -493,22 +504,35 @@ function runCheck(state, enemy, action) {
   const mod = mergeModifiers(mergeModifiers(passiveMod, npMod), tagMod);
   const enemyAction = decideEnemyAction(enemy, action);
 
-  const enemyPower =
-    classPower(enemy.className) +
+  const playerAffinity = getClassAffinity(state.servant.className, enemy.className);
+  const enemyAffinity = getClassAffinity(enemy.className, state.servant.className);
+
+  const enemyActionBonus = enemyActionPowerBonus(enemy, enemyAction.type);
+
+  let enemyPowerRaw =
+    enemyBase +
     randomInt(1, 6) +
     (state.servant.trueNameRevealed ? 2 : 0) +
     mod.enemyPower +
-    enemyAction.powerBonus;
+    enemyAction.powerBonus +
+    enemyActionBonus;
+
+  const enemyPower = Math.round(enemyPowerRaw * enemyAffinity.multiplier);
 
   let bonus = state.battle.tacticalAdvantage + (build.生存 || 0) + mod.bonus;
   let manaCost = Math.max(1, 8 + mod.manaCost);
   let damage = 35 + mod.damage;
 
+  state.log.push(`クラス相性: 自陣${state.servant.className}→敵${enemy.className} ${playerAffinity.relation} x${playerAffinity.multiplier.toFixed(2)}`);
+  state.log.push(`クラス相性: 敵陣${enemy.className}→自陣${state.servant.className} ${enemyAffinity.relation} x${enemyAffinity.multiplier.toFixed(2)}`);
+
   mod.logs.forEach((entry) => state.log.push(entry));
   if (enemyAction.log) state.log.push(enemyAction.log);
 
   if (action === "retreat") {
-    const retreatSuccess = base + randomInt(1, 6) + bonus + mod.retreatBonus >= enemyPower;
+    const retreatPowerRaw = playerBase + randomInt(1, 6) + bonus + mod.retreatBonus;
+    const retreatPower = Math.round(retreatPowerRaw * playerAffinity.multiplier);
+    const retreatSuccess = retreatPower >= enemyPower;
     if (retreatSuccess) {
       return {
         win: true,
@@ -532,7 +556,7 @@ function runCheck(state, enemy, action) {
   }
 
   if (action.includes("np")) {
-    bonus += state.servant.params.宝具 + 2;
+    bonus += npBurstPower(state.servant.params, state.servant.className) + 2;
     damage += 25;
     manaCost = Math.max(1, 20 + mod.manaCost);
   }
@@ -547,12 +571,15 @@ function runCheck(state, enemy, action) {
     }
   }
 
-  const myPower = base + bonus + randomInt(1, 6);
+  const myPowerRaw = playerBase + bonus + randomInt(1, 6);
+  const myPower = Math.round(myPowerRaw * playerAffinity.multiplier);
   const win = myPower >= enemyPower;
 
   if (action.startsWith("final")) {
     damage += 10;
   }
+
+  damage = Math.max(0, Math.round(damage * playerAffinity.multiplier));
 
   if (win) return { win: true, damage, manaCost, backlashMaster: 0, backlashMana: 0, exposureDelta: mod.exposureDelta, enemyAction };
   return {
@@ -564,6 +591,37 @@ function runCheck(state, enemy, action) {
     exposureDelta: mod.exposureDelta,
     enemyAction,
   };
+}
+
+function calcClassWeightedPower(params, className) {
+  const weights = CLASS_POWER_WEIGHTS[className] || CLASS_POWER_WEIGHTS.セイバー;
+  const weighted =
+    (params.筋力 || 0) * weights.筋力 +
+    (params.耐久 || 0) * weights.耐久 +
+    (params.敏捷 || 0) * weights.敏捷 +
+    (params.魔力 || 0) * weights.魔力 +
+    (params.幸運 || 0) * weights.幸運;
+  return Math.round(weighted * 4);
+}
+
+function npBurstPower(params, className) {
+  const weights = CLASS_POWER_WEIGHTS[className] || CLASS_POWER_WEIGHTS.セイバー;
+  return Math.round((params.宝具 || 0) * weights.宝具 * 2.5);
+}
+
+function enemyActionPowerBonus(enemy, enemyActionType) {
+  if (enemyActionType === "np") {
+    return npBurstPower(enemy.params, enemy.className);
+  }
+  if (enemyActionType === "skill") {
+    return Math.round(((enemy.params.魔力 || 0) + (enemy.params.敏捷 || 0)) * 0.4);
+  }
+  return 0;
+}
+
+function getClassAffinity(attackerClass, defenderClass) {
+  const fallback = { multiplier: 1, relation: "等倍" };
+  return CLASS_AFFINITY_TABLE?.[attackerClass]?.[defenderClass] || fallback;
 }
 
 function emptyModifier() {
@@ -883,11 +941,6 @@ function applyChapterDayEvent(state, actionType) {
 
 function remainingEnemies(state) {
   return state.factions.filter((f) => f.alive).length;
-}
-
-function classPower(className) {
-  const map = { セイバー: 13, アーチャー: 12, ランサー: 12, ライダー: 11, キャスター: 11, アサシン: 10, バーサーカー: 14 };
-  return map[className] || 11;
 }
 
 function toClassKey(className) {
