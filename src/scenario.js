@@ -1,4 +1,4 @@
-import { ENEMY_INTEL_RULES, FSN_SERVANTS, SERVANT_CHECK_TAG_SKILLS, SERVANT_COMBAT_EFFECTS } from "./data/generatedData.js";
+import { CLASS_AFFINITY_TABLE, ENEMY_INTEL_RULES, FSN_SERVANTS, SERVANT_CHECK_TAG_SKILLS, SERVANT_COMBAT_EFFECTS } from "./data/generatedData.js";
 
 const MASTER_BUILDS = {
   血統型: { 魔力: 2, 交渉: -1, 生存: 0, 情報: 0 },
@@ -11,6 +11,24 @@ const CATALYSTS = {
   古びた外套の切れ端: { rider: 4, assassin: 1, lancer: 1 },
   異国の魔導書断片: { caster: 4, archer: 1, berserker: 1 },
   朽ちた城門の礫: { archer: 2, saber: 2, berserker: 2, lancer: 1 },
+};
+const CHAPTERS = {
+  1: { title: "第1章 序戦『召喚の夜』", objective: "契約方針を固め、初夜戦を突破する。", motif: "召喚儀式と初遭遇" },
+  2: { title: "第2章 駆け引き『偽装と同盟』", objective: "交渉で同盟線を確保し、情報優位を築く。", motif: "学園/市街地の二重生活と休戦交渉" },
+  3: { title: "第3章 侵攻『工房崩し』", objective: "敵拠点を突き止め、補給線を断つ。", motif: "工房急襲と夜間索敵" },
+  4: { title: "第4章 断層『河川決戦』", objective: "公開戦闘の被害を抑えつつ強敵を脱落させる。", motif: "河川/橋梁での対軍宝具級衝突" },
+  5: { title: "第5章 収束『裏切りと露見』", objective: "同盟の真偽を見極め、終盤構図を固定する。", motif: "同盟崩壊と真名露見" },
+  6: { title: "第6章 終章『聖杯到達』", objective: "願いの是非を選び、最終決戦を完遂する。", motif: "聖杯選択の倫理決断" },
+};
+
+const CLASS_POWER_WEIGHTS = {
+  セイバー: { 筋力: 0.3, 耐久: 0.25, 敏捷: 0.2, 魔力: 0.15, 幸運: 0.1, 宝具: 0.55 },
+  アーチャー: { 筋力: 0.22, 耐久: 0.15, 敏捷: 0.28, 魔力: 0.2, 幸運: 0.15, 宝具: 0.5 },
+  ランサー: { 筋力: 0.25, 耐久: 0.2, 敏捷: 0.3, 魔力: 0.1, 幸運: 0.15, 宝具: 0.48 },
+  ライダー: { 筋力: 0.2, 耐久: 0.18, 敏捷: 0.27, 魔力: 0.15, 幸運: 0.2, 宝具: 0.52 },
+  キャスター: { 筋力: 0.08, 耐久: 0.12, 敏捷: 0.14, 魔力: 0.38, 幸運: 0.28, 宝具: 0.6 },
+  アサシン: { 筋力: 0.14, 耐久: 0.12, 敏捷: 0.34, 魔力: 0.12, 幸運: 0.28, 宝具: 0.45 },
+  バーサーカー: { 筋力: 0.38, 耐久: 0.3, 敏捷: 0.14, 魔力: 0.06, 幸運: 0.12, 宝具: 0.58 },
 };
 
 export const SERVANT_PROFILES = {
@@ -143,8 +161,17 @@ export const INITIAL_STATE = {
   },
   summon: { catalyst: null, classShifted: false },
   battle: { lastResult: "none", tacticalAdvantage: 0, currentEnemyId: null },
-  progress: { enemiesDefeated: 0, finalUnlocked: false },
-  flags: { trueNameExposure: 0, rescueUsed: false, endingType: null },
+  progress: { enemiesDefeated: 0, finalUnlocked: false, chapterIndex: 1, chapterIntroShown: 0 },
+  flags: {
+    trueNameExposure: 0,
+    rescueUsed: false,
+    endingType: null,
+    idealPoints: 0,
+    civilianDamage: 0,
+    midgameRecoveryUsed: false,
+    allianceState: "none",
+    finalLockState: null,
+  },
   factions: [],
   log: ["召喚準備を開始した。"],
 };
@@ -184,13 +211,42 @@ export const SCENES = {
       const shifted = s.summon.classShifted ? "（原典と異なるクラスで現界）" : "（原典準拠クラスで現界）";
       return `令呪が刻まれ、サーヴァントが応じる。\nクラス: ${s.servant.className} ${shifted}\n真名: ？？？\n\n他陣営6組の反応も確認。戦争は既に始まっている。`;
     },
-    choices: [{ label: "昼フェーズへ", next: "dayAction" }],
+    choices: [{ label: "第1章へ進む", next: "chapterIntro" }],
+  },
+  chapterIntro: {
+    phase: "章間",
+    title: "章導入",
+    text: (s) => {
+      const chapter = getChapterData(s);
+      return `${chapter.title}
+目的: ${chapter.objective}
+参照モチーフ: ${chapter.motif}
+
+理想を掲げるほど遠回りになる。だが、それでも救えるものがある。`;
+    },
+    choices: [
+      {
+        label: "作戦会議を終えて行動開始",
+        effect: (s) => {
+          s.progress.chapterIntroShown = s.progress.chapterIndex;
+          if (s.progress.chapterIndex === 5 && !s.flags.finalLockState) {
+            s.flags.finalLockState = `露見:${s.flags.trueNameExposure}|同盟:${s.flags.allianceState}|被害:${s.flags.civilianDamage}`;
+            s.log.push("終盤固定フラグを確定。ここから分岐は不可逆へ移行。");
+          }
+          s.log.push(`${getChapterData(s).title} を開始。`);
+        },
+        next: "dayAction",
+      },
+    ],
   },
   dayAction: {
     phase: "昼",
     title: "日中行動",
     text: (s) =>
-      `Day ${s.day}。行動を選択する。\n残存敵陣営: ${remainingEnemies(s)}組 / 真名看破進行: ${s.flags.trueNameExposure}/3`,
+      `Day ${s.day} / ${getChapterData(s).title}
+目的: ${getChapterData(s).objective}
+残存敵陣営: ${remainingEnemies(s)}組 / 真名看破進行: ${s.flags.trueNameExposure}/3
+理想点: ${s.flags.idealPoints} / 一般被害: ${s.flags.civilianDamage} / 同盟: ${s.flags.allianceState}`,
     choices: [
       {
         label: "情報収集（敵情報を看破）",
@@ -200,6 +256,7 @@ export const SCENES = {
           collectEnemyIntel(s, intelGain);
           s.master.mana = Math.min(100, s.master.mana + 6);
           s.battle.tacticalAdvantage = 0;
+          applyChapterDayEvent(s, "intel");
           runNpcFactionPhase(s);
         },
         next: "nightBattle",
@@ -210,6 +267,7 @@ export const SCENES = {
           s.master.mana = Math.min(100, s.master.mana + 18);
           s.battle.tacticalAdvantage = 0;
           s.log.push("工房を整備し魔力を回復。戦闘準備を優先した。");
+          applyChapterDayEvent(s, "workshop");
           runNpcFactionPhase(s);
         },
         next: "nightBattle",
@@ -220,6 +278,7 @@ export const SCENES = {
           s.master.mana = Math.max(0, s.master.mana - 8);
           s.battle.tacticalAdvantage = 2;
           s.log.push("先制陣地を構築。夜戦に有利な位置を確保した。");
+          applyChapterDayEvent(s, "position");
           runNpcFactionPhase(s);
         },
         next: "nightBattle",
@@ -241,6 +300,26 @@ export const SCENES = {
       { label: "撤退", effect: (s) => resolveBattle(s, "retreat"), next: (s) => postBattleScene(s) },
     ],
   },
+  midgameRecovery: {
+    phase: "深夜",
+    title: "中盤リカバリー",
+    text: "致命的敗北。しかし中盤までは再編の余地がある。\n代償として一般被害と信用低下を受け、戦線へ復帰する。",
+    choices: [
+      {
+        label: "代償を払って再編する",
+        effect: (s) => {
+          s.flags.midgameRecoveryUsed = true;
+          s.master.hp = 35;
+          s.master.mana = Math.min(100, s.master.mana + 20);
+          s.flags.civilianDamage += 1;
+          s.flags.allianceState = "ceasefire";
+          s.log.push("中盤リカバリーを実行。一般被害+1、同盟状態は停戦へ。");
+          nextDay(s);
+        },
+        next: (s) => (shouldShowChapterIntro(s) ? "chapterIntro" : "dayAction"),
+      },
+    ],
+  },
   rescue: {
     phase: "深夜",
     title: "救済導線発動",
@@ -249,13 +328,17 @@ export const SCENES = {
       {
         label: "代償を受け入れて継戦する",
         effect: (s) => {
+          s.flags.rescueUsed = true;
           s.master.hp = Math.max(20, s.master.hp);
           s.servant.params.耐久 = Math.max(1, s.servant.params.耐久 - 1);
           s.flags.trueNameExposure = Math.min(3, s.flags.trueNameExposure + 1);
           s.log.push("救済導線を発動。耐久低下と看破進行を受諾。",);
           nextDay(s);
         },
-        next: (s) => (s.progress.finalUnlocked ? "finalBattle" : "dayAction"),
+        next: (s) => {
+          if (s.progress.finalUnlocked) return "finalBattle";
+          return shouldShowChapterIntro(s) ? "chapterIntro" : "dayAction";
+        },
       },
     ],
   },
@@ -402,18 +485,17 @@ function resolveBattle(state, action) {
 
   state.master.mana = Math.max(0, state.master.mana - result.manaCost);
 
-  if (state.progress.enemiesDefeated >= 3) state.progress.finalUnlocked = true;
+  if (state.progress.enemiesDefeated >= 5) state.progress.finalUnlocked = true;
+  updateChapterProgress(state);
 
-  if (state.master.hp <= 0 && !state.flags.rescueUsed) {
-    state.flags.rescueUsed = true;
-  }
 
   if (state.master.hp > 0) nextDay(state);
 }
 
 function runCheck(state, enemy, action) {
   const build = MASTER_BUILDS[state.master.buildType] || { 生存: 0, 情報: 0, 魔力: 0 };
-  const base = state.servant.params.筋力 + state.servant.params.敏捷 + state.servant.params.耐久;
+  const playerBase = calcClassWeightedPower(state.servant.params, state.servant.className);
+  const enemyBase = calcClassWeightedPower(enemy.params, enemy.className);
 
   const checkTags = getCheckTags(action, enemy);
   const passiveMod = getServantCombatModifier(state, "passive", action);
@@ -422,22 +504,35 @@ function runCheck(state, enemy, action) {
   const mod = mergeModifiers(mergeModifiers(passiveMod, npMod), tagMod);
   const enemyAction = decideEnemyAction(enemy, action);
 
-  const enemyPower =
-    classPower(enemy.className) +
+  const playerAffinity = getClassAffinity(state.servant.className, enemy.className);
+  const enemyAffinity = getClassAffinity(enemy.className, state.servant.className);
+
+  const enemyActionBonus = enemyActionPowerBonus(enemy, enemyAction.type);
+
+  let enemyPowerRaw =
+    enemyBase +
     randomInt(1, 6) +
     (state.servant.trueNameRevealed ? 2 : 0) +
     mod.enemyPower +
-    enemyAction.powerBonus;
+    enemyAction.powerBonus +
+    enemyActionBonus;
+
+  const enemyPower = Math.round(enemyPowerRaw * enemyAffinity.multiplier);
 
   let bonus = state.battle.tacticalAdvantage + (build.生存 || 0) + mod.bonus;
   let manaCost = Math.max(1, 8 + mod.manaCost);
   let damage = 35 + mod.damage;
 
+  state.log.push(`クラス相性: 自陣${state.servant.className}→敵${enemy.className} ${playerAffinity.relation} x${playerAffinity.multiplier.toFixed(2)}`);
+  state.log.push(`クラス相性: 敵陣${enemy.className}→自陣${state.servant.className} ${enemyAffinity.relation} x${enemyAffinity.multiplier.toFixed(2)}`);
+
   mod.logs.forEach((entry) => state.log.push(entry));
   if (enemyAction.log) state.log.push(enemyAction.log);
 
   if (action === "retreat") {
-    const retreatSuccess = base + randomInt(1, 6) + bonus + mod.retreatBonus >= enemyPower;
+    const retreatPowerRaw = playerBase + randomInt(1, 6) + bonus + mod.retreatBonus;
+    const retreatPower = Math.round(retreatPowerRaw * playerAffinity.multiplier);
+    const retreatSuccess = retreatPower >= enemyPower;
     if (retreatSuccess) {
       return {
         win: true,
@@ -461,7 +556,7 @@ function runCheck(state, enemy, action) {
   }
 
   if (action.includes("np")) {
-    bonus += state.servant.params.宝具 + 2;
+    bonus += npBurstPower(state.servant.params, state.servant.className) + 2;
     damage += 25;
     manaCost = Math.max(1, 20 + mod.manaCost);
   }
@@ -476,12 +571,15 @@ function runCheck(state, enemy, action) {
     }
   }
 
-  const myPower = base + bonus + randomInt(1, 6);
+  const myPowerRaw = playerBase + bonus + randomInt(1, 6);
+  const myPower = Math.round(myPowerRaw * playerAffinity.multiplier);
   const win = myPower >= enemyPower;
 
   if (action.startsWith("final")) {
     damage += 10;
   }
+
+  damage = Math.max(0, Math.round(damage * playerAffinity.multiplier));
 
   if (win) return { win: true, damage, manaCost, backlashMaster: 0, backlashMana: 0, exposureDelta: mod.exposureDelta, enemyAction };
   return {
@@ -493,6 +591,37 @@ function runCheck(state, enemy, action) {
     exposureDelta: mod.exposureDelta,
     enemyAction,
   };
+}
+
+function calcClassWeightedPower(params, className) {
+  const weights = CLASS_POWER_WEIGHTS[className] || CLASS_POWER_WEIGHTS.セイバー;
+  const weighted =
+    (params.筋力 || 0) * weights.筋力 +
+    (params.耐久 || 0) * weights.耐久 +
+    (params.敏捷 || 0) * weights.敏捷 +
+    (params.魔力 || 0) * weights.魔力 +
+    (params.幸運 || 0) * weights.幸運;
+  return Math.round(weighted * 4);
+}
+
+function npBurstPower(params, className) {
+  const weights = CLASS_POWER_WEIGHTS[className] || CLASS_POWER_WEIGHTS.セイバー;
+  return Math.round((params.宝具 || 0) * weights.宝具 * 2.5);
+}
+
+function enemyActionPowerBonus(enemy, enemyActionType) {
+  if (enemyActionType === "np") {
+    return npBurstPower(enemy.params, enemy.className);
+  }
+  if (enemyActionType === "skill") {
+    return Math.round(((enemy.params.魔力 || 0) + (enemy.params.敏捷 || 0)) * 0.4);
+  }
+  return 0;
+}
+
+function getClassAffinity(attackerClass, defenderClass) {
+  const fallback = { multiplier: 1, relation: "等倍" };
+  return CLASS_AFFINITY_TABLE?.[attackerClass]?.[defenderClass] || fallback;
 }
 
 function emptyModifier() {
@@ -695,17 +824,20 @@ function runNpcFactionPhase(state) {
     }
   }
 
-  if (remainingEnemies(state) <= 3) {
+  if (remainingEnemies(state) <= 1) {
     state.progress.finalUnlocked = true;
   }
+  updateChapterProgress(state);
 }
 
 function postBattleScene(state) {
   if (state.master.hp <= 0) {
-    if (state.flags.rescueUsed) return "rescue";
+    if (canUseMidgameRecovery(state)) return "midgameRecovery";
+    if (!state.flags.rescueUsed) return "rescue";
     return "gameOver";
   }
   if (state.progress.finalUnlocked) return "finalBattle";
+  if (shouldShowChapterIntro(state)) return "chapterIntro";
   return "dayAction";
 }
 
@@ -713,13 +845,15 @@ function decideEnding(state) {
   const alive = state.master.hp > 0;
   const score =
     (alive ? 1 : 0) +
-    (state.progress.enemiesDefeated >= 4 ? 1 : 0) +
+    (state.progress.enemiesDefeated >= 5 ? 1 : 0) +
     (!state.servant.trueNameRevealed ? 1 : 0) +
     (state.master.commandSpells >= 1 ? 1 : 0) +
-    (!state.flags.rescueUsed ? 1 : 0);
+    (!state.flags.rescueUsed ? 1 : 0) +
+    (state.flags.idealPoints >= 3 ? 1 : 0) -
+    Math.min(2, state.flags.civilianDamage);
 
   if (score >= 4) state.flags.endingType = "正統勝利";
-  else if (score >= 3) state.flags.endingType = "代償勝利";
+  else if (score >= 2) state.flags.endingType = "代償勝利";
   else if (alive) state.flags.endingType = "救済生還";
   else state.flags.endingType = "破滅";
 }
@@ -744,13 +878,69 @@ function nextDay(state) {
   state.master.mana = Math.min(100, state.master.mana + 4);
 }
 
-function remainingEnemies(state) {
-  return state.factions.filter((f) => f.alive).length;
+
+function chapterFromDefeats(defeated) {
+  if (defeated >= 5) return 6;
+  return Math.min(5, defeated + 1);
 }
 
-function classPower(className) {
-  const map = { セイバー: 13, アーチャー: 12, ランサー: 12, ライダー: 11, キャスター: 11, アサシン: 10, バーサーカー: 14 };
-  return map[className] || 11;
+function getChapterData(state) {
+  const idx = state.progress.chapterIndex || 1;
+  return CHAPTERS[idx] || CHAPTERS[1];
+}
+
+function updateChapterProgress(state) {
+  const nextChapter = chapterFromDefeats(state.progress.enemiesDefeated);
+  if (nextChapter > state.progress.chapterIndex) {
+    state.progress.chapterIndex = nextChapter;
+    state.log.push(`${CHAPTERS[nextChapter].title} へ進行。`);
+  }
+}
+
+function shouldShowChapterIntro(state) {
+  return state.progress.chapterIntroShown < state.progress.chapterIndex;
+}
+
+function canUseMidgameRecovery(state) {
+  return state.progress.chapterIndex <= 4 && !state.flags.midgameRecoveryUsed;
+}
+
+function applyChapterDayEvent(state, actionType) {
+  const chapter = state.progress.chapterIndex;
+  if (chapter === 2 && actionType === "intel") {
+    state.flags.allianceState = Math.random() < 0.65 ? "allied" : "none";
+    if (state.flags.allianceState === "allied") {
+      state.flags.idealPoints += 1;
+      state.log.push("交渉が実り、同盟線を確保。理想点+1。");
+    } else {
+      state.log.push("交渉は決裂。次章の連戦リスクが増す。");
+    }
+  }
+
+  if (chapter === 3 && actionType === "position") {
+    state.battle.tacticalAdvantage += 1;
+    state.log.push("敵工房への侵攻準備が整い、夜戦補正が強化された。");
+  }
+
+  if (chapter === 4) {
+    if (actionType === "workshop") {
+      state.flags.civilianDamage += 1;
+      state.log.push("河川戦の余波で一般被害が拡大。一般被害+1。");
+    }
+    if (actionType === "intel") {
+      state.flags.idealPoints += 1;
+      state.log.push("避難誘導を優先。理想点+1。");
+    }
+  }
+
+  if (chapter >= 5 && actionType === "intel" && state.flags.allianceState === "allied") {
+    state.flags.allianceState = "betrayed";
+    state.log.push("終盤で同盟が崩壊。裏切りフラグが成立。");
+  }
+}
+
+function remainingEnemies(state) {
+  return state.factions.filter((f) => f.alive).length;
 }
 
 function toClassKey(className) {
