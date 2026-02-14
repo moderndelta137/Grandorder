@@ -32,13 +32,17 @@ body {
 }
 
 .app {
-  max-width: 1200px;
+  max-width: 1280px;
   margin: 0 auto;
-  padding: 24px;
+  padding: 16px 20px;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
 }
 
 .app-header {
-  margin-bottom: 20px;
+  margin-bottom: 10px;
+  flex: 0 0 auto;
 }
 
 h1 {
@@ -54,8 +58,17 @@ h1 {
 
 .layout {
   display: grid;
-  grid-template-columns: 260px 1fr 280px;
-  gap: 16px;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 14px;
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+.main-column {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) 190px;
+  gap: 12px;
+  min-height: 0;
 }
 
 .card {
@@ -67,15 +80,101 @@ h1 {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.24);
 }
 
+.status-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+}
+
 .status-panel dl {
   margin: 0;
   display: grid;
-  gap: 10px;
+  gap: 8px;
+}
+
+.status-primary {
+  flex: 0 0 auto;
+}
+
+.status-details summary {
+  cursor: pointer;
+  color: var(--text-subtle);
+  font-size: 0.9rem;
+}
+
+.status-details[open] {
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding-top: 8px;
 }
 
 .status-panel div {
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   padding-bottom: 6px;
+}
+
+.status-meter dd {
+  margin-top: 6px;
+}
+
+.meter-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  margin-bottom: 4px;
+}
+
+.meter-track {
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.12);
+  overflow: hidden;
+}
+
+.meter-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.2s ease;
+}
+
+.meter-fill.hp {
+  background: linear-gradient(90deg, #ff6d89, #ff9fb2);
+}
+
+.meter-fill.mana {
+  background: linear-gradient(90deg, #5d82ff, #82d3ff);
+}
+
+.param-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 8px;
+}
+
+.param-row {
+  display: grid;
+  grid-template-columns: 30px 18px 1fr;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+}
+
+.param-row .rank {
+  color: #ffe6a8;
+  font-weight: 700;
+}
+
+.param-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.14);
+  overflow: hidden;
+}
+
+.param-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, rgba(130,164,255,0.8), rgba(190,209,255,0.95));
 }
 
 .status-panel dt {
@@ -126,16 +225,22 @@ h1 {
 }
 
 .story {
-  min-height: 520px;
-  display: flex;
-  flex-direction: column;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  gap: 10px;
 }
 
 .scene-meta {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 14px;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.badge.subtle {
+  background: rgba(255,255,255,0.08);
+  color: var(--text-subtle);
 }
 
 .badge {
@@ -152,16 +257,17 @@ h1 {
 }
 
 .scene-text {
-  line-height: 1.9;
-  margin-bottom: 20px;
-  min-height: 230px;
+  line-height: 1.8;
+  margin: 0;
+  min-height: 0;
   white-space: pre-line;
+  overflow: auto;
+  padding-right: 4px;
 }
 
 .choices {
-  margin-top: auto;
   display: grid;
-  gap: 10px;
+  gap: 8px;
 }
 
 button {
@@ -191,11 +297,19 @@ button.secondary {
   border-color: var(--line);
 }
 
+.log-panel {
+  min-height: 0;
+}
+
+.log-panel h2 {
+  margin: 0 0 8px;
+}
+
 .log-panel ul {
   margin: 0;
   padding-left: 1.2em;
-  line-height: 1.6;
-  max-height: 500px;
+  line-height: 1.55;
+  height: 128px;
   overflow: auto;
 }
 
@@ -209,12 +323,17 @@ button.secondary {
 }
 
 @media (max-width: 1024px) {
+  .app {
+    height: auto;
+    min-height: 100dvh;
+  }
+
   .layout {
     grid-template-columns: 1fr;
   }
 
-  .story {
-    min-height: 400px;
+  .main-column {
+    grid-template-rows: minmax(0, 1fr) 180px;
   }
 }
 
