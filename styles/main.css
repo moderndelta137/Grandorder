@@ -35,7 +35,7 @@ body {
   max-width: 1280px;
   margin: 0 auto;
   padding: 16px 20px;
-  padding-right: clamp(20px, 37vw, 360px);
+  padding-right: clamp(20px, 30vw, 290px);
   height: 100dvh;
   display: flex;
   flex-direction: column;
@@ -61,7 +61,7 @@ h1 {
   position: fixed;
   top: 14px;
   right: 14px;
-  width: min(320px, 34vw);
+  width: min(260px, 28vw);
   z-index: 20;
   display: grid;
   gap: 8px;
@@ -292,15 +292,7 @@ h1 {
 .battle-area {
   display: grid;
   gap: 8px;
-}
-
-.story.combat-layout .battle-area {
-  grid-template-columns: minmax(220px, 0.85fr) minmax(0, 1.15fr);
-  align-items: start;
-}
-
-.story.combat-layout .enemy-intel {
-  margin: 0;
+  grid-template-columns: 1fr;
 }
 
 .story.combat-layout .choices.choices-grid {
@@ -316,6 +308,42 @@ h1 {
   margin: 0;
   max-height: 142px;
   overflow: auto;
+}
+
+.enemy-intel-body {
+  display: grid;
+  gap: 8px;
+}
+
+.enemy-intel-grid {
+  margin: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.enemy-intel-grid div {
+  display: grid;
+  grid-template-columns: 82px 1fr;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.enemy-intel-grid dt {
+  color: var(--text-subtle);
+  font-size: 0.78rem;
+}
+
+.enemy-intel-grid dd {
+  margin: 0;
+  font-size: 0.82rem;
+}
+
+.enemy-param-grid {
+  grid-template-columns: 1fr 1fr;
+}
+
+.param-bar-fill.unknown {
+  background: rgba(255,255,255,0.24);
 }
 
 button {
@@ -392,7 +420,6 @@ button.secondary {
     grid-template-rows: minmax(0, 1fr) 180px;
   }
 
-  .story.combat-layout .battle-area,
   .story.combat-layout .choices.choices-grid {
     grid-template-columns: 1fr;
   }
@@ -605,7 +632,7 @@ button.secondary {
 
 
 .enemy-intel {
-  margin: 8px 0 18px;
+  margin: 0;
   padding: 10px 12px;
   border: 1px solid rgba(255, 189, 120, 0.35);
   border-radius: 10px;
@@ -622,11 +649,7 @@ button.secondary {
   color: #ffdcb5;
 }
 
-.enemy-intel pre {
-  margin: 0;
-  white-space: pre-wrap;
-  line-height: 1.6;
-  font-family: "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+.enemy-intel-body {
   color: #f7dfc3;
 }
 

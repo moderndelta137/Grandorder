@@ -518,35 +518,42 @@ function renderEnemyIntel(state, sceneId) {
   }
 
   dom.enemyIntelPanel.classList.remove("hidden");
-  dom.enemyIntelText.textContent = buildEnemyIntelText(enemy);
+  dom.enemyIntelText.innerHTML = buildEnemyIntelHtml(enemy);
 }
 
-function buildEnemyIntelText(enemy) {
+function buildEnemyIntelHtml(enemy) {
   const intelLevel = enemy.intel?.level || 0;
   const statOrder = ["筋力", "耐久", "敏捷", "魔力", "幸運", "宝具"];
   const rule = ENEMY_INTEL_RULES.find((r) => r.level === intelLevel) || ENEMY_INTEL_RULES[0] || { revealStatsCount: 0, revealSkillCount: 0, revealTrueName: 0, revealNpType: 0, revealNpName: 0 };
   const statRevealCount = rule.revealStatsCount;
 
-  const stats = statOrder
-    .map((key, idx) => `${key}: ${idx < statRevealCount ? toParamRank(enemy.params?.[key] || 0) : "???"}`)
-    .join(" / ");
-
   const skillBaseCount = rule.revealSkillCount;
   const seenSkills = enemy.intel?.seenSkills || [];
   const knownSkills = [...new Set([...(enemy.skills || []).slice(0, skillBaseCount), ...seenSkills])];
-  const skillText = knownSkills.length ? knownSkills.join("、") : "???";
+  const skillText = knownSkills.length ? knownSkills.join(" / ") : "???";
 
   const npTypeKnown = Boolean(rule.revealNpType) || enemy.intel?.npSeen;
   const npNameKnown = Boolean(rule.revealNpName) || enemy.intel?.npSeen;
   const trueNameKnown = Boolean(rule.revealTrueName);
 
-  return [
-    `対象クラス: ${enemy.className}`,
-    `真名: ${trueNameKnown ? enemy.trueName : "???"}`,
-    `ステータス: ${stats}`,
-    `確認スキル: ${skillText}`,
-    `宝具種別: ${npTypeKnown ? enemy.npType : "???"}`,
-    `宝具名: ${npNameKnown ? enemy.npName : "???"}`,
-    `看破Lv: ${intelLevel} / 4`,
-  ].join("\n");
+  const paramRows = statOrder
+    .map((key, idx) => {
+      if (idx >= statRevealCount) {
+        return `<div class="param-row"><span>${key}</span><span class="rank">?</span><span class="param-bar"><span class="param-bar-fill unknown" style="width:18%"></span></span></div>`;
+      }
+      const value = floorClamp(enemy.params?.[key] || 0);
+      const width = Math.max(8, Math.min(100, value * 20));
+      return `<div class="param-row"><span>${key}</span><span class="rank">${toParamRank(value)}</span><span class="param-bar"><span class="param-bar-fill" style="width:${width}%"></span></span></div>`;
+    })
+    .join("");
+
+  return `
+    <dl class="enemy-intel-grid">
+      <div><dt>対象クラス</dt><dd>${enemy.className}</dd></div>
+      <div><dt>真名情報</dt><dd>${trueNameKnown ? enemy.trueName : "???"}（看破 ${intelLevel} / 4）</dd></div>
+      <div><dt>主要スキル</dt><dd>${skillText}</dd></div>
+      <div><dt>宝具</dt><dd>${npNameKnown ? enemy.npName : "???"} / 種別: ${npTypeKnown ? enemy.npType : "???"}</dd></div>
+    </dl>
+    <div class="param-grid enemy-param-grid">${paramRows}</div>
+  `;
 }
