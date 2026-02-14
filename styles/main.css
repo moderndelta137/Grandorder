@@ -385,3 +385,30 @@ button.secondary {
     text-align: center;
   }
 }
+
+
+.enemy-intel {
+  margin: 8px 0 18px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 189, 120, 0.35);
+  border-radius: 10px;
+  background: rgba(56, 25, 13, 0.5);
+}
+
+.enemy-intel.hidden {
+  display: none;
+}
+
+.enemy-intel h3 {
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+  color: #ffdcb5;
+}
+
+.enemy-intel pre {
+  margin: 0;
+  white-space: pre-wrap;
+  line-height: 1.6;
+  font-family: "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+  color: #f7dfc3;
+}

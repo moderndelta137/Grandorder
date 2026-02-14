@@ -18,6 +18,8 @@ const dom = {
   scenePhase: document.querySelector("#scene-phase"),
   sceneTitle: document.querySelector("#scene-title"),
   sceneText: document.querySelector("#scene-text"),
+  enemyIntelPanel: document.querySelector("#enemy-intel-panel"),
+  enemyIntelText: document.querySelector("#enemy-intel-text"),
   choices: document.querySelector("#choices"),
   battleLog: document.querySelector("#battle-log"),
   restartButton: document.querySelector("#restart-button"),
@@ -98,6 +100,7 @@ function render() {
   renderStatus(state);
   renderScene(state, scene);
   renderLog(state);
+  renderEnemyIntel(state, currentSceneId);
   if (dom.servantSheet.classList.contains("open")) renderServantSheet(state);
 }
 
@@ -231,4 +234,52 @@ function toParamRank(value) {
 
 function floorClamp(value) {
   return Math.max(0, Math.floor(value));
+}
+
+
+function renderEnemyIntel(state, sceneId) {
+  const visibleScenes = new Set(["nightBattle", "finalBattle"]);
+  if (!visibleScenes.has(sceneId)) {
+    dom.enemyIntelPanel.classList.add("hidden");
+    return;
+  }
+
+  const enemy = state.factions.find((f) => f.id === state.battle.currentEnemyId && f.alive) || null;
+  if (!enemy) {
+    dom.enemyIntelPanel.classList.remove("hidden");
+    dom.enemyIntelText.textContent = "敵情報なし";
+    return;
+  }
+
+  dom.enemyIntelPanel.classList.remove("hidden");
+  dom.enemyIntelText.textContent = buildEnemyIntelText(enemy);
+}
+
+function buildEnemyIntelText(enemy) {
+  const intelLevel = enemy.intel?.level || 0;
+  const statOrder = ["筋力", "耐久", "敏捷", "魔力", "幸運", "宝具"];
+  const statRevealCount = intelLevel >= 4 ? 6 : intelLevel >= 3 ? 5 : intelLevel >= 2 ? 4 : intelLevel >= 1 ? 2 : 0;
+
+  const stats = statOrder
+    .map((key, idx) => `${key}: ${idx < statRevealCount ? toParamRank(enemy.params?.[key] || 0) : "???"}`)
+    .join(" / ");
+
+  const skillBaseCount = intelLevel >= 3 ? 2 : intelLevel >= 2 ? 1 : 0;
+  const seenSkills = enemy.intel?.seenSkills || [];
+  const knownSkills = [...new Set([...(enemy.skills || []).slice(0, skillBaseCount), ...seenSkills])];
+  const skillText = knownSkills.length ? knownSkills.join("、") : "???";
+
+  const npTypeKnown = intelLevel >= 3 || enemy.intel?.npSeen;
+  const npNameKnown = intelLevel >= 4 || enemy.intel?.npSeen;
+  const trueNameKnown = intelLevel >= 4;
+
+  return [
+    `対象クラス: ${enemy.className}`,
+    `真名: ${trueNameKnown ? enemy.trueName : "???"}`,
+    `ステータス: ${stats}`,
+    `確認スキル: ${skillText}`,
+    `宝具種別: ${npTypeKnown ? enemy.npType : "???"}`,
+    `宝具名: ${npNameKnown ? enemy.npName : "???"}`,
+    `看破Lv: ${intelLevel} / 4`,
+  ].join("\n");
 }

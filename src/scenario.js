@@ -277,13 +277,13 @@ export const SCENES = {
       `Day ${s.day}。行動を選択する。\n残存敵陣営: ${remainingEnemies(s)}組 / 真名看破進行: ${s.flags.trueNameExposure}/3`,
     choices: [
       {
-        label: "情報収集（真名看破を進める）",
+        label: "情報収集（敵情報を看破）",
         effect: (s) => {
           const intel = MASTER_BUILDS[s.master.buildType]?.情報 ?? 0;
-          s.flags.trueNameExposure = Math.min(3, s.flags.trueNameExposure + 1 + (intel > 0 ? 1 : 0));
+          const intelGain = 1 + (intel > 0 ? 1 : 0);
+          collectEnemyIntel(s, intelGain);
           s.master.mana = Math.min(100, s.master.mana + 6);
-          s.battle.tacticalAdvantage = 1;
-          s.log.push("日中の情報網を展開。敵の行動パターンを把握した。");
+          s.battle.tacticalAdvantage = 0;
         },
         next: "nightBattle",
       },
@@ -393,13 +393,26 @@ function pickCatalyst(state, catalystName) {
   state.servant.params = picked.stats;
   state.servant.sourceName = picked.trueName;
 
-  state.factions = FSN_SERVANTS.filter((s) => s.trueName !== picked.trueName).map((s, idx) => ({
-    id: idx + 1,
-    trueName: s.trueName,
-    className: s.className,
-    hp: 100,
-    alive: true,
-  }));
+  state.factions = FSN_SERVANTS.filter((s) => s.trueName !== picked.trueName).map((s, idx) => {
+    const profile = SERVANT_PROFILES[s.trueName] || {};
+    return {
+      id: idx + 1,
+      trueName: s.trueName,
+      className: s.className,
+      hp: 100,
+      alive: true,
+      params: structuredClone(s.stats),
+      skills: (profile.skills || []).map((skill) => skill.name),
+      classSkills: (profile.classAbilities || []).map((skill) => skill.name),
+      npName: profile.noblePhantasm?.name || "不明宝具",
+      npType: profile.noblePhantasm?.type || "対軍",
+      intel: {
+        level: 0,
+        seenSkills: [],
+        npSeen: false,
+      },
+    };
+  });
 
   state.log.push(`触媒「${catalystName}」で ${state.servant.className} を召喚。敵6陣営を確認。`);
 }
@@ -434,6 +447,8 @@ function resolveBattle(state, action) {
   }
 
   const result = runCheck(state, enemy, actionForCheck);
+  applyEnemyIntelFromBattle(state, enemy, result);
+
   if (result.win) {
     enemy.hp -= result.damage;
     state.log.push(`${enemy.className} へ ${result.damage} ダメージ。`);
@@ -486,27 +501,43 @@ function runCheck(state, enemy, action) {
   const npMod = action.includes("np") ? getServantCombatModifier(state, "np", action) : emptyModifier();
   const tagMod = getCheckTagModifier(state, checkTags);
   const mod = mergeModifiers(mergeModifiers(passiveMod, npMod), tagMod);
+  const enemyAction = decideEnemyAction(enemy, action);
 
-  const enemyPower = classPower(enemy.className) + randomInt(1, 6) + (state.servant.trueNameRevealed ? 2 : 0) + mod.enemyPower;
+  const enemyPower =
+    classPower(enemy.className) +
+    randomInt(1, 6) +
+    (state.servant.trueNameRevealed ? 2 : 0) +
+    mod.enemyPower +
+    enemyAction.powerBonus;
 
   let bonus = state.battle.tacticalAdvantage + (build.生存 || 0) + mod.bonus;
   let manaCost = Math.max(1, 8 + mod.manaCost);
   let damage = 35 + mod.damage;
 
   mod.logs.forEach((entry) => state.log.push(entry));
+  if (enemyAction.log) state.log.push(enemyAction.log);
 
   if (action === "retreat") {
     const retreatSuccess = base + randomInt(1, 6) + bonus + mod.retreatBonus >= enemyPower;
     if (retreatSuccess) {
-      return { win: true, damage: 0, manaCost: 4, backlashMaster: 0, backlashMana: 0, exposureDelta: mod.exposureDelta };
+      return {
+        win: true,
+        damage: 0,
+        manaCost: 4,
+        backlashMaster: 0,
+        backlashMana: 0,
+        exposureDelta: mod.exposureDelta,
+        enemyAction,
+      };
     }
     return {
       win: false,
       damage: 0,
       manaCost: 5,
-      backlashMaster: Math.max(0, 14 + mod.backlashMaster),
+      backlashMaster: Math.max(0, 14 + mod.backlashMaster + enemyAction.backlashMaster),
       backlashMana: 10,
       exposureDelta: mod.exposureDelta,
+      enemyAction,
     };
   }
 
@@ -533,14 +564,15 @@ function runCheck(state, enemy, action) {
     damage += 10;
   }
 
-  if (win) return { win: true, damage, manaCost, backlashMaster: 0, backlashMana: 0, exposureDelta: mod.exposureDelta };
+  if (win) return { win: true, damage, manaCost, backlashMaster: 0, backlashMana: 0, exposureDelta: mod.exposureDelta, enemyAction };
   return {
     win: false,
     damage: 0,
     manaCost,
-    backlashMaster: Math.max(0, randomInt(12, 22) + mod.backlashMaster),
+    backlashMaster: Math.max(0, randomInt(12, 22) + mod.backlashMaster + enemyAction.backlashMaster),
     backlashMana: randomInt(8, 16),
     exposureDelta: mod.exposureDelta,
+    enemyAction,
   };
 }
 
@@ -631,6 +663,74 @@ function getCheckTagModifier(state, checkTags) {
   });
 
   return modifier;
+}
+
+
+function collectEnemyIntel(state, points) {
+  const candidates = state.factions.filter((f) => f.alive);
+  if (!candidates.length) return;
+
+  const minLevel = Math.min(...candidates.map((f) => f.intel?.level ?? 0));
+  const pool = candidates.filter((f) => (f.intel?.level ?? 0) === minLevel);
+  const target = pool[Math.floor(Math.random() * pool.length)];
+  const prev = target.intel.level;
+  target.intel.level = Math.min(4, target.intel.level + points);
+
+  state.log.push(`情報収集で敵${target.className}陣営を追跡（看破Lv ${prev} → ${target.intel.level}）。`);
+
+  if (prev < 1 && target.intel.level >= 1) state.log.push("基礎ステータスの一部を把握した。");
+  if (prev < 2 && target.intel.level >= 2) state.log.push("保有スキルの一部を把握した。");
+  if (prev < 3 && target.intel.level >= 3) state.log.push("真名候補と宝具種別を把握した。");
+  if (prev < 4 && target.intel.level >= 4) state.log.push("真名と宝具の核心情報を看破した。");
+}
+
+function decideEnemyAction(enemy, playerAction) {
+  if (playerAction === "retreat") {
+    return { type: "pursuit", powerBonus: 1, backlashMaster: 0, log: `${enemy.className} が追撃態勢を取る。` };
+  }
+
+  const roll = Math.random();
+  if (roll < 0.18) {
+    return {
+      type: "np",
+      powerBonus: 4,
+      backlashMaster: 3,
+      npName: enemy.npName,
+      log: `${enemy.className} が宝具の兆候を見せる。`,
+    };
+  }
+
+  if (roll < 0.5) {
+    const skillName = enemy.skills?.length ? enemy.skills[Math.floor(Math.random() * enemy.skills.length)] : "戦技";
+    return {
+      type: "skill",
+      powerBonus: 2,
+      backlashMaster: 1,
+      skillName,
+      log: `${enemy.className} がスキルを展開。`,
+    };
+  }
+
+  return { type: "normal", powerBonus: 0, backlashMaster: 0, log: `${enemy.className} は通常戦闘を選択。` };
+}
+
+function applyEnemyIntelFromBattle(state, enemy, result) {
+  const action = result.enemyAction;
+  if (!action) return;
+
+  if (action.type === "skill" && action.skillName) {
+    if (!enemy.intel.seenSkills.includes(action.skillName)) {
+      enemy.intel.seenSkills.push(action.skillName);
+      state.log.push(`敵スキル「${action.skillName}」の情報を記録した。`);
+    }
+  }
+
+  if (action.type === "np") {
+    if (!enemy.intel.npSeen) {
+      enemy.intel.npSeen = true;
+      state.log.push(`敵宝具「${enemy.npName}」が観測され、情報が公開された。`);
+    }
+  }
 }
 
 function postBattleScene(state) {
