@@ -188,6 +188,7 @@ export const INITIAL_STATE = {
     midgameRecoveryUsed: false,
     allianceState: "none",
     finalLockState: null,
+    chapterContentShown: {},
   },
   factions: [],
   log: ["召喚準備を開始した。"],
@@ -251,6 +252,79 @@ export const SCENES = {
             s.log.push("終盤固定フラグを確定。ここから分岐は不可逆へ移行。");
           }
           s.log.push(`${getChapterData(s).title} を開始。`);
+        },
+        next: (s) => getChapterContentEntryScene(s) || "dayAction",
+      },
+    ],
+  },
+
+  chapter1_main_001: {
+    phase: "章本文",
+    title: "第1章 本文: 契約直後の夜",
+    text: `【本文挿入口】第1章-必須シーン1。
+契約直後の緊張、初動方針、街への視線を描写する。
+（Sprint3で本文へ置換予定）`,
+    choices: [
+      {
+        label: "次へ",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["1_001"] = true;
+          s.log.push("章本文プレースホルダ: chapter1_main_001 を通過。");
+        },
+        next: "chapter1_main_002",
+      },
+    ],
+  },
+  chapter1_main_002: {
+    phase: "章本文",
+    title: "第1章 本文: 初接触の予兆",
+    text: `【本文挿入口】第1章-必須シーン2。
+敵影の気配、真名秘匿の価値、夜戦前の判断を描写する。
+（Sprint3で本文へ置換予定）`,
+    choices: [
+      {
+        label: "日中行動へ",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["1_002"] = true;
+          s.log.push("章本文プレースホルダ: chapter1_main_002 を通過。");
+        },
+        next: "dayAction",
+      },
+    ],
+  },
+  chapter2_main_001: {
+    phase: "章本文",
+    title: "第2章 本文: 偽装と同盟の駆け引き",
+    text: `【本文挿入口】第2章-必須シーン1。
+学園/市街地での偽装生活と、休戦交渉の火種を描写する。
+（Sprint3で本文へ置換予定）`,
+    choices: [
+      {
+        label: "次へ",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["2_001"] = true;
+          s.log.push("章本文プレースホルダ: chapter2_main_001 を通過。");
+        },
+        next: "chapter2_main_002",
+      },
+    ],
+  },
+  chapter2_main_002: {
+    phase: "章本文",
+    title: "第2章 本文: 取引の代償",
+    text: `【本文挿入口】第2章-必須シーン2。
+同盟維持か情報優先かの天秤を描写し、次の昼行動へ接続する。
+（Sprint3で本文へ置換予定）`,
+    choices: [
+      {
+        label: "日中行動へ",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["2_002"] = true;
+          s.log.push("章本文プレースホルダ: chapter2_main_002 を通過。");
         },
         next: "dayAction",
       },
@@ -1008,6 +1082,15 @@ function updateChapterProgress(state) {
     state.progress.chapterIndex = nextChapter;
     state.log.push(`${CHAPTERS[nextChapter].title} へ進行。`);
   }
+}
+
+
+function getChapterContentEntryScene(state) {
+  const chapter = state.progress.chapterIndex;
+  const shown = state.flags.chapterContentShown || {};
+  if (chapter === 1 && !shown["1_001"]) return "chapter1_main_001";
+  if (chapter === 2 && !shown["2_001"]) return "chapter2_main_001";
+  return null;
 }
 
 function shouldShowChapterIntro(state) {

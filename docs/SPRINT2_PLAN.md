@@ -3,7 +3,7 @@
 最終更新: 現在スレッド  
 担当: Codex  
 参照仕様: `docs/GDD.md`, `docs/V1_PLAN.md`, `docs/SCENARIO_CHAPTER_PLAN.md`
-進捗メモ: Step A/B/C完了。Step Cでセーブ3枠・ロード互換チェック・既読スキップ（等速/高速）を実装。
+進捗メモ: Step A/B/C/D完了。Step Dで章本文命名規約と第1-2章プレースホルダ挿入口を実装。
 
 ---
 
