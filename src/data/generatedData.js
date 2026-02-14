@@ -549,3 +549,216 @@ export const ENEMY_INTEL_RULES = [
     "revealNpName": 1
   }
 ];
+
+export const CLASS_AFFINITY_TABLE = {
+  "セイバー": {
+    "セイバー": {
+      "multiplier": 1,
+      "relation": "等倍"
+    },
+    "アーチャー": {
+      "multiplier": 0.8,
+      "relation": "不利"
+    },
+    "ランサー": {
+      "multiplier": 1.2,
+      "relation": "有利"
+    },
+    "ライダー": {
+      "multiplier": 1,
+      "relation": "等倍"
+    },
+    "キャスター": {
+      "multiplier": 1,
+      "relation": "等倍"
+    },
+    "アサシン": {
+      "multiplier": 1,
+      "relation": "等倍"
+    },
+    "バーサーカー": {
+      "multiplier": 1.1,
+      "relation": "準有利"
+    }
+  },
+  "アーチャー": {
+    "セイバー": {
+      "multiplier": 1.2,
+      "relation": "有利"
+    },
+    "アーチャー": {
+      "multiplier": 1,
+      "relation": "等倍"
+    },
+    "ランサー": {
+      "multiplier": 0.8,
+      "relation": "不利"
+    },
+    "ライダー": {
+      "multiplier": 1,
+      "relation": "等倍"
+    },
+    "キャスター": {
+      "multiplier": 1,
+      "relation": "等倍"
+    },
+    "アサシン": {
+      "multiplier": 1,
+      "relation": "等倍"
+    },
+    "バーサーカー": {
+      "multiplier": 1.1,
+      "relation": "準有利"
+    }
+  },
+  "ランサー": {
+    "セイバー": {
+      "multiplier": 0.8,
+      "relation": "不利"
+    },
+    "アーチャー": {
+      "multiplier": 1.2,
+      "relation": "有利"
+    },
+    "ランサー": {
+      "multiplier": 1,
+      "relation": "等倍"
+    },
+    "ライダー": {
+      "multiplier": 1,
+      "relation": "等倍"
+    },
+    "キャスター": {
+      "multiplier": 1,
+      "relation": "等倍"
+    },
+    "アサシン": {
+      "multiplier": 1,
+      "relation": "等倍"
+    },
+    "バーサーカー": {
+      "multiplier": 1.1,
+      "relation": "準有利"
+    }
+  },
+  "ライダー": {
+    "セイバー": {
+      "multiplier": 1,
+      "relation": "等倍"
+    },
+    "アーチャー": {
+      "multiplier": 1,
+      "relation": "等倍"
+    },
+    "ランサー": {
+      "multiplier": 1,
+      "relation": "等倍"
+    },
+    "ライダー": {
+      "multiplier": 1,
+      "relation": "等倍"
+    },
+    "キャスター": {
+      "multiplier": 1.2,
+      "relation": "有利"
+    },
+    "アサシン": {
+      "multiplier": 0.8,
+      "relation": "不利"
+    },
+    "バーサーカー": {
+      "multiplier": 1.1,
+      "relation": "準有利"
+    }
+  },
+  "キャスター": {
+    "セイバー": {
+      "multiplier": 1,
+      "relation": "等倍"
+    },
+    "アーチャー": {
+      "multiplier": 1,
+      "relation": "等倍"
+    },
+    "ランサー": {
+      "multiplier": 1,
+      "relation": "等倍"
+    },
+    "ライダー": {
+      "multiplier": 0.8,
+      "relation": "不利"
+    },
+    "キャスター": {
+      "multiplier": 1,
+      "relation": "等倍"
+    },
+    "アサシン": {
+      "multiplier": 1.2,
+      "relation": "有利"
+    },
+    "バーサーカー": {
+      "multiplier": 1.1,
+      "relation": "準有利"
+    }
+  },
+  "アサシン": {
+    "セイバー": {
+      "multiplier": 1,
+      "relation": "等倍"
+    },
+    "アーチャー": {
+      "multiplier": 1,
+      "relation": "等倍"
+    },
+    "ランサー": {
+      "multiplier": 1,
+      "relation": "等倍"
+    },
+    "ライダー": {
+      "multiplier": 1.2,
+      "relation": "有利"
+    },
+    "キャスター": {
+      "multiplier": 0.8,
+      "relation": "不利"
+    },
+    "アサシン": {
+      "multiplier": 1,
+      "relation": "等倍"
+    },
+    "バーサーカー": {
+      "multiplier": 1.1,
+      "relation": "準有利"
+    }
+  },
+  "バーサーカー": {
+    "セイバー": {
+      "multiplier": 1.15,
+      "relation": "狂化補正"
+    },
+    "アーチャー": {
+      "multiplier": 1.15,
+      "relation": "狂化補正"
+    },
+    "ランサー": {
+      "multiplier": 1.15,
+      "relation": "狂化補正"
+    },
+    "ライダー": {
+      "multiplier": 1.15,
+      "relation": "狂化補正"
+    },
+    "キャスター": {
+      "multiplier": 1.15,
+      "relation": "狂化補正"
+    },
+    "アサシン": {
+      "multiplier": 1.15,
+      "relation": "狂化補正"
+    },
+    "バーサーカー": {
+      "multiplier": 1,
+      "relation": "等倍"
+    }
+  }
+};
