@@ -31,6 +31,23 @@ const CLASS_POWER_WEIGHTS = {
   バーサーカー: { 筋力: 0.38, 耐久: 0.3, 敏捷: 0.14, 魔力: 0.06, 幸運: 0.12, 宝具: 0.58 },
 };
 
+const ACTION_POWER_BONUS = {
+  normal: 5,
+  np: 0,
+  command: 7,
+  retreat: 0,
+};
+
+const PLAYER_NP_BURST_SCALE = 0.2;
+
+const ENEMY_ACTION_POWER_SCALE = {
+  np: 0.8,
+  skill: 0.6,
+  normal: 0.45,
+  pursuit: 0.5,
+};
+
+
 export const SERVANT_PROFILES = {
   "アルトリア・ペンドラゴン": {
     alignment: "秩序・善",
@@ -159,8 +176,8 @@ export const INITIAL_STATE = {
     sourceName: null,
     npUsedThisBattle: false,
   },
-  summon: { catalyst: null, classShifted: false },
-  battle: { lastResult: "none", tacticalAdvantage: 0, currentEnemyId: null },
+  summon: { catalyst: null, classShifted: false, debugWeights: [] },
+  battle: { lastResult: "none", tacticalAdvantage: 0, currentEnemyId: null, lastAction: null, lastActionWin: null },
   progress: { enemiesDefeated: 0, finalUnlocked: false, chapterIndex: 1, chapterIntroShown: 0 },
   flags: {
     trueNameExposure: 0,
@@ -386,9 +403,10 @@ function applyMasterBuild(state, buildType) {
 
 function pickCatalyst(state, catalystName) {
   state.summon.catalyst = catalystName;
-  const picked = summonServant(catalystName, state.master.buildType);
+  const picked = summonServant(state, catalystName);
 
   state.summon.classShifted = picked.classShifted;
+  state.summon.debugWeights = picked.debugWeights || [];
   state.servant.className = picked.className;
   state.servant.trueName = "？？？";
   state.servant.trueNameRevealed = false;
@@ -417,21 +435,83 @@ function pickCatalyst(state, catalystName) {
   });
 
   state.log.push(`触媒「${catalystName}」で ${state.servant.className} を召喚。敵6陣営を確認。`);
+  if (state.summon.debugWeights.length) {
+    const top = state.summon.debugWeights.slice(0, 3).map((row) => `${row.trueName}:${row.total.toFixed(2)}`).join(" / ");
+    state.log.push(`召喚相性内訳（上位）: ${top}`);
+  }
 }
 
-function summonServant(catalystName, buildType) {
-  const weights = CATALYSTS[catalystName] || {};
-  const scored = FSN_SERVANTS.map((s) => {
-    const classKey = toClassKey(s.className);
-    const buildBonus = buildType === "血統型" && s.stats.魔力 >= 4 ? 1 : 0;
-    return { servant: s, score: (weights[classKey] || 1) + buildBonus + Math.random() * 1.2 };
-  }).sort((a, b) => b.score - a.score);
+function summonServant(state, catalystName) {
+  const scored = FSN_SERVANTS.map((servant) => {
+    const weights = calculateSummonWeight(state, servant, catalystName);
+    return { servant, ...weights };
+  }).sort((a, b) => b.total - a.total);
 
-  const picked = structuredClone(scored[0].servant);
+  const picked = weightedPick(scored);
   const classShifted = Math.random() < 0.35;
   if (classShifted && picked.altClasses.length > 0) picked.className = picked.altClasses[0];
   picked.classShifted = classShifted;
+  picked.debugWeights = scored.slice(0, 5).map((row) => ({
+    trueName: row.servant.trueName,
+    className: row.servant.className,
+    catalyst: Number(row.catalyst.toFixed(2)),
+    build: Number(row.build.toFixed(2)),
+    chapter: Number(row.chapter.toFixed(2)),
+    alliance: Number(row.alliance.toFixed(2)),
+    random: Number(row.random.toFixed(2)),
+    total: Number(row.total.toFixed(2)),
+  }));
   return picked;
+}
+
+function calculateSummonWeight(state, servant, catalystName) {
+  const classKey = toClassKey(servant.className);
+  const catalystWeights = CATALYSTS[catalystName] || {};
+  const catalyst = Number(catalystWeights[classKey] || 1);
+
+  const buildType = state.master.buildType;
+  let build = 0;
+  if (buildType === "血統型") {
+    build += servant.stats.魔力 >= 4 ? 1.8 : 0.4;
+    build += servant.stats.幸運 >= 4 ? 0.4 : 0;
+  } else if (buildType === "現場型") {
+    build += servant.stats.筋力 >= 4 ? 1.2 : 0.3;
+    build += servant.stats.耐久 >= 4 ? 1.2 : 0.3;
+    build += servant.stats.敏捷 >= 4 ? 0.7 : 0.2;
+  } else if (buildType === "研究型") {
+    build += servant.stats.魔力 >= 4 ? 1.3 : 0.3;
+    build += servant.stats.宝具 >= 4 ? 0.9 : 0.2;
+    build += servant.stats.敏捷 >= 4 ? 0.4 : 0;
+  }
+
+  const chapterIndex = state.progress?.chapterIndex || 1;
+  const chapter = chapterIndex >= 5
+    ? (servant.stats.幸運 >= 4 ? 0.6 : 0)
+    : (servant.stats.魔力 >= 4 ? 0.35 : 0.1);
+
+  const allianceState = state.flags?.allianceState || "none";
+  let alliance = 0;
+  if (allianceState === "allied") alliance = servant.stats.幸運 >= 4 ? 0.45 : 0.15;
+  if (allianceState === "betrayed") alliance = servant.stats.耐久 >= 4 ? 0.4 : 0.1;
+  if (allianceState === "ceasefire") alliance = servant.stats.敏捷 >= 4 ? 0.3 : 0.1;
+
+  const random = Math.random() * 0.9;
+  const unclipped = catalyst + build + chapter + alliance + random;
+  const total = clamp(unclipped, 1.25, 7.5);
+
+  return { catalyst, build, chapter, alliance, random, total };
+}
+
+function weightedPick(scoredRows) {
+  const total = scoredRows.reduce((sum, row) => sum + row.total, 0);
+  if (total <= 0) return structuredClone(scoredRows[0].servant);
+
+  let roll = Math.random() * total;
+  for (const row of scoredRows) {
+    roll -= row.total;
+    if (roll <= 0) return structuredClone(row.servant);
+  }
+  return structuredClone(scoredRows[scoredRows.length - 1].servant);
 }
 
 function resolveBattle(state, action) {
@@ -449,6 +529,8 @@ function resolveBattle(state, action) {
   }
 
   const result = runCheck(state, enemy, actionForCheck);
+  state.battle.lastAction = actionForCheck;
+  state.battle.lastActionWin = result.win;
   applyEnemyIntelFromBattle(state, enemy, result);
 
   if (result.win) {
@@ -497,40 +579,49 @@ function runCheck(state, enemy, action) {
   const playerBase = calcClassWeightedPower(state.servant.params, state.servant.className);
   const enemyBase = calcClassWeightedPower(enemy.params, enemy.className);
 
-  const checkTags = getCheckTags(action, enemy);
-  const passiveMod = getServantCombatModifier(state, "passive", action);
-  const npMod = action.includes("np") ? getServantCombatModifier(state, "np", action) : emptyModifier();
-  const tagMod = getCheckTagModifier(state, checkTags);
-  const mod = mergeModifiers(mergeModifiers(passiveMod, npMod), tagMod);
   const enemyAction = decideEnemyAction(enemy, action);
+
+  const playerCheckTags = getCheckTags(action, enemy);
+  const enemyCheckTags = getEnemyCheckTags(enemyAction, state.servant.className);
+
+  const playerPassiveMod = getServantCombatModifierByName(state.servant.sourceName, "passive", action, state.master.hp, "自陣");
+  const playerNpMod = action.includes("np") ? getServantCombatModifierByName(state.servant.sourceName, "np", action, state.master.hp, "自陣") : emptyModifier();
+  const playerTagMod = getCheckTagModifierByName(state.servant.sourceName, playerCheckTags, "自陣");
+  const playerMod = mergeModifiers(mergeModifiers(playerPassiveMod, playerNpMod), playerTagMod);
+
+  const enemyPassiveMod = getServantCombatModifierByName(enemy.trueName, "passive", enemyAction.type, enemy.hp, "敵陣");
+  const enemyNpMod = enemyAction.type === "np" ? getServantCombatModifierByName(enemy.trueName, "np", enemyAction.type, enemy.hp, "敵陣") : emptyModifier();
+  const enemyTagMod = getCheckTagModifierByName(enemy.trueName, enemyCheckTags, "敵陣");
+  const enemyMod = mergeModifiers(mergeModifiers(enemyPassiveMod, enemyNpMod), enemyTagMod);
 
   const playerAffinity = getClassAffinity(state.servant.className, enemy.className);
   const enemyAffinity = getClassAffinity(enemy.className, state.servant.className);
 
   const enemyActionBonus = enemyActionPowerBonus(enemy, enemyAction.type);
 
-  let enemyPowerRaw =
+  const enemyPowerRaw =
     enemyBase +
     randomInt(1, 6) +
     (state.servant.trueNameRevealed ? 2 : 0) +
-    mod.enemyPower +
     enemyAction.powerBonus +
-    enemyActionBonus;
+    enemyActionBonus +
+    enemyMod.bonus;
 
   const enemyPower = Math.round(enemyPowerRaw * enemyAffinity.multiplier);
 
-  let bonus = state.battle.tacticalAdvantage + (build.生存 || 0) + mod.bonus;
-  let manaCost = Math.max(1, 8 + mod.manaCost);
-  let damage = 35 + mod.damage;
+  let bonus = state.battle.tacticalAdvantage + (build.生存 || 0) + playerMod.bonus + ACTION_POWER_BONUS.normal;
+  let manaCost = Math.max(1, 8 + playerMod.manaCost);
+  let damage = 35 + playerMod.damage;
 
   state.log.push(`クラス相性: 自陣${state.servant.className}→敵${enemy.className} ${playerAffinity.relation} x${playerAffinity.multiplier.toFixed(2)}`);
   state.log.push(`クラス相性: 敵陣${enemy.className}→自陣${state.servant.className} ${enemyAffinity.relation} x${enemyAffinity.multiplier.toFixed(2)}`);
 
-  mod.logs.forEach((entry) => state.log.push(entry));
+  playerMod.logs.forEach((entry) => state.log.push(entry));
+  enemyMod.logs.forEach((entry) => state.log.push(entry));
   if (enemyAction.log) state.log.push(enemyAction.log);
 
   if (action === "retreat") {
-    const retreatPowerRaw = playerBase + randomInt(1, 6) + bonus + mod.retreatBonus;
+    const retreatPowerRaw = playerBase + randomInt(1, 6) + bonus + playerMod.retreatBonus + ACTION_POWER_BONUS.retreat;
     const retreatPower = Math.round(retreatPowerRaw * playerAffinity.multiplier);
     const retreatSuccess = retreatPower >= enemyPower;
     if (retreatSuccess) {
@@ -540,7 +631,7 @@ function runCheck(state, enemy, action) {
         manaCost: 4,
         backlashMaster: 0,
         backlashMana: 0,
-        exposureDelta: mod.exposureDelta,
+        exposureDelta: playerMod.exposureDelta,
         enemyAction,
       };
     }
@@ -548,26 +639,26 @@ function runCheck(state, enemy, action) {
       win: false,
       damage: 0,
       manaCost: 5,
-      backlashMaster: Math.max(0, 14 + mod.backlashMaster + enemyAction.backlashMaster),
+      backlashMaster: Math.max(0, 14 + playerMod.backlashMaster + enemyAction.backlashMaster + enemyMod.damage),
       backlashMana: 10,
-      exposureDelta: mod.exposureDelta,
+      exposureDelta: playerMod.exposureDelta,
       enemyAction,
     };
   }
 
   if (action.includes("np")) {
-    bonus += npBurstPower(state.servant.params, state.servant.className) + 2;
+    bonus += Math.round(npBurstPower(state.servant.params, state.servant.className) * PLAYER_NP_BURST_SCALE) + 2 + ACTION_POWER_BONUS.np;
     damage += 25;
-    manaCost = Math.max(1, 20 + mod.manaCost);
+    manaCost = Math.max(1, 20 + playerMod.manaCost);
   }
 
   if (action.includes("command")) {
     if (state.master.commandSpells <= 0) {
       state.log.push("令呪が尽きている。通常行動として処理。",);
     } else {
-      bonus += 4;
+      bonus += ACTION_POWER_BONUS.command;
       damage += 15;
-      manaCost = Math.max(1, 12 + mod.manaCost);
+      manaCost = Math.max(1, 12 + playerMod.manaCost);
     }
   }
 
@@ -581,14 +672,14 @@ function runCheck(state, enemy, action) {
 
   damage = Math.max(0, Math.round(damage * playerAffinity.multiplier));
 
-  if (win) return { win: true, damage, manaCost, backlashMaster: 0, backlashMana: 0, exposureDelta: mod.exposureDelta, enemyAction };
+  if (win) return { win: true, damage, manaCost, backlashMaster: 0, backlashMana: 0, exposureDelta: playerMod.exposureDelta, enemyAction };
   return {
     win: false,
     damage: 0,
     manaCost,
-    backlashMaster: Math.max(0, randomInt(12, 22) + mod.backlashMaster + enemyAction.backlashMaster),
+    backlashMaster: Math.max(0, randomInt(12, 22) + playerMod.backlashMaster + enemyAction.backlashMaster + enemyMod.damage),
     backlashMana: randomInt(8, 16),
-    exposureDelta: mod.exposureDelta,
+    exposureDelta: playerMod.exposureDelta,
     enemyAction,
   };
 }
@@ -610,11 +701,19 @@ function npBurstPower(params, className) {
 }
 
 function enemyActionPowerBonus(enemy, enemyActionType) {
+  const scale = ENEMY_ACTION_POWER_SCALE[enemyActionType] ?? 0;
+
   if (enemyActionType === "np") {
-    return npBurstPower(enemy.params, enemy.className);
+    return Math.round(npBurstPower(enemy.params, enemy.className) * scale);
   }
   if (enemyActionType === "skill") {
-    return Math.round(((enemy.params.魔力 || 0) + (enemy.params.敏捷 || 0)) * 0.4);
+    return Math.round(((enemy.params.魔力 || 0) + (enemy.params.敏捷 || 0)) * scale);
+  }
+  if (enemyActionType === "normal") {
+    return Math.round(((enemy.params.筋力 || 0) + (enemy.params.耐久 || 0)) * scale);
+  }
+  if (enemyActionType === "pursuit") {
+    return Math.round(((enemy.params.敏捷 || 0) + (enemy.params.幸運 || 0)) * scale);
   }
   return 0;
 }
@@ -641,8 +740,7 @@ function mergeModifiers(a, b) {
   };
 }
 
-function getServantCombatModifier(state, mode, action) {
-  const sourceName = state.servant.sourceName;
+function getServantCombatModifierByName(sourceName, mode, action, currentHp, actorLabel) {
   const effect = SERVANT_COMBAT_EFFECTS[sourceName];
   if (!effect) return emptyModifier();
 
@@ -660,13 +758,13 @@ function getServantCombatModifier(state, mode, action) {
     logs: [],
   };
 
-  if (base.lowHpBonus && state.master.hp <= 50) modifier.bonus += base.lowHpBonus;
+  if (base.lowHpBonus && currentHp <= 50) modifier.bonus += base.lowHpBonus;
 
   if (mode === "passive" && effect.passiveLabel) {
-    modifier.logs.push(`固有スキル「${effect.passiveLabel}」が機能。`);
+    modifier.logs.push(`${actorLabel}固有スキル「${effect.passiveLabel}」が機能。`);
   }
   if (mode === "np" && effect.npLabel && action.includes("np")) {
-    modifier.logs.push(`宝具「${effect.npLabel}」を解放。`);
+    modifier.logs.push(`${actorLabel}宝具「${effect.npLabel}」を解放。`);
   }
 
   return modifier;
@@ -690,8 +788,23 @@ function getCheckTags(action, enemy) {
   return [...new Set(tags)];
 }
 
-function getCheckTagModifier(state, checkTags) {
-  const skills = SERVANT_CHECK_TAG_SKILLS[state.servant.sourceName] || [];
+function getEnemyCheckTags(enemyAction, playerClassName) {
+  const tags = [];
+
+  if (enemyAction.type === "np") tags.push("宝具", "真名解放", "強襲");
+  if (enemyAction.type === "skill") tags.push("近接", "決戦");
+  if (enemyAction.type === "pursuit") tags.push("撤退", "機動");
+
+  if (playerClassName === "キャスター") tags.push("魔術防御");
+  if (playerClassName === "アサシン") tags.push("危機察知");
+  if (playerClassName === "ライダー") tags.push("機動");
+  if (playerClassName === "バーサーカー") tags.push("継戦");
+
+  return [...new Set(tags)];
+}
+
+function getCheckTagModifierByName(sourceName, checkTags, actorLabel) {
+  const skills = SERVANT_CHECK_TAG_SKILLS[sourceName] || [];
   if (!skills.length || !checkTags.length) return emptyModifier();
 
   const modifier = emptyModifier();
@@ -707,7 +820,7 @@ function getCheckTagModifier(state, checkTags) {
     modifier.backlashMaster += skill.passiveModifiers?.backlashMaster || 0;
     modifier.retreatBonus += skill.passiveModifiers?.retreatBonus || 0;
     modifier.exposureDelta += skill.passiveModifiers?.exposureDelta || 0;
-    modifier.logs.push(`判定タグ[${checkTags.join("/")}]により「${skill.name}」補正が発動。`);
+    modifier.logs.push(`${actorLabel}判定タグ[${checkTags.join("/")}]により「${skill.name}」補正が発動。`);
   });
 
   return modifier;
@@ -979,8 +1092,15 @@ function getIntelRule(level) {
   return ENEMY_INTEL_RULES.find((rule) => rule.level === level) || fallback;
 }
 
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
 function randomInt(min, max) {
   const lower = Math.ceil(min);
   const upper = Math.floor(max);
   return Math.floor(Math.random() * (upper - lower + 1)) + lower;
 }
+
+
+export const __internal = { summonServantForTest: summonServant };

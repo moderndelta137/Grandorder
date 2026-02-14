@@ -3,7 +3,7 @@
 最終更新: 現在スレッド  
 担当: Codex  
 参照仕様: `docs/GDD.md`, `docs/V1_PLAN.md`, `docs/SCENARIO_CHAPTER_PLAN.md`
-進捗メモ: A-1（クラス相性表データ作成）完了。A-2（戦闘計算式への統合）完了。A-3以降は未着手。
+進捗メモ: Step A完了。Step Bも完了（召喚重み分解・クリップ・1000回分布検証）。次はStep C。
 
 ---
 
@@ -107,7 +107,7 @@ Sprint 2は「戦闘核の品質底上げ」と「次スプリントに繰り越
 - `node --check src/scenario.js`
 - `node --check src/game.js`
 - `node scripts/generate_csv_data.mjs`
-- `node --input-type=module scripts/simulate_battle.mjs`
+- `node scripts/simulate_battle.mjs`
 - `node --input-type=module scripts/simulate_summon.mjs`
 
 ---
