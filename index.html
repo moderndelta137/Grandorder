@@ -14,6 +14,20 @@
         <p class="subtitle">Sprint 1〜4 実装版（召喚 / 夜戦 / 救済 / エンディング）</p>
       </header>
 
+      <aside class="utility-panel card">
+        <h2>ユーティリティ</h2>
+        <div class="save-controls">
+          <h3>セーブ / ロード</h3>
+          <div class="save-row"><span>SLOT 1</span><button id="save-slot-1" class="secondary" type="button">保存</button><button id="load-slot-1" class="secondary" type="button">読込</button></div>
+          <div class="save-row"><span>SLOT 2</span><button id="save-slot-2" class="secondary" type="button">保存</button><button id="load-slot-2" class="secondary" type="button">読込</button></div>
+          <div class="save-row"><span>SLOT 3</span><button id="save-slot-3" class="secondary" type="button">保存</button><button id="load-slot-3" class="secondary" type="button">読込</button></div>
+          <p id="save-status" class="save-status">保存データなし</p>
+        </div>
+        <button id="read-skip-toggle" class="secondary" type="button">既読スキップ: OFF（等速）</button>
+        <button id="autoplay-toggle" class="secondary" type="button">Debug自動プレイ: OFF</button>
+        <button id="restart-button" class="secondary" type="button">最初から</button>
+      </aside>
+
       <section class="layout">
         <aside class="status-panel card">
           <h2>戦況</h2>
@@ -23,14 +37,14 @@
             <div><dt>令呪残数</dt><dd id="status-command-spells">-</dd></div>
             <div><dt>サーヴァントクラス</dt><dd id="status-servant-class">-</dd></div>
             <div><dt>パラメータ</dt><dd id="status-servant-params" class="param-grid">-</dd></div>
-            <div><dt>真名秘匿</dt><dd id="status-true-name">-</dd></div>
-            <div><dt>看破進行</dt><dd id="status-exposure">-</dd></div>
+            <div><dt>真名情報</dt><dd id="status-identity">-</dd></div>
+            <div><dt>主要スキル</dt><dd id="status-servant-skills">-</dd></div>
+            <div><dt>宝具</dt><dd id="status-servant-np">-</dd></div>
           </dl>
           <details class="status-details">
             <summary>詳細モード</summary>
             <dl>
               <div><dt>日数</dt><dd id="status-day">-</dd></div>
-              <div><dt>フェーズ</dt><dd id="status-phase">-</dd></div>
               <div><dt>主人公ビルド</dt><dd id="status-master-build">-</dd></div>
               <div><dt>触媒</dt><dd id="status-catalyst">-</dd></div>
               <div><dt>残存敵陣営</dt><dd id="status-enemies">-</dd></div>
@@ -39,16 +53,6 @@
             </dl>
           </details>
           <button id="open-servant-sheet" type="button">サーヴァント詳細</button>
-          <div class="save-controls">
-            <h3>セーブ / ロード</h3>
-            <div class="save-row"><span>SLOT 1</span><button id="save-slot-1" class="secondary" type="button">保存</button><button id="load-slot-1" class="secondary" type="button">読込</button></div>
-            <div class="save-row"><span>SLOT 2</span><button id="save-slot-2" class="secondary" type="button">保存</button><button id="load-slot-2" class="secondary" type="button">読込</button></div>
-            <div class="save-row"><span>SLOT 3</span><button id="save-slot-3" class="secondary" type="button">保存</button><button id="load-slot-3" class="secondary" type="button">読込</button></div>
-            <p id="save-status" class="save-status">保存データなし</p>
-          </div>
-          <button id="read-skip-toggle" class="secondary" type="button">既読スキップ: OFF（等速）</button>
-          <button id="autoplay-toggle" class="secondary" type="button">Debug自動プレイ: OFF</button>
-          <button id="restart-button" class="secondary" type="button">最初から</button>
         </aside>
 
         <section class="main-column">
@@ -59,11 +63,13 @@
               <span id="scene-title" class="scene-title">-</span>
             </div>
             <article id="scene-text" class="scene-text"></article>
-            <section id="enemy-intel-panel" class="enemy-intel hidden">
-              <h3>敵情報（看破）</h3>
-              <pre id="enemy-intel-text">夜戦で敵情報が表示されます。</pre>
+            <section class="battle-area">
+              <section id="enemy-intel-panel" class="enemy-intel hidden">
+                <h3>敵情報（看破）</h3>
+                <pre id="enemy-intel-text">夜戦で敵情報が表示されます。</pre>
+              </section>
+              <div id="choices" class="choices"></div>
             </section>
-            <div id="choices" class="choices"></div>
           </section>
 
           <section class="log-panel card">

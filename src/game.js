@@ -3,7 +3,6 @@ import { ENEMY_INTEL_RULES } from "./data/generatedData.js";
 
 const dom = {
   day: document.querySelector("#status-day"),
-  phase: document.querySelector("#status-phase"),
   masterHp: document.querySelector("#status-master-hp"),
   masterMana: document.querySelector("#status-master-mana"),
   masterBuild: document.querySelector("#status-master-build"),
@@ -11,8 +10,9 @@ const dom = {
   servantClass: document.querySelector("#status-servant-class"),
   servantParams: document.querySelector("#status-servant-params"),
   catalyst: document.querySelector("#status-catalyst"),
-  trueName: document.querySelector("#status-true-name"),
-  exposure: document.querySelector("#status-exposure"),
+  identity: document.querySelector("#status-identity"),
+  servantSkills: document.querySelector("#status-servant-skills"),
+  servantNp: document.querySelector("#status-servant-np"),
   enemies: document.querySelector("#status-enemies"),
   rescue: document.querySelector("#status-rescue"),
   ending: document.querySelector("#status-ending"),
@@ -347,7 +347,6 @@ function renderParamGrid(params) {
 
 function renderStatus(state) {
   dom.day.textContent = `${state.day}日目`;
-  dom.phase.textContent = state.phase;
   dom.masterHp.innerHTML = renderMeter(state.master.hp, 100, "hp");
   dom.masterMana.innerHTML = renderMeter(state.master.mana, 100, "mana");
   dom.masterBuild.textContent = state.master.buildType || "未選択";
@@ -357,9 +356,18 @@ function renderStatus(state) {
   const p = state.servant.params;
   dom.servantParams.innerHTML = renderParamGrid(p);
 
+  const profile = SERVANT_PROFILES[state.servant.sourceName] || null;
+  const skillNames = profile?.skills?.slice(0, 2).map((skill) => skill.name).join(" / ") || "未判明";
+  dom.servantSkills.textContent = skillNames;
+  if (profile?.noblePhantasm?.name) {
+    dom.servantNp.textContent = `${profile.noblePhantasm.name} [${profile.noblePhantasm.rank || "?"}]`;
+  } else {
+    dom.servantNp.textContent = "未判明";
+  }
+
   dom.catalyst.textContent = state.summon.catalyst || "未選択";
-  dom.trueName.textContent = state.servant.trueNameRevealed ? "露見" : "秘匿";
-  dom.exposure.textContent = `${state.flags.trueNameExposure} / 3`;
+  const revealText = state.servant.trueNameRevealed ? "露見" : "秘匿";
+  dom.identity.textContent = `${revealText}（看破 ${state.flags.trueNameExposure} / 3）`;
   dom.enemies.textContent = String(state.factions.filter((f) => f.alive).length);
   dom.rescue.textContent = state.flags.rescueUsed ? "使用済み" : "未使用";
   dom.ending.textContent = state.flags.endingType || "未判定";
@@ -368,11 +376,14 @@ function renderStatus(state) {
 function renderScene(state, scene) {
   dom.scenePhase.textContent = scene.phase;
   dom.sceneTitle.textContent = scene.title;
-  if (dom.sceneDayPhase) dom.sceneDayPhase.textContent = `${state.day}日目`;
+  if (dom.sceneDayPhase) dom.sceneDayPhase.textContent = `${state.day}日目 / ${scene.phase}`;
   state.phase = scene.phase;
 
   const text = typeof scene.text === "function" ? scene.text(state) : scene.text;
   dom.sceneText.textContent = text;
+  dom.choices.classList.toggle("choices-grid", scene.phase === "夜");
+  const storyCard = dom.sceneText.closest(".story");
+  if (storyCard) storyCard.classList.toggle("combat-layout", scene.phase === "夜");
 
   dom.choices.innerHTML = "";
   scene.choices.forEach((choice) => {

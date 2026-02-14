@@ -35,6 +35,7 @@ body {
   max-width: 1280px;
   margin: 0 auto;
   padding: 16px 20px;
+  padding-right: clamp(20px, 37vw, 360px);
   height: 100dvh;
   display: flex;
   flex-direction: column;
@@ -55,6 +56,24 @@ h1 {
   margin: 8px 0 0;
   color: var(--text-subtle);
 }
+
+.utility-panel {
+  position: fixed;
+  top: 14px;
+  right: 14px;
+  width: min(320px, 34vw);
+  z-index: 20;
+  display: grid;
+  gap: 8px;
+  max-height: calc(100dvh - 28px);
+  overflow: auto;
+}
+
+.utility-panel h2 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
 
 .layout {
   display: grid;
@@ -173,6 +192,8 @@ h1 {
 }
 
 .param-bar-fill {
+  display: block;
+  min-width: 6px;
   height: 100%;
   background: linear-gradient(90deg, rgba(130,164,255,0.8), rgba(190,209,255,0.95));
 }
@@ -189,9 +210,7 @@ h1 {
 
 
 .save-controls {
-  margin-top: 14px;
-  border-top: 1px solid rgba(255,255,255,0.12);
-  padding-top: 10px;
+  margin-top: 0;
 }
 
 .save-controls h3 {
@@ -270,6 +289,35 @@ h1 {
   gap: 8px;
 }
 
+.battle-area {
+  display: grid;
+  gap: 8px;
+}
+
+.story.combat-layout .battle-area {
+  grid-template-columns: minmax(220px, 0.85fr) minmax(0, 1.15fr);
+  align-items: start;
+}
+
+.story.combat-layout .enemy-intel {
+  margin: 0;
+}
+
+.story.combat-layout .choices.choices-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.enemy-intel {
+  margin-top: 0;
+}
+
+.enemy-intel pre {
+  margin: 0;
+  max-height: 142px;
+  overflow: auto;
+}
+
 button {
   border: 1px solid transparent;
   border-radius: 10px;
@@ -326,6 +374,14 @@ button.secondary {
   .app {
     height: auto;
     min-height: 100dvh;
+    padding-right: 20px;
+  }
+
+  .utility-panel {
+    position: static;
+    width: auto;
+    max-height: none;
+    margin-bottom: 10px;
   }
 
   .layout {
@@ -334,6 +390,11 @@ button.secondary {
 
   .main-column {
     grid-template-rows: minmax(0, 1fr) 180px;
+  }
+
+  .story.combat-layout .battle-area,
+  .story.combat-layout .choices.choices-grid {
+    grid-template-columns: 1fr;
   }
 }
 
