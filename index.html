@@ -16,23 +16,28 @@
 
       <section class="layout">
         <aside class="status-panel card">
-          <h2>状態</h2>
-          <dl>
-            <div><dt>日数</dt><dd id="status-day">-</dd></div>
-            <div><dt>フェーズ</dt><dd id="status-phase">-</dd></div>
-            <div><dt>マスターHP</dt><dd id="status-master-hp">-</dd></div>
-            <div><dt>マスター魔力</dt><dd id="status-master-mana">-</dd></div>
-            <div><dt>主人公ビルド</dt><dd id="status-master-build">-</dd></div>
+          <h2>戦況</h2>
+          <dl class="status-primary">
+            <div class="status-meter"><dt>マスターHP</dt><dd id="status-master-hp">-</dd></div>
+            <div class="status-meter"><dt>マスター魔力</dt><dd id="status-master-mana">-</dd></div>
             <div><dt>令呪残数</dt><dd id="status-command-spells">-</dd></div>
-            <div><dt>触媒</dt><dd id="status-catalyst">-</dd></div>
             <div><dt>サーヴァントクラス</dt><dd id="status-servant-class">-</dd></div>
-            <div><dt>パラメータ</dt><dd id="status-servant-params">-</dd></div>
+            <div><dt>パラメータ</dt><dd id="status-servant-params" class="param-grid">-</dd></div>
             <div><dt>真名秘匿</dt><dd id="status-true-name">-</dd></div>
             <div><dt>看破進行</dt><dd id="status-exposure">-</dd></div>
-            <div><dt>残存敵陣営</dt><dd id="status-enemies">-</dd></div>
-            <div><dt>救済導線</dt><dd id="status-rescue">-</dd></div>
-            <div><dt>結末判定</dt><dd id="status-ending">-</dd></div>
           </dl>
+          <details class="status-details">
+            <summary>詳細モード</summary>
+            <dl>
+              <div><dt>日数</dt><dd id="status-day">-</dd></div>
+              <div><dt>フェーズ</dt><dd id="status-phase">-</dd></div>
+              <div><dt>主人公ビルド</dt><dd id="status-master-build">-</dd></div>
+              <div><dt>触媒</dt><dd id="status-catalyst">-</dd></div>
+              <div><dt>残存敵陣営</dt><dd id="status-enemies">-</dd></div>
+              <div><dt>救済導線</dt><dd id="status-rescue">-</dd></div>
+              <div><dt>結末判定</dt><dd id="status-ending">-</dd></div>
+            </dl>
+          </details>
           <button id="open-servant-sheet" type="button">サーヴァント詳細</button>
           <div class="save-controls">
             <h3>セーブ / ロード</h3>
@@ -46,23 +51,26 @@
           <button id="restart-button" class="secondary" type="button">最初から</button>
         </aside>
 
-        <section class="story card">
-          <div class="scene-meta">
-            <span id="scene-phase" class="badge">-</span>
-            <span id="scene-title" class="scene-title">-</span>
-          </div>
-          <article id="scene-text" class="scene-text"></article>
-          <section id="enemy-intel-panel" class="enemy-intel hidden">
-            <h3>敵情報（看破）</h3>
-            <pre id="enemy-intel-text">夜戦で敵情報が表示されます。</pre>
+        <section class="main-column">
+          <section class="story card">
+            <div class="scene-meta">
+              <span id="scene-phase" class="badge">-</span>
+              <span id="scene-dayphase" class="badge subtle">-</span>
+              <span id="scene-title" class="scene-title">-</span>
+            </div>
+            <article id="scene-text" class="scene-text"></article>
+            <section id="enemy-intel-panel" class="enemy-intel hidden">
+              <h3>敵情報（看破）</h3>
+              <pre id="enemy-intel-text">夜戦で敵情報が表示されます。</pre>
+            </section>
+            <div id="choices" class="choices"></div>
           </section>
-          <div id="choices" class="choices"></div>
-        </section>
 
-        <aside class="log-panel card">
-          <h2>進行ログ</h2>
-          <ul id="battle-log"></ul>
-        </aside>
+          <section class="log-panel card">
+            <h2>進行ログ</h2>
+            <ul id="battle-log"></ul>
+          </section>
+        </section>
       </section>
     </main>
 
