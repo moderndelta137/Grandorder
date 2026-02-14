@@ -1,4 +1,5 @@
 import { INITIAL_STATE, SCENES, SERVANT_PROFILES } from "./scenario.js";
+import { ENEMY_INTEL_RULES } from "./data/generatedData.js";
 
 const dom = {
   day: document.querySelector("#status-day"),
@@ -258,20 +259,21 @@ function renderEnemyIntel(state, sceneId) {
 function buildEnemyIntelText(enemy) {
   const intelLevel = enemy.intel?.level || 0;
   const statOrder = ["筋力", "耐久", "敏捷", "魔力", "幸運", "宝具"];
-  const statRevealCount = intelLevel >= 4 ? 6 : intelLevel >= 3 ? 5 : intelLevel >= 2 ? 4 : intelLevel >= 1 ? 2 : 0;
+  const rule = ENEMY_INTEL_RULES.find((r) => r.level === intelLevel) || ENEMY_INTEL_RULES[0] || { revealStatsCount: 0, revealSkillCount: 0, revealTrueName: 0, revealNpType: 0, revealNpName: 0 };
+  const statRevealCount = rule.revealStatsCount;
 
   const stats = statOrder
     .map((key, idx) => `${key}: ${idx < statRevealCount ? toParamRank(enemy.params?.[key] || 0) : "???"}`)
     .join(" / ");
 
-  const skillBaseCount = intelLevel >= 3 ? 2 : intelLevel >= 2 ? 1 : 0;
+  const skillBaseCount = rule.revealSkillCount;
   const seenSkills = enemy.intel?.seenSkills || [];
   const knownSkills = [...new Set([...(enemy.skills || []).slice(0, skillBaseCount), ...seenSkills])];
   const skillText = knownSkills.length ? knownSkills.join("、") : "???";
 
-  const npTypeKnown = intelLevel >= 3 || enemy.intel?.npSeen;
-  const npNameKnown = intelLevel >= 4 || enemy.intel?.npSeen;
-  const trueNameKnown = intelLevel >= 4;
+  const npTypeKnown = Boolean(rule.revealNpType) || enemy.intel?.npSeen;
+  const npNameKnown = Boolean(rule.revealNpName) || enemy.intel?.npSeen;
+  const trueNameKnown = Boolean(rule.revealTrueName);
 
   return [
     `対象クラス: ${enemy.className}`,

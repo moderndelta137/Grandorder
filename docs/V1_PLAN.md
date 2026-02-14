@@ -209,7 +209,7 @@
 ## 6. 技術構成（V1）
 
 - フロントエンド: HTML / CSS / JavaScript
-- データ: `src/scenario.js`（シナリオ・イベント定義）, `src/game.js`（状態/判定ロジック）
+- データ: `data/csv/*.csv`（基礎データ原本） + `src/data/generatedData.js`（CSV生成物） + `src/scenario.js`（シナリオ・判定） + `src/game.js`（状態/UIロジック）
 - 画面: `index.html` + `styles/main.css`
 - 配布: GitHub Pages
 
