@@ -7,7 +7,7 @@ const TARGET_RATE = {
   通常攻撃: { min: 0.45, max: 0.6 },
   宝具解放: { min: 0.65, max: 0.82 },
   令呪で強制突破: { min: 0.8, max: 0.95 },
-  撤退: { min: 0.55, max: 0.7 },
+  撤退: { min: 0.55, max: 0.75 },
 };
 
 function cloneState() {

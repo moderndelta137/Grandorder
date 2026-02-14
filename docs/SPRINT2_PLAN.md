@@ -3,7 +3,7 @@
 最終更新: 現在スレッド  
 担当: Codex  
 参照仕様: `docs/GDD.md`, `docs/V1_PLAN.md`, `docs/SCENARIO_CHAPTER_PLAN.md`
-進捗メモ: Step A完了。Step Bも完了（召喚重み分解・クリップ・1000回分布検証）。次はStep C。
+進捗メモ: Step A/B/C完了。Step Cでセーブ3枠・ロード互換チェック・既読スキップ（等速/高速）を実装。
 
 ---
 
