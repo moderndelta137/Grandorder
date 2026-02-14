@@ -1,4 +1,5 @@
 import { INITIAL_STATE, SCENES } from '../src/scenario.js';
+import { FSN_SERVANTS } from '../src/data/generatedData.js';
 
 const ACTION_LABELS = ['通常攻撃', '宝具解放', '令呪で強制突破', '撤退'];
 
@@ -28,11 +29,21 @@ function runChoice(state, sceneKey, label) {
   return next;
 }
 
+
+function forceBenchmarkServant(state) {
+  const benchmark = FSN_SERVANTS.find((s) => s.trueName === 'エミヤ') || FSN_SERVANTS[0];
+  state.servant.className = benchmark.className;
+  state.servant.sourceName = benchmark.trueName;
+  state.servant.params = structuredClone(benchmark.stats);
+  state.log.push(`回帰テスト固定: ${benchmark.trueName}（${benchmark.className}）で評価。`);
+}
+
 function setupToNightBattle(state) {
   runChoice(state, 'title', '主人公ビルドを決める');
   runChoice(state, 'buildSelect', '研究型（情報高）');
   runChoice(state, 'catalystSelect', '異国の魔導書断片を使用する');
   runChoice(state, 'summonResult', '第1章へ進む');
+  forceBenchmarkServant(state);
   runChoice(state, 'chapterIntro', '作戦会議を終えて行動開始');
   runChoice(state, 'dayAction', '先制配置（夜戦補正）');
 }

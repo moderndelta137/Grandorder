@@ -3,7 +3,7 @@
 最終更新: 現在スレッド  
 担当: Codex  
 参照仕様: `docs/GDD.md`, `docs/V1_PLAN.md`, `docs/SCENARIO_CHAPTER_PLAN.md`
-進捗メモ: A-1完了 / A-2完了 / A-3完了（回帰テスト + 勝率レンジ調整）。等倍条件で通常攻撃は約50%帯を目安に調整済み。
+進捗メモ: Step A完了。Step Bも完了（召喚重み分解・クリップ・1000回分布検証）。次はStep C。
 
 ---
 

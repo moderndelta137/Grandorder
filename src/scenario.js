@@ -32,9 +32,9 @@ const CLASS_POWER_WEIGHTS = {
 };
 
 const ACTION_POWER_BONUS = {
-  normal: 7,
+  normal: 5,
   np: 0,
-  command: 6,
+  command: 7,
   retreat: 0,
 };
 
@@ -176,7 +176,7 @@ export const INITIAL_STATE = {
     sourceName: null,
     npUsedThisBattle: false,
   },
-  summon: { catalyst: null, classShifted: false },
+  summon: { catalyst: null, classShifted: false, debugWeights: [] },
   battle: { lastResult: "none", tacticalAdvantage: 0, currentEnemyId: null, lastAction: null, lastActionWin: null },
   progress: { enemiesDefeated: 0, finalUnlocked: false, chapterIndex: 1, chapterIntroShown: 0 },
   flags: {
@@ -403,9 +403,10 @@ function applyMasterBuild(state, buildType) {
 
 function pickCatalyst(state, catalystName) {
   state.summon.catalyst = catalystName;
-  const picked = summonServant(catalystName, state.master.buildType);
+  const picked = summonServant(state, catalystName);
 
   state.summon.classShifted = picked.classShifted;
+  state.summon.debugWeights = picked.debugWeights || [];
   state.servant.className = picked.className;
   state.servant.trueName = "？？？";
   state.servant.trueNameRevealed = false;
@@ -434,21 +435,83 @@ function pickCatalyst(state, catalystName) {
   });
 
   state.log.push(`触媒「${catalystName}」で ${state.servant.className} を召喚。敵6陣営を確認。`);
+  if (state.summon.debugWeights.length) {
+    const top = state.summon.debugWeights.slice(0, 3).map((row) => `${row.trueName}:${row.total.toFixed(2)}`).join(" / ");
+    state.log.push(`召喚相性内訳（上位）: ${top}`);
+  }
 }
 
-function summonServant(catalystName, buildType) {
-  const weights = CATALYSTS[catalystName] || {};
-  const scored = FSN_SERVANTS.map((s) => {
-    const classKey = toClassKey(s.className);
-    const buildBonus = buildType === "血統型" && s.stats.魔力 >= 4 ? 1 : 0;
-    return { servant: s, score: (weights[classKey] || 1) + buildBonus + Math.random() * 1.2 };
-  }).sort((a, b) => b.score - a.score);
+function summonServant(state, catalystName) {
+  const scored = FSN_SERVANTS.map((servant) => {
+    const weights = calculateSummonWeight(state, servant, catalystName);
+    return { servant, ...weights };
+  }).sort((a, b) => b.total - a.total);
 
-  const picked = structuredClone(scored[0].servant);
+  const picked = weightedPick(scored);
   const classShifted = Math.random() < 0.35;
   if (classShifted && picked.altClasses.length > 0) picked.className = picked.altClasses[0];
   picked.classShifted = classShifted;
+  picked.debugWeights = scored.slice(0, 5).map((row) => ({
+    trueName: row.servant.trueName,
+    className: row.servant.className,
+    catalyst: Number(row.catalyst.toFixed(2)),
+    build: Number(row.build.toFixed(2)),
+    chapter: Number(row.chapter.toFixed(2)),
+    alliance: Number(row.alliance.toFixed(2)),
+    random: Number(row.random.toFixed(2)),
+    total: Number(row.total.toFixed(2)),
+  }));
   return picked;
+}
+
+function calculateSummonWeight(state, servant, catalystName) {
+  const classKey = toClassKey(servant.className);
+  const catalystWeights = CATALYSTS[catalystName] || {};
+  const catalyst = Number(catalystWeights[classKey] || 1);
+
+  const buildType = state.master.buildType;
+  let build = 0;
+  if (buildType === "血統型") {
+    build += servant.stats.魔力 >= 4 ? 1.8 : 0.4;
+    build += servant.stats.幸運 >= 4 ? 0.4 : 0;
+  } else if (buildType === "現場型") {
+    build += servant.stats.筋力 >= 4 ? 1.2 : 0.3;
+    build += servant.stats.耐久 >= 4 ? 1.2 : 0.3;
+    build += servant.stats.敏捷 >= 4 ? 0.7 : 0.2;
+  } else if (buildType === "研究型") {
+    build += servant.stats.魔力 >= 4 ? 1.3 : 0.3;
+    build += servant.stats.宝具 >= 4 ? 0.9 : 0.2;
+    build += servant.stats.敏捷 >= 4 ? 0.4 : 0;
+  }
+
+  const chapterIndex = state.progress?.chapterIndex || 1;
+  const chapter = chapterIndex >= 5
+    ? (servant.stats.幸運 >= 4 ? 0.6 : 0)
+    : (servant.stats.魔力 >= 4 ? 0.35 : 0.1);
+
+  const allianceState = state.flags?.allianceState || "none";
+  let alliance = 0;
+  if (allianceState === "allied") alliance = servant.stats.幸運 >= 4 ? 0.45 : 0.15;
+  if (allianceState === "betrayed") alliance = servant.stats.耐久 >= 4 ? 0.4 : 0.1;
+  if (allianceState === "ceasefire") alliance = servant.stats.敏捷 >= 4 ? 0.3 : 0.1;
+
+  const random = Math.random() * 0.9;
+  const unclipped = catalyst + build + chapter + alliance + random;
+  const total = clamp(unclipped, 1.25, 7.5);
+
+  return { catalyst, build, chapter, alliance, random, total };
+}
+
+function weightedPick(scoredRows) {
+  const total = scoredRows.reduce((sum, row) => sum + row.total, 0);
+  if (total <= 0) return structuredClone(scoredRows[0].servant);
+
+  let roll = Math.random() * total;
+  for (const row of scoredRows) {
+    roll -= row.total;
+    if (roll <= 0) return structuredClone(row.servant);
+  }
+  return structuredClone(scoredRows[scoredRows.length - 1].servant);
 }
 
 function resolveBattle(state, action) {
@@ -1029,8 +1092,15 @@ function getIntelRule(level) {
   return ENEMY_INTEL_RULES.find((rule) => rule.level === level) || fallback;
 }
 
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
 function randomInt(min, max) {
   const lower = Math.ceil(min);
   const upper = Math.floor(max);
   return Math.floor(Math.random() * (upper - lower + 1)) + lower;
 }
+
+
+export const __internal = { summonServantForTest: summonServant };
