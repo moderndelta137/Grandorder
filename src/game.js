@@ -99,14 +99,11 @@ function startAutoplay() {
   updateAutoplayUi();
 
   autoplayTimer = setInterval(() => {
-    const buttons = [...dom.choices.querySelectorAll("button")].filter((btn) => !btn.disabled);
-    if (!buttons.length) {
+    const stepped = runAutoplayStep();
+    if (!stepped) {
       stopAutoplay();
       return;
     }
-
-    const pick = buttons[Math.floor(Math.random() * buttons.length)];
-    pick.click();
 
     const state = store.getState();
     if (["endingJudge", "gameOver"].includes(currentSceneId) || state.flags.endingType) {
@@ -122,6 +119,23 @@ function stopAutoplay() {
     autoplayTimer = null;
   }
   updateAutoplayUi();
+}
+
+function runAutoplayStep() {
+  const scene = SCENES[currentSceneId];
+  if (!scene || !scene.choices?.length) return false;
+
+  const choice = scene.choices[Math.floor(Math.random() * scene.choices.length)];
+  store.update((draft) => {
+    if (choice.effect) choice.effect(draft);
+  });
+
+  currentSceneId = typeof choice.next === "function" ? choice.next(store.getState()) : choice.next;
+  if (currentSceneId === "title") {
+    store.reset();
+  }
+  render();
+  return true;
 }
 
 function updateAutoplayUi() {
