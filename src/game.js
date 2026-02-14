@@ -24,6 +24,7 @@ const dom = {
   choices: document.querySelector("#choices"),
   battleLog: document.querySelector("#battle-log"),
   restartButton: document.querySelector("#restart-button"),
+  autoplayToggle: document.querySelector("#autoplay-toggle"),
   openServantSheet: document.querySelector("#open-servant-sheet"),
   servantSheet: document.querySelector("#servant-sheet"),
   closeServantSheet: document.querySelector("#close-servant-sheet"),
@@ -44,8 +45,19 @@ let store = createStore(INITIAL_STATE);
 let currentSceneId = "title";
 let activeSheetTab = "overview";
 
+let autoplayTimer = null;
+let autoplayRunning = false;
+
+if (dom.autoplayToggle) {
+  dom.autoplayToggle.addEventListener("click", () => {
+    if (autoplayRunning) stopAutoplay();
+    else startAutoplay();
+  });
+}
+
 if (dom.restartButton) {
   dom.restartButton.addEventListener("click", () => {
+    stopAutoplay();
     store.reset();
     currentSceneId = "title";
     render();
@@ -78,29 +90,45 @@ dom.sheetTabs.forEach((tab) => {
   });
 });
 
-dom.openServantSheet.addEventListener("click", () => {
-  dom.servantSheet.classList.add("open");
-  dom.servantSheet.setAttribute("aria-hidden", "false");
-  renderServantSheet(store.getState());
-});
-
-dom.closeServantSheet.addEventListener("click", closeServantSheet);
-
-dom.servantSheet.addEventListener("click", (event) => {
-  const target = event.target;
-  if (target instanceof HTMLElement && target.dataset.closeSheet === "true") {
-    closeServantSheet();
-  }
-});
-
-dom.sheetTabs.forEach((tab) => {
-  tab.addEventListener("click", () => {
-    activeSheetTab = tab.dataset.tab || "overview";
-    updateSheetTabs();
-  });
-});
-
 render();
+
+
+function startAutoplay() {
+  if (autoplayRunning) return;
+  autoplayRunning = true;
+  updateAutoplayUi();
+
+  autoplayTimer = setInterval(() => {
+    const buttons = [...dom.choices.querySelectorAll("button")].filter((btn) => !btn.disabled);
+    if (!buttons.length) {
+      stopAutoplay();
+      return;
+    }
+
+    const pick = buttons[Math.floor(Math.random() * buttons.length)];
+    pick.click();
+
+    const state = store.getState();
+    if (["endingJudge", "gameOver"].includes(currentSceneId) || state.flags.endingType) {
+      stopAutoplay();
+    }
+  }, 120);
+}
+
+function stopAutoplay() {
+  autoplayRunning = false;
+  if (autoplayTimer) {
+    clearInterval(autoplayTimer);
+    autoplayTimer = null;
+  }
+  updateAutoplayUi();
+}
+
+function updateAutoplayUi() {
+  if (!dom.autoplayToggle) return;
+  dom.autoplayToggle.textContent = `Debug自動プレイ: ${autoplayRunning ? "ON" : "OFF"}`;
+  dom.autoplayToggle.classList.toggle("autoplay-running", autoplayRunning);
+}
 
 function createStore(initial) {
   let state = structuredClone(initial);
@@ -172,7 +200,8 @@ function renderScene(state, scene) {
       });
       currentSceneId = typeof choice.next === "function" ? choice.next(store.getState()) : choice.next;
       if (currentSceneId === "title") {
-        store.reset();
+        stopAutoplay();
+    store.reset();
       }
       render();
     });

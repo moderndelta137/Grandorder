@@ -412,3 +412,10 @@ button.secondary {
   font-family: "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
   color: #f7dfc3;
 }
+
+
+button.autoplay-running {
+  border-color: rgba(130, 255, 170, 0.55);
+  color: #d7ffe6;
+  box-shadow: 0 0 0 1px rgba(130, 255, 170, 0.25) inset;
+}
