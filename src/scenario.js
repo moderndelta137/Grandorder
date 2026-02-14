@@ -66,6 +66,122 @@ const SERVANT_COMBAT_EFFECTS = {
   },
 };
 
+export const SERVANT_PROFILES = {
+  "アルトリア・ペンドラゴン": {
+    alignment: "秩序・善",
+    classAbilities: [
+      { name: "対魔力", rank: "A", desc: "大半の現代魔術を大幅に軽減し、正面衝突に強い。" },
+      { name: "騎乗", rank: "B", desc: "移動戦・追撃で安定した戦術展開が可能。" },
+    ],
+    skills: [
+      { name: "直感A", desc: "戦場で最適解を掴み、攻防の判断精度が上がる。" },
+      { name: "魔力放出A", desc: "瞬間的に火力を引き上げ、強襲時の決定力を増す。" },
+    ],
+    noblePhantasm: {
+      name: "約束された勝利の剣",
+      rank: "A++",
+      desc: "高威力の対軍宝具。真名解放は戦局を一変させるが情報露見リスクを伴う。",
+    },
+  },
+  エミヤ: {
+    alignment: "中立・中庸",
+    classAbilities: [
+      { name: "対魔力", rank: "D", desc: "簡易的な魔術妨害に耐性を持つ。" },
+      { name: "単独行動", rank: "B", desc: "マスター支援が薄い局面でも行動を継続できる。" },
+    ],
+    skills: [
+      { name: "千里眼", desc: "敵挙動の先読みで被弾リスクを抑える。" },
+      { name: "心眼（真）", desc: "不利局面でも勝機を拾う防御的技量。" },
+    ],
+    noblePhantasm: {
+      name: "無限の剣製",
+      rank: "E〜A+",
+      desc: "投影兵装を展開して継続戦闘能力を高める固有結界型宝具。",
+    },
+  },
+  "クー・フーリン": {
+    alignment: "秩序・中庸",
+    classAbilities: [
+      { name: "対魔力", rank: "C", desc: "近代魔術を受け流しつつ前線維持が可能。" },
+      { name: "戦闘続行", rank: "A", desc: "致命傷級でも短時間戦闘継続する粘り強さを持つ。" },
+    ],
+    skills: [
+      { name: "ルーン魔術", desc: "状況に応じて攻守補助を付与する。" },
+      { name: "仕切り直し", desc: "不利局面の立て直しに長ける。" },
+    ],
+    noblePhantasm: {
+      name: "刺し穿つ死棘の槍",
+      rank: "B",
+      desc: "因果逆転の一撃。回避困難で終盤の切り札として機能する。",
+    },
+  },
+  "メドゥーサ": {
+    alignment: "混沌・善",
+    classAbilities: [
+      { name: "対魔力", rank: "B", desc: "高水準の魔術耐性で撤退戦にも強い。" },
+      { name: "騎乗", rank: "A+", desc: "機動戦・追撃・離脱を高精度で実行できる。" },
+    ],
+    skills: [
+      { name: "魔眼", desc: "視線制圧で敵の行動を鈍らせる。" },
+      { name: "怪力", desc: "近接戦での瞬間火力を強化する。" },
+    ],
+    noblePhantasm: {
+      name: "騎英の手綱",
+      rank: "A+",
+      desc: "機動力と突破力を兼ね備えた突撃宝具。敵陣を崩す能力が高い。",
+    },
+  },
+  "メディア": {
+    alignment: "中立・悪",
+    classAbilities: [
+      { name: "陣地作成", rank: "A", desc: "工房・神殿化により魔術性能を大幅に底上げする。" },
+      { name: "道具作成", rank: "A", desc: "戦術に応じた魔術礼装を素早く用意できる。" },
+    ],
+    skills: [
+      { name: "高速神言", desc: "詠唱短縮で魔力効率を大きく改善する。" },
+      { name: "金羊の皮", desc: "限定的な守護術式で被害を緩和する。" },
+    ],
+    noblePhantasm: {
+      name: "破戒すべき全ての符",
+      rank: "C",
+      desc: "契約・術式を断ち切る対魔術宝具。情報戦にも強く影響する。",
+    },
+  },
+  "佐々木小次郎": {
+    alignment: "中立・中庸",
+    classAbilities: [
+      { name: "気配遮断", rank: "C", desc: "一撃離脱と奇襲展開に適性を持つ。" },
+      { name: "宗和の心得", rank: "B", desc: "間合い管理に優れ、対一での安定度が高い。" },
+    ],
+    skills: [
+      { name: "心眼（偽）", desc: "経験則に基づく読みで敵の意図を外す。" },
+      { name: "透化", desc: "短時間の気配希薄化で初動を取りやすい。" },
+    ],
+    noblePhantasm: {
+      name: "燕返し",
+      rank: "C",
+      desc: "同時三連斬撃。近接域で高い決定力を持つ。",
+    },
+  },
+  "ヘラクレス": {
+    alignment: "混沌・狂",
+    classAbilities: [
+      { name: "狂化", rank: "B", desc: "理性と引き換えに圧倒的身体能力を獲得する。" },
+      { name: "神性", rank: "A", desc: "神話由来の高い存在強度を有する。" },
+    ],
+    skills: [
+      { name: "勇猛", desc: "威圧を無効化し、攻撃意思を維持する。" },
+      { name: "心眼（偽）", desc: "本能的な危機回避により生存力を高める。" },
+    ],
+    noblePhantasm: {
+      name: "射殺す百頭",
+      rank: "A",
+      desc: "多重攻撃型の対軍宝具。押し切り性能が非常に高い。",
+    },
+  },
+};
+
+
 export const INITIAL_STATE = {
   day: 1,
   phase: "導入",
