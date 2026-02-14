@@ -66,6 +66,37 @@ const SERVANT_COMBAT_EFFECTS = {
   },
 };
 
+const SERVANT_CHECK_TAG_SKILLS = {
+  "アルトリア・ペンドラゴン": [
+    { name: "直感A", checkTags: ["先制", "危機察知"], passiveModifiers: { bonus: 2 } },
+    { name: "対魔力A", checkTags: ["魔術防御"], passiveModifiers: { enemyPower: -1 } },
+  ],
+  エミヤ: [
+    { name: "千里眼", checkTags: ["情報戦", "先制"], passiveModifiers: { bonus: 1 } },
+    { name: "単独行動B", checkTags: ["継戦", "撤退"], passiveModifiers: { retreatBonus: 1 } },
+  ],
+  "クー・フーリン": [
+    { name: "戦闘続行A", checkTags: ["継戦", "近接"], passiveModifiers: { backlashMaster: -3 } },
+    { name: "ルーン", checkTags: ["魔術攻撃", "魔術防御"], passiveModifiers: { bonus: 1 } },
+  ],
+  "メドゥーサ": [
+    { name: "騎乗A+", checkTags: ["機動", "撤退"], passiveModifiers: { retreatBonus: 2 } },
+    { name: "魔眼", checkTags: ["制圧", "情報戦"], passiveModifiers: { enemyPower: -1 } },
+  ],
+  "メディア": [
+    { name: "高速神言", checkTags: ["魔術攻撃", "宝具"], passiveModifiers: { manaCost: -2 } },
+    { name: "陣地作成A", checkTags: ["工房", "継戦"], passiveModifiers: { bonus: 1 } },
+  ],
+  "佐々木小次郎": [
+    { name: "宗和の心得", checkTags: ["近接", "先制"], passiveModifiers: { bonus: 2 } },
+    { name: "気配遮断", checkTags: ["奇襲", "撤退"], passiveModifiers: { retreatBonus: 1, enemyPower: -1 } },
+  ],
+  "ヘラクレス": [
+    { name: "狂化B", checkTags: ["近接", "強襲"], passiveModifiers: { bonus: 2, backlashMaster: -2 } },
+    { name: "神性A", checkTags: ["継戦", "対魔術"], passiveModifiers: { enemyPower: -1 } },
+  ],
+};
+
 export const SERVANT_PROFILES = {
   "アルトリア・ペンドラゴン": {
     alignment: "秩序・善",
@@ -450,9 +481,11 @@ function runCheck(state, enemy, action) {
   const build = MASTER_BUILDS[state.master.buildType] || { 生存: 0, 情報: 0, 魔力: 0 };
   const base = state.servant.params.筋力 + state.servant.params.敏捷 + state.servant.params.耐久;
 
+  const checkTags = getCheckTags(action, enemy);
   const passiveMod = getServantCombatModifier(state, "passive", action);
   const npMod = action.includes("np") ? getServantCombatModifier(state, "np", action) : emptyModifier();
-  const mod = mergeModifiers(passiveMod, npMod);
+  const tagMod = getCheckTagModifier(state, checkTags);
+  const mod = mergeModifiers(mergeModifiers(passiveMod, npMod), tagMod);
 
   const enemyPower = classPower(enemy.className) + randomInt(1, 6) + (state.servant.trueNameRevealed ? 2 : 0) + mod.enemyPower;
 
@@ -555,6 +588,47 @@ function getServantCombatModifier(state, mode, action) {
   if (mode === "np" && effect.npLabel && action.includes("np")) {
     modifier.logs.push(`宝具「${effect.npLabel}」を解放。`);
   }
+
+  return modifier;
+}
+
+
+function getCheckTags(action, enemy) {
+  const tags = [];
+
+  if (action.includes("np")) tags.push("宝具", "真名解放", "強襲");
+  if (action.includes("command")) tags.push("令呪", "強襲");
+  if (action === "retreat") tags.push("撤退", "機動");
+  if (action.includes("normal")) tags.push("近接");
+  if (action.startsWith("final")) tags.push("決戦");
+
+  if (enemy.className === "キャスター") tags.push("魔術防御");
+  if (enemy.className === "アサシン") tags.push("危機察知");
+  if (enemy.className === "ライダー") tags.push("機動");
+  if (enemy.className === "バーサーカー") tags.push("継戦");
+
+  return [...new Set(tags)];
+}
+
+function getCheckTagModifier(state, checkTags) {
+  const skills = SERVANT_CHECK_TAG_SKILLS[state.servant.sourceName] || [];
+  if (!skills.length || !checkTags.length) return emptyModifier();
+
+  const modifier = emptyModifier();
+
+  skills.forEach((skill) => {
+    const hit = skill.checkTags?.some((tag) => checkTags.includes(tag));
+    if (!hit) return;
+
+    modifier.bonus += skill.passiveModifiers?.bonus || 0;
+    modifier.damage += skill.passiveModifiers?.damage || 0;
+    modifier.manaCost += skill.passiveModifiers?.manaCost || 0;
+    modifier.enemyPower += skill.passiveModifiers?.enemyPower || 0;
+    modifier.backlashMaster += skill.passiveModifiers?.backlashMaster || 0;
+    modifier.retreatBonus += skill.passiveModifiers?.retreatBonus || 0;
+    modifier.exposureDelta += skill.passiveModifiers?.exposureDelta || 0;
+    modifier.logs.push(`判定タグ[${checkTags.join("/")}]により「${skill.name}」補正が発動。`);
+  });
 
   return modifier;
 }
