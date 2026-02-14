@@ -180,3 +180,242 @@ button.secondary {
     min-height: 400px;
   }
 }
+
+
+.servant-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: none;
+}
+
+.servant-sheet.open {
+  display: block;
+}
+
+.sheet-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(8, 5, 3, 0.72);
+}
+
+.sheet-card {
+  position: relative;
+  margin: 4vh auto;
+  width: min(980px, 94vw);
+  max-height: 92vh;
+  overflow: auto;
+  padding: 18px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 192, 128, 0.35);
+  background:
+    radial-gradient(circle at 20% 15%, rgba(255, 193, 125, 0.18), transparent 30%),
+    linear-gradient(160deg, #4d2413 0%, #2d130d 55%, #1c0f0a 100%);
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.55);
+}
+
+.sheet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.sheet-header h2 {
+  margin: 0;
+  font-size: 2rem;
+  font-style: italic;
+  color: #ffe6c8;
+}
+
+.sheet-close {
+  background: transparent;
+  border: 1px solid rgba(255, 216, 180, 0.5);
+}
+
+.sheet-layout {
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  gap: 18px;
+}
+
+.sheet-nav {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+}
+
+.sheet-tab {
+  text-align: left;
+  padding: 10px 12px;
+  background: linear-gradient(90deg, rgba(118, 58, 30, 0.85), rgba(79, 37, 21, 0.7));
+  border: 1px solid rgba(255, 193, 140, 0.2);
+}
+
+.sheet-tab.active {
+  border-color: rgba(255, 230, 175, 0.6);
+  box-shadow: inset 0 0 0 1px rgba(255, 230, 175, 0.35);
+}
+
+.sheet-main {
+  border: 1px solid rgba(255, 210, 170, 0.25);
+  border-radius: 10px;
+  padding: 14px;
+  background: rgba(38, 18, 10, 0.5);
+}
+
+.sheet-classline {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.sheet-classline span {
+  letter-spacing: 0.08em;
+  color: #ffd9b0;
+}
+
+.sheet-classline strong {
+  font-size: 2.2rem;
+  color: #fff1e2;
+}
+
+.sheet-identity {
+  margin: 0 0 14px;
+  display: grid;
+  gap: 8px;
+}
+
+.sheet-identity div {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  border-bottom: 1px solid rgba(255, 201, 152, 0.2);
+  padding-bottom: 4px;
+}
+
+.sheet-identity dt {
+  color: #f6cfa6;
+}
+
+.sheet-identity dd {
+  margin: 0;
+  font-weight: 700;
+}
+
+.sheet-tab-panel {
+  display: none;
+}
+
+.sheet-tab-panel.active {
+  display: block;
+}
+
+.sheet-main h3 {
+  margin: 10px 0 8px;
+  color: #ffe6cd;
+}
+
+.sheet-stats {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.sheet-stat {
+  display: grid;
+  grid-template-columns: 56px 1fr 24px;
+  align-items: center;
+  gap: 10px;
+}
+
+.sheet-bar {
+  height: 11px;
+  border-radius: 999px;
+  background: rgba(108, 60, 35, 0.85);
+  border: 1px solid rgba(255, 210, 170, 0.3);
+  overflow: hidden;
+}
+
+.sheet-bar i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #ffbd79, #ffdca7);
+}
+
+.sheet-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.sheet-list li,
+.sheet-np {
+  border: 1px solid rgba(255, 212, 168, 0.3);
+  background: rgba(65, 29, 16, 0.5);
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.sheet-list h4,
+.sheet-np h4 {
+  margin: 0 0 4px;
+  color: #ffe7cf;
+}
+
+.sheet-list p,
+.sheet-np p {
+  margin: 0;
+  line-height: 1.55;
+  color: #f2d4b2;
+}
+
+@media (max-width: 840px) {
+  .sheet-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .sheet-nav {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .sheet-tab {
+    text-align: center;
+  }
+}
+
+
+.enemy-intel {
+  margin: 8px 0 18px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 189, 120, 0.35);
+  border-radius: 10px;
+  background: rgba(56, 25, 13, 0.5);
+}
+
+.enemy-intel.hidden {
+  display: none;
+}
+
+.enemy-intel h3 {
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+  color: #ffdcb5;
+}
+
+.enemy-intel pre {
+  margin: 0;
+  white-space: pre-wrap;
+  line-height: 1.6;
+  font-family: "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+  color: #f7dfc3;
+}
+
+
+button.autoplay-running {
+  border-color: rgba(130, 255, 170, 0.55);
+  color: #d7ffe6;
+  box-shadow: 0 0 0 1px rgba(130, 255, 170, 0.25) inset;
+}
