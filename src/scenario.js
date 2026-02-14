@@ -284,6 +284,7 @@ export const SCENES = {
           collectEnemyIntel(s, intelGain);
           s.master.mana = Math.min(100, s.master.mana + 6);
           s.battle.tacticalAdvantage = 0;
+          runNpcFactionPhase(s);
         },
         next: "nightBattle",
       },
@@ -293,6 +294,7 @@ export const SCENES = {
           s.master.mana = Math.min(100, s.master.mana + 18);
           s.battle.tacticalAdvantage = 0;
           s.log.push("工房を整備し魔力を回復。戦闘準備を優先した。");
+          runNpcFactionPhase(s);
         },
         next: "nightBattle",
       },
@@ -302,6 +304,7 @@ export const SCENES = {
           s.master.mana = Math.max(0, s.master.mana - 8);
           s.battle.tacticalAdvantage = 2;
           s.log.push("先制陣地を構築。夜戦に有利な位置を確保した。");
+          runNpcFactionPhase(s);
         },
         next: "nightBattle",
       },
@@ -730,6 +733,53 @@ function applyEnemyIntelFromBattle(state, enemy, result) {
       enemy.intel.npSeen = true;
       state.log.push(`敵宝具「${enemy.npName}」が観測され、情報が公開された。`);
     }
+  }
+}
+
+
+function runNpcFactionPhase(state) {
+  const alive = state.factions.filter((f) => f.alive);
+  if (alive.length <= 1) {
+    state.log.push("他陣営は動きを見せず、夜を待っている。",);
+    return;
+  }
+
+  const skirmishCount = Math.min(2, Math.max(1, Math.floor(Math.random() * 3)));
+
+  for (let i = 0; i < skirmishCount; i += 1) {
+    const actors = state.factions.filter((f) => f.alive);
+    if (actors.length <= 1) break;
+
+    const actor = actors[Math.floor(Math.random() * actors.length)];
+    const targets = actors.filter((f) => f.id !== actor.id);
+    const target = targets[Math.floor(Math.random() * targets.length)];
+    const roll = Math.random();
+
+    if (roll < 0.2) {
+      state.log.push(`他陣営: ${actor.className}陣営は潜伏を選択。戦闘は発生しなかった。`,);
+      continue;
+    }
+
+    if (roll < 0.35) {
+      actor.hp = Math.min(100, actor.hp + 8);
+      state.log.push(`他陣営: ${actor.className}陣営は同盟工作に成功し、戦力を立て直した。`,);
+      continue;
+    }
+
+    const damage = randomInt(16, 34);
+    target.hp -= damage;
+    state.log.push(`他陣営交戦: ${actor.className}陣営が ${target.className}陣営へ ${damage} ダメージ。`,);
+
+    if (target.hp <= 0) {
+      target.alive = false;
+      target.hp = 0;
+      if (state.battle.currentEnemyId === target.id) state.battle.currentEnemyId = null;
+      state.log.push(`他陣営結果: ${target.className}陣営が脱落。`,);
+    }
+  }
+
+  if (remainingEnemies(state) <= 3) {
+    state.progress.finalUnlocked = true;
   }
 }
 
