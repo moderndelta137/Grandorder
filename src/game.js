@@ -3,7 +3,6 @@ import { ENEMY_INTEL_RULES } from "./data/generatedData.js";
 
 const dom = {
   day: document.querySelector("#status-day"),
-  phase: document.querySelector("#status-phase"),
   masterHp: document.querySelector("#status-master-hp"),
   masterMana: document.querySelector("#status-master-mana"),
   masterBuild: document.querySelector("#status-master-build"),
@@ -11,13 +10,15 @@ const dom = {
   servantClass: document.querySelector("#status-servant-class"),
   servantParams: document.querySelector("#status-servant-params"),
   catalyst: document.querySelector("#status-catalyst"),
-  trueName: document.querySelector("#status-true-name"),
-  exposure: document.querySelector("#status-exposure"),
+  identity: document.querySelector("#status-identity"),
+  servantSkills: document.querySelector("#status-servant-skills"),
+  servantNp: document.querySelector("#status-servant-np"),
   enemies: document.querySelector("#status-enemies"),
   rescue: document.querySelector("#status-rescue"),
   ending: document.querySelector("#status-ending"),
   scenePhase: document.querySelector("#scene-phase"),
   sceneTitle: document.querySelector("#scene-title"),
+  sceneDayPhase: document.querySelector("#scene-dayphase"),
   sceneText: document.querySelector("#scene-text"),
   enemyIntelPanel: document.querySelector("#enemy-intel-panel"),
   enemyIntelText: document.querySelector("#enemy-intel-text"),
@@ -318,21 +319,55 @@ function render() {
   scheduleReadSkipIfNeeded();
 }
 
+function renderMeter(value, max, type) {
+  const safeMax = Math.max(1, max || 100);
+  const safeValue = floorClamp(Math.max(0, value));
+  const ratio = Math.max(0, Math.min(100, (safeValue / safeMax) * 100));
+  return `<div class="meter-row"><span>${safeValue} / ${safeMax}</span><span>${Math.round(ratio)}%</span></div><div class="meter-track"><div class="meter-fill ${type}" style="width:${ratio}%"></div></div>`;
+}
+
+function paramRank(value) {
+  if (value >= 5) return "A";
+  if (value >= 4) return "B";
+  if (value >= 3) return "C";
+  if (value >= 2) return "D";
+  return "E";
+}
+
+function renderParamGrid(params) {
+  const labels = ["筋力", "耐久", "敏捷", "魔力", "幸運", "宝具"];
+  return labels
+    .map((key) => {
+      const value = floorClamp(params[key] || 0);
+      const width = Math.max(8, Math.min(100, value * 20));
+      return `<div class="param-row"><span>${key}</span><span class="rank">${paramRank(value)}</span><span class="param-bar"><span class="param-bar-fill" style="width:${width}%"></span></span></div>`;
+    })
+    .join("");
+}
+
 function renderStatus(state) {
   dom.day.textContent = `${state.day}日目`;
-  dom.phase.textContent = state.phase;
-  dom.masterHp.textContent = floorClamp(state.master.hp);
-  dom.masterMana.textContent = floorClamp(state.master.mana);
+  dom.masterHp.innerHTML = renderMeter(state.master.hp, 100, "hp");
+  dom.masterMana.innerHTML = renderMeter(state.master.mana, 100, "mana");
   dom.masterBuild.textContent = state.master.buildType || "未選択";
   dom.commandSpells.textContent = `${state.master.commandSpells}画`;
 
   dom.servantClass.textContent = state.servant.className;
   const p = state.servant.params;
-  dom.servantParams.textContent = `${p.筋力}/${p.耐久}/${p.敏捷} | ${p.魔力}/${p.幸運}/${p.宝具}`;
+  dom.servantParams.innerHTML = renderParamGrid(p);
+
+  const profile = SERVANT_PROFILES[state.servant.sourceName] || null;
+  const skillNames = profile?.skills?.slice(0, 2).map((skill) => skill.name).join(" / ") || "未判明";
+  dom.servantSkills.textContent = skillNames;
+  if (profile?.noblePhantasm?.name) {
+    dom.servantNp.textContent = `${profile.noblePhantasm.name} [${profile.noblePhantasm.rank || "?"}]`;
+  } else {
+    dom.servantNp.textContent = "未判明";
+  }
 
   dom.catalyst.textContent = state.summon.catalyst || "未選択";
-  dom.trueName.textContent = state.servant.trueNameRevealed ? "露見" : "秘匿";
-  dom.exposure.textContent = `${state.flags.trueNameExposure} / 3`;
+  const revealText = state.servant.trueNameRevealed ? "露見" : "秘匿";
+  dom.identity.textContent = `${revealText}（看破 ${state.flags.trueNameExposure} / 3）`;
   dom.enemies.textContent = String(state.factions.filter((f) => f.alive).length);
   dom.rescue.textContent = state.flags.rescueUsed ? "使用済み" : "未使用";
   dom.ending.textContent = state.flags.endingType || "未判定";
@@ -341,10 +376,14 @@ function renderStatus(state) {
 function renderScene(state, scene) {
   dom.scenePhase.textContent = scene.phase;
   dom.sceneTitle.textContent = scene.title;
+  if (dom.sceneDayPhase) dom.sceneDayPhase.textContent = `${state.day}日目 / ${scene.phase}`;
   state.phase = scene.phase;
 
   const text = typeof scene.text === "function" ? scene.text(state) : scene.text;
   dom.sceneText.textContent = text;
+  dom.choices.classList.toggle("choices-grid", scene.phase === "夜");
+  const storyCard = dom.sceneText.closest(".story");
+  if (storyCard) storyCard.classList.toggle("combat-layout", scene.phase === "夜");
 
   dom.choices.innerHTML = "";
   scene.choices.forEach((choice) => {
@@ -371,6 +410,7 @@ function renderScene(state, scene) {
 }
 
 function renderLog(state) {
+  const nearBottom = dom.battleLog.scrollHeight - dom.battleLog.scrollTop - dom.battleLog.clientHeight < 24;
   dom.battleLog.innerHTML = "";
   state.log.slice(-24).forEach((entry) => {
     const li = document.createElement("li");
@@ -380,6 +420,9 @@ function renderLog(state) {
     }
     dom.battleLog.appendChild(li);
   });
+  if (nearBottom || dom.battleLog.scrollTop === 0) {
+    dom.battleLog.scrollTop = dom.battleLog.scrollHeight;
+  }
 }
 
 function closeServantSheet() {
