@@ -1,4 +1,5 @@
-import { INITIAL_STATE, SCENES } from "./scenario.js";
+import { INITIAL_STATE, SCENES, SERVANT_PROFILES } from "./scenario.js";
+import { ENEMY_INTEL_RULES } from "./data/generatedData.js";
 
 const dom = {
   day: document.querySelector("#status-day"),
@@ -18,21 +19,116 @@ const dom = {
   scenePhase: document.querySelector("#scene-phase"),
   sceneTitle: document.querySelector("#scene-title"),
   sceneText: document.querySelector("#scene-text"),
+  enemyIntelPanel: document.querySelector("#enemy-intel-panel"),
+  enemyIntelText: document.querySelector("#enemy-intel-text"),
   choices: document.querySelector("#choices"),
   battleLog: document.querySelector("#battle-log"),
   restartButton: document.querySelector("#restart-button"),
+  autoplayToggle: document.querySelector("#autoplay-toggle"),
+  openServantSheet: document.querySelector("#open-servant-sheet"),
+  servantSheet: document.querySelector("#servant-sheet"),
+  closeServantSheet: document.querySelector("#close-servant-sheet"),
+  sheetTabs: document.querySelectorAll(".sheet-tab"),
+  sheetClass: document.querySelector("#sheet-class"),
+  sheetMaster: document.querySelector("#sheet-master"),
+  sheetTrueName: document.querySelector("#sheet-true-name"),
+  sheetAlignment: document.querySelector("#sheet-alignment"),
+  sheetStats: document.querySelector("#sheet-stats"),
+  sheetClassAbilities: document.querySelector("#sheet-class-abilities"),
+  sheetSkills: document.querySelector("#sheet-skills"),
+  sheetNpName: document.querySelector("#sheet-np-name"),
+  sheetNpRank: document.querySelector("#sheet-np-rank"),
+  sheetNpDesc: document.querySelector("#sheet-np-desc"),
 };
 
 let store = createStore(INITIAL_STATE);
 let currentSceneId = "title";
+let activeSheetTab = "overview";
 
-dom.restartButton.addEventListener("click", () => {
-  store.reset();
-  currentSceneId = "title";
-  render();
+let autoplayTimer = null;
+let autoplayRunning = false;
+
+if (dom.autoplayToggle) {
+  dom.autoplayToggle.addEventListener("click", () => {
+    if (autoplayRunning) stopAutoplay();
+    else startAutoplay();
+  });
+}
+
+if (dom.restartButton) {
+  dom.restartButton.addEventListener("click", () => {
+    stopAutoplay();
+    store.reset();
+    currentSceneId = "title";
+    render();
+  });
+}
+
+if (dom.openServantSheet && dom.servantSheet) {
+  dom.openServantSheet.addEventListener("click", () => {
+    dom.servantSheet.classList.add("open");
+    dom.servantSheet.setAttribute("aria-hidden", "false");
+    renderServantSheet(store.getState());
+  });
+}
+
+if (dom.closeServantSheet) dom.closeServantSheet.addEventListener("click", closeServantSheet);
+
+if (dom.servantSheet) {
+  dom.servantSheet.addEventListener("click", (event) => {
+    const target = event.target;
+    if (target instanceof HTMLElement && target.dataset.closeSheet === "true") {
+      closeServantSheet();
+    }
+  });
+}
+
+dom.sheetTabs.forEach((tab) => {
+  tab.addEventListener("click", () => {
+    activeSheetTab = tab.dataset.tab || "overview";
+    updateSheetTabs();
+  });
 });
 
 render();
+
+
+function startAutoplay() {
+  if (autoplayRunning) return;
+  autoplayRunning = true;
+  updateAutoplayUi();
+
+  autoplayTimer = setInterval(() => {
+    const buttons = [...dom.choices.querySelectorAll("button")].filter((btn) => !btn.disabled);
+    if (!buttons.length) {
+      stopAutoplay();
+      return;
+    }
+
+    const pick = buttons[Math.floor(Math.random() * buttons.length)];
+    pick.click();
+
+    const state = store.getState();
+    if (["endingJudge", "gameOver"].includes(currentSceneId) || state.flags.endingType) {
+      stopAutoplay();
+    }
+  }, 120);
+}
+
+function stopAutoplay() {
+  autoplayRunning = false;
+  if (autoplayTimer) {
+    clearInterval(autoplayTimer);
+    autoplayTimer = null;
+  }
+  updateAutoplayUi();
+}
+
+function updateAutoplayUi() {
+  if (!dom.autoplayToggle) return;
+  dom.autoplayToggle.textContent = `Debug自動プレイ: ${autoplayRunning ? "ON" : "OFF"}`;
+  dom.autoplayToggle.classList.toggle("autoplay-running", autoplayRunning);
+}
 
 function createStore(initial) {
   let state = structuredClone(initial);
@@ -61,6 +157,8 @@ function render() {
   renderStatus(state);
   renderScene(state, scene);
   renderLog(state);
+  renderEnemyIntel(state, currentSceneId);
+  if (dom.servantSheet?.classList.contains("open")) renderServantSheet(state);
 }
 
 function renderStatus(state) {
@@ -102,7 +200,8 @@ function renderScene(state, scene) {
       });
       currentSceneId = typeof choice.next === "function" ? choice.next(store.getState()) : choice.next;
       if (currentSceneId === "title") {
-        store.reset();
+        stopAutoplay();
+    store.reset();
       }
       render();
     });
@@ -122,6 +221,128 @@ function renderLog(state) {
   });
 }
 
+function closeServantSheet() {
+  if (!dom.servantSheet) return;
+  dom.servantSheet.classList.remove("open");
+  dom.servantSheet.setAttribute("aria-hidden", "true");
+}
+
+function updateSheetTabs() {
+  if (!dom.sheetTabs.length) return;
+  dom.sheetTabs.forEach((tab) => {
+    const isActive = tab.dataset.tab === activeSheetTab;
+    tab.classList.toggle("active", isActive);
+  });
+
+  ["overview", "skills", "np"].forEach((tabName) => {
+    const panel = document.querySelector(`#sheet-tab-${tabName}`);
+    if (!panel) return;
+    panel.classList.toggle("active", tabName === activeSheetTab);
+  });
+}
+
+function renderServantSheet(state) {
+  if (!dom.sheetClass || !dom.sheetMaster || !dom.sheetTrueName || !dom.sheetAlignment || !dom.sheetStats || !dom.sheetClassAbilities || !dom.sheetSkills || !dom.sheetNpName || !dom.sheetNpRank || !dom.sheetNpDesc) return;
+  const profile = SERVANT_PROFILES[state.servant.sourceName] || null;
+  const p = state.servant.params;
+
+  dom.sheetClass.textContent = state.servant.className || "未契約";
+  dom.sheetMaster.textContent = state.master.name || "名無しの魔術師";
+  dom.sheetTrueName.textContent = state.servant.trueNameRevealed ? state.servant.sourceName || "不明" : "？？？（秘匿）";
+  dom.sheetAlignment.textContent = profile?.alignment || "不明";
+
+  const statLabels = ["筋力", "耐久", "敏捷", "魔力", "幸運", "宝具"];
+  dom.sheetStats.innerHTML = "";
+  statLabels.forEach((key) => {
+    const value = p[key] || 0;
+    const row = document.createElement("div");
+    row.className = "sheet-stat";
+    row.innerHTML = `<span>${key}</span><div class="sheet-bar"><i style="width:${Math.max(0, Math.min(100, value * 20))}%"></i></div><strong>${toParamRank(value)}</strong>`;
+    dom.sheetStats.appendChild(row);
+  });
+
+  dom.sheetClassAbilities.innerHTML = "";
+  (profile?.classAbilities || []).forEach((item) => {
+    const li = document.createElement("li");
+    li.innerHTML = `<h4>${item.name} : ${item.rank}</h4><p>${item.desc}</p>`;
+    dom.sheetClassAbilities.appendChild(li);
+  });
+  if (!dom.sheetClassAbilities.children.length) {
+    dom.sheetClassAbilities.innerHTML = "<li><p>契約成立後にクラス能力が表示されます。</p></li>";
+  }
+
+  dom.sheetSkills.innerHTML = "";
+  (profile?.skills || []).forEach((item) => {
+    const li = document.createElement("li");
+    li.innerHTML = `<h4>${item.name}</h4><p>${item.desc}</p>`;
+    dom.sheetSkills.appendChild(li);
+  });
+  if (!dom.sheetSkills.children.length) {
+    dom.sheetSkills.innerHTML = "<li><p>契約成立後に固有スキルが表示されます。</p></li>";
+  }
+
+  dom.sheetNpName.textContent = profile?.noblePhantasm?.name || "未確認";
+  dom.sheetNpRank.textContent = profile?.noblePhantasm?.rank ? `ランク: ${profile.noblePhantasm.rank}` : "ランク: -";
+  dom.sheetNpDesc.textContent = profile?.noblePhantasm?.desc || "契約成立後に宝具情報が表示されます。";
+
+  updateSheetTabs();
+}
+
+function toParamRank(value) {
+  const map = { 5: "A", 4: "B", 3: "C", 2: "D", 1: "E", 0: "-" };
+  return map[Math.max(0, Math.min(5, Math.floor(value)))] || "-";
+}
+
 function floorClamp(value) {
   return Math.max(0, Math.floor(value));
+}
+
+
+function renderEnemyIntel(state, sceneId) {
+  if (!dom.enemyIntelPanel || !dom.enemyIntelText) return;
+  const visibleScenes = new Set(["nightBattle", "finalBattle"]);
+  if (!visibleScenes.has(sceneId)) {
+    dom.enemyIntelPanel.classList.add("hidden");
+    return;
+  }
+
+  const enemy = state.factions.find((f) => f.id === state.battle.currentEnemyId && f.alive) || null;
+  if (!enemy) {
+    dom.enemyIntelPanel.classList.remove("hidden");
+    dom.enemyIntelText.textContent = "敵情報なし";
+    return;
+  }
+
+  dom.enemyIntelPanel.classList.remove("hidden");
+  dom.enemyIntelText.textContent = buildEnemyIntelText(enemy);
+}
+
+function buildEnemyIntelText(enemy) {
+  const intelLevel = enemy.intel?.level || 0;
+  const statOrder = ["筋力", "耐久", "敏捷", "魔力", "幸運", "宝具"];
+  const rule = ENEMY_INTEL_RULES.find((r) => r.level === intelLevel) || ENEMY_INTEL_RULES[0] || { revealStatsCount: 0, revealSkillCount: 0, revealTrueName: 0, revealNpType: 0, revealNpName: 0 };
+  const statRevealCount = rule.revealStatsCount;
+
+  const stats = statOrder
+    .map((key, idx) => `${key}: ${idx < statRevealCount ? toParamRank(enemy.params?.[key] || 0) : "???"}`)
+    .join(" / ");
+
+  const skillBaseCount = rule.revealSkillCount;
+  const seenSkills = enemy.intel?.seenSkills || [];
+  const knownSkills = [...new Set([...(enemy.skills || []).slice(0, skillBaseCount), ...seenSkills])];
+  const skillText = knownSkills.length ? knownSkills.join("、") : "???";
+
+  const npTypeKnown = Boolean(rule.revealNpType) || enemy.intel?.npSeen;
+  const npNameKnown = Boolean(rule.revealNpName) || enemy.intel?.npSeen;
+  const trueNameKnown = Boolean(rule.revealTrueName);
+
+  return [
+    `対象クラス: ${enemy.className}`,
+    `真名: ${trueNameKnown ? enemy.trueName : "???"}`,
+    `ステータス: ${stats}`,
+    `確認スキル: ${skillText}`,
+    `宝具種別: ${npTypeKnown ? enemy.npType : "???"}`,
+    `宝具名: ${npNameKnown ? enemy.npName : "???"}`,
+    `看破Lv: ${intelLevel} / 4`,
+  ].join("\n");
 }
