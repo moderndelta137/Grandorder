@@ -1,7 +1,7 @@
 # 聖杯戦争ADV RPG ゲームデザインドキュメント（GDD）
 
 > 本書は本プロジェクトの**唯一の正規仕様（Single Source of Truth）**とする。  
-> 既存の `docs/V1_PLAN.md`、`docs/SERVANT_STATUS_SKILL_DESIGN.md`、`docs/Wiki/聖杯戦争_世界観融合ゲームデザイン案.md` を統合し、今後の開発・保守は本書を参照して実施する。
+> `docs/V1_PLAN.md` および過去の設計草案の内容は本書へ統合済み。今後の開発・保守は本書のみを参照する。
 
 ---
 
@@ -216,7 +216,15 @@
 
 ### 8.2 ランク体系
 - `E / D / C / B / A / A+ / A++ / EX`
-- 内部値: `1..8`
+- 内部値マッピング:
+  - `E=1`
+  - `D=2`
+  - `C=3`
+  - `B=4`
+  - `A=5`
+  - `A+=6`
+  - `A++=7`
+  - `EX=8`
 
 ### 8.3 判定式（共通）
 - `判定値 = 基礎値 + スキル補正 + 状況補正 + 乱数(1-6)`
@@ -226,10 +234,23 @@
 - 保有スキル（3〜5）
 - 宝具（1〜2）
 
-### 8.5 タグ連動
+### 8.5 スキルデータ最小スキーマ
+- 各スキルに以下の要素を持たせる:
+  - `name`
+  - `rank`
+  - `description`
+  - `checkTags`
+  - `passiveModifiers`
+- 宝具には以下を追加する:
+  - `releaseCondition`（真名開放条件）
+  - `usesPerBattle`
+  - `targetType`
+  - `multiplier`
+
+### 8.6 タグ連動
 - `checkTags` と判定カテゴリ一致で補正発動
 
-### 8.6 真名露見ペナルティ
+### 8.7 真名露見ペナルティ
 - 防御系判定 -1
 - 宝具初見ボーナス無効
 
@@ -285,8 +306,13 @@ state = {
   },
   servant: {
     className: "セイバー",
+    masterName: "主人公",
     trueName: "？？？",
     trueNameRevealed: false,
+    gender: "女性",
+    heightCm: 154,
+    weightKg: 42,
+    alignment: { axis1: "秩序", axis2: "善" },
     params: {
       筋力: "B", 耐久: "C", 敏捷: "B", 魔力: "B", 幸運: "C", 宝具: "A"
     },
@@ -368,7 +394,4 @@ state = {
 ## 16. 参照元ドキュメント
 
 - `docs/Wiki/サーヴァント.md`
-- `docs/SERVANT_STATUS_SKILL_DESIGN.md`
-- `docs/Wiki/聖杯戦争_世界観融合ゲームデザイン案.md`
 - `docs/V1_PLAN.md`
-
