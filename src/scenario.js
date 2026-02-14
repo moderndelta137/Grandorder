@@ -260,17 +260,44 @@ export const SCENES = {
 
   chapter1_main_001: {
     phase: "章本文",
-    title: "第1章 本文: 契約直後の夜",
-    text: `【本文挿入口】第1章-必須シーン1。
-契約直後の緊張、初動方針、街への視線を描写する。
-（Sprint3で本文へ置換予定）`,
+    title: "第1章 本文: 契約の温度",
+    text: (s) => `召喚陣の残光が床に薄く残る。工房の窓越しに見える街は静かで、まだ誰も今夜の始まりを知らない。
+あなたの手の甲では令呪がかすかに熱を持ち、対面した${s.servant.className}は一歩だけ距離を測るように視線を向けた。
+
+「確認しよう、マスター。君はこの戦いで何を守る」
+
+勝利だけを求めれば判断は速い。だが被害を抑えるなら、遠回りと交渉を引き受ける覚悟が要る。
+契約直後の今こそ、指揮の形を決める必要があった。`,
     choices: [
       {
-        label: "次へ",
+        label: "対等契約で進む（信頼優先）",
         effect: (s) => {
           s.flags.chapterContentShown = s.flags.chapterContentShown || {};
           s.flags.chapterContentShown["1_001"] = true;
-          s.log.push("章本文プレースホルダ: chapter1_main_001 を通過。");
+          s.flags.idealPoints += 1;
+          s.master.mana = Math.max(0, s.master.mana - 4);
+          s.log.push("契約方針: 対等契約を選択。理想点+1、初動コストで魔力-4。");
+        },
+        next: "chapter1_main_002",
+      },
+      {
+        label: "指揮重視で進む（統制優先）",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["1_001"] = true;
+          s.battle.tacticalAdvantage = Math.max(s.battle.tacticalAdvantage || 0, 1);
+          s.log.push("契約方針: 指揮重視を選択。夜戦の戦術優位を確保。");
+        },
+        next: "chapter1_main_002",
+      },
+      {
+        label: "成果重視で進む（短期決着優先）",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["1_001"] = true;
+          s.master.mana = Math.min(100, s.master.mana + 6);
+          s.flags.civilianDamage += 1;
+          s.log.push("契約方針: 成果重視を選択。魔力+6、強引な準備で一般被害+1。");
         },
         next: "chapter1_main_002",
       },
@@ -278,17 +305,34 @@ export const SCENES = {
   },
   chapter1_main_002: {
     phase: "章本文",
-    title: "第1章 本文: 初接触の予兆",
-    text: `【本文挿入口】第1章-必須シーン2。
-敵影の気配、真名秘匿の価値、夜戦前の判断を描写する。
-（Sprint3で本文へ置換予定）`,
+    title: "第1章 本文: 初夜戦前、灯りの外",
+    text: `街灯の切れ目で、結界に触れたような微かな歪みが走る。敵はまだ姿を見せない。
+だが、気配だけでわかる。こちらの召喚成立を嗅ぎつけた陣営が、試し合いの距離まで近づいている。
+
+「真名を隠せるうちは、こちらが主導権を取れる」
+サーヴァントの声は低い。戦うなら今夜、退くなら今夜だ。
+
+工房の地図には避難経路、橋、封鎖しやすい路地。あなたは視線を巡らせ、最初の夜戦で何を優先するかを選ぶ。`,
     choices: [
       {
-        label: "日中行動へ",
+        label: "被害回避を優先して索敵する",
         effect: (s) => {
           s.flags.chapterContentShown = s.flags.chapterContentShown || {};
           s.flags.chapterContentShown["1_002"] = true;
-          s.log.push("章本文プレースホルダ: chapter1_main_002 を通過。");
+          s.flags.idealPoints += 1;
+          s.battle.tacticalAdvantage = Math.max(s.battle.tacticalAdvantage || 0, 1);
+          s.log.push("初夜戦方針: 被害回避を優先。理想点+1、索敵により戦術優位+1。");
+        },
+        next: "dayAction",
+      },
+      {
+        label: "短期決着を狙い、切り札の準備を進める",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["1_002"] = true;
+          s.master.mana = Math.min(100, s.master.mana + 8);
+          s.flags.trueNameExposure = Math.min(3, s.flags.trueNameExposure + 1);
+          s.log.push("初夜戦方針: 短期決着を選択。魔力+8、準備過程で情報露見+1。");
         },
         next: "dayAction",
       },
