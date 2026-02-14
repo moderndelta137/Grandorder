@@ -44,10 +44,38 @@ let store = createStore(INITIAL_STATE);
 let currentSceneId = "title";
 let activeSheetTab = "overview";
 
-dom.restartButton.addEventListener("click", () => {
-  store.reset();
-  currentSceneId = "title";
-  render();
+if (dom.restartButton) {
+  dom.restartButton.addEventListener("click", () => {
+    store.reset();
+    currentSceneId = "title";
+    render();
+  });
+}
+
+if (dom.openServantSheet && dom.servantSheet) {
+  dom.openServantSheet.addEventListener("click", () => {
+    dom.servantSheet.classList.add("open");
+    dom.servantSheet.setAttribute("aria-hidden", "false");
+    renderServantSheet(store.getState());
+  });
+}
+
+if (dom.closeServantSheet) dom.closeServantSheet.addEventListener("click", closeServantSheet);
+
+if (dom.servantSheet) {
+  dom.servantSheet.addEventListener("click", (event) => {
+    const target = event.target;
+    if (target instanceof HTMLElement && target.dataset.closeSheet === "true") {
+      closeServantSheet();
+    }
+  });
+}
+
+dom.sheetTabs.forEach((tab) => {
+  tab.addEventListener("click", () => {
+    activeSheetTab = tab.dataset.tab || "overview";
+    updateSheetTabs();
+  });
 });
 
 dom.openServantSheet.addEventListener("click", () => {
@@ -102,7 +130,7 @@ function render() {
   renderScene(state, scene);
   renderLog(state);
   renderEnemyIntel(state, currentSceneId);
-  if (dom.servantSheet.classList.contains("open")) renderServantSheet(state);
+  if (dom.servantSheet?.classList.contains("open")) renderServantSheet(state);
 }
 
 function renderStatus(state) {
@@ -165,11 +193,13 @@ function renderLog(state) {
 }
 
 function closeServantSheet() {
+  if (!dom.servantSheet) return;
   dom.servantSheet.classList.remove("open");
   dom.servantSheet.setAttribute("aria-hidden", "true");
 }
 
 function updateSheetTabs() {
+  if (!dom.sheetTabs.length) return;
   dom.sheetTabs.forEach((tab) => {
     const isActive = tab.dataset.tab === activeSheetTab;
     tab.classList.toggle("active", isActive);
@@ -183,6 +213,7 @@ function updateSheetTabs() {
 }
 
 function renderServantSheet(state) {
+  if (!dom.sheetClass || !dom.sheetMaster || !dom.sheetTrueName || !dom.sheetAlignment || !dom.sheetStats || !dom.sheetClassAbilities || !dom.sheetSkills || !dom.sheetNpName || !dom.sheetNpRank || !dom.sheetNpDesc) return;
   const profile = SERVANT_PROFILES[state.servant.sourceName] || null;
   const p = state.servant.params;
 
@@ -239,6 +270,7 @@ function floorClamp(value) {
 
 
 function renderEnemyIntel(state, sceneId) {
+  if (!dom.enemyIntelPanel || !dom.enemyIntelText) return;
   const visibleScenes = new Set(["nightBattle", "finalBattle"]);
   if (!visibleScenes.has(sceneId)) {
     dom.enemyIntelPanel.classList.add("hidden");
