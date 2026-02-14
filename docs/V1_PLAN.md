@@ -2,6 +2,10 @@
 
 本書は `docs/GDD.md` の実現に向けた、**具体的な機能実装順序と開発スプリント計画**を定義する。
 
+章本文の具体設計は `docs/SCENARIO_CHAPTER_PLAN.md` を参照。
+章本文シーン命名規約は `docs/SCENE_NAMING_RULE.md` を参照。
+Sprint 2の具体タスクは `docs/SPRINT2_PLAN.md` を参照。
+
 ---
 
 ## 1. V1ゴール（今回確定）

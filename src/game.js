@@ -25,6 +25,14 @@ const dom = {
   battleLog: document.querySelector("#battle-log"),
   restartButton: document.querySelector("#restart-button"),
   autoplayToggle: document.querySelector("#autoplay-toggle"),
+  readSkipToggle: document.querySelector("#read-skip-toggle"),
+  saveStatus: document.querySelector("#save-status"),
+  saveSlot1: document.querySelector("#save-slot-1"),
+  saveSlot2: document.querySelector("#save-slot-2"),
+  saveSlot3: document.querySelector("#save-slot-3"),
+  loadSlot1: document.querySelector("#load-slot-1"),
+  loadSlot2: document.querySelector("#load-slot-2"),
+  loadSlot3: document.querySelector("#load-slot-3"),
   openServantSheet: document.querySelector("#open-servant-sheet"),
   servantSheet: document.querySelector("#servant-sheet"),
   closeServantSheet: document.querySelector("#close-servant-sheet"),
@@ -41,12 +49,22 @@ const dom = {
   sheetNpDesc: document.querySelector("#sheet-np-desc"),
 };
 
+const SAVE_VERSION = 1;
+const SAVE_KEY_PREFIX = "grandorder_save_slot_";
+
 let store = createStore(INITIAL_STATE);
 let currentSceneId = "title";
 let activeSheetTab = "overview";
+let readSkipMode = "off";
+let readSkipTimer = null;
 
 let autoplayTimer = null;
 let autoplayRunning = false;
+
+store.update((draft) => {
+  draft.flags = draft.flags || {};
+  draft.flags.readScenes = draft.flags.readScenes || {};
+});
 
 if (dom.autoplayToggle) {
   dom.autoplayToggle.addEventListener("click", () => {
@@ -55,9 +73,26 @@ if (dom.autoplayToggle) {
   });
 }
 
+
+if (dom.readSkipToggle) {
+  dom.readSkipToggle.addEventListener("click", () => {
+    readSkipMode = readSkipMode === "off" ? "normal" : readSkipMode === "normal" ? "fast" : "off";
+    updateReadSkipUi();
+    scheduleReadSkipIfNeeded();
+  });
+}
+
+[1, 2, 3].forEach((slot) => {
+  const saveBtn = dom[`saveSlot${slot}`];
+  const loadBtn = dom[`loadSlot${slot}`];
+  if (saveBtn) saveBtn.addEventListener("click", () => saveToSlot(slot));
+  if (loadBtn) loadBtn.addEventListener("click", () => loadFromSlot(slot));
+});
+
 if (dom.restartButton) {
   dom.restartButton.addEventListener("click", () => {
     stopAutoplay();
+    clearReadSkipTimer();
     store.reset();
     currentSceneId = "title";
     render();
@@ -91,6 +126,8 @@ dom.sheetTabs.forEach((tab) => {
 });
 
 render();
+updateReadSkipUi();
+refreshSaveStatus();
 
 
 function startAutoplay() {
@@ -144,6 +181,109 @@ function updateAutoplayUi() {
   dom.autoplayToggle.classList.toggle("autoplay-running", autoplayRunning);
 }
 
+
+function clearReadSkipTimer() {
+  if (readSkipTimer) {
+    clearTimeout(readSkipTimer);
+    readSkipTimer = null;
+  }
+}
+
+function updateReadSkipUi() {
+  if (!dom.readSkipToggle) return;
+  if (readSkipMode === "off") dom.readSkipToggle.textContent = "既読スキップ: OFF（等速）";
+  if (readSkipMode === "normal") dom.readSkipToggle.textContent = "既読スキップ: ON（等速）";
+  if (readSkipMode === "fast") dom.readSkipToggle.textContent = "既読スキップ: ON（高速）";
+}
+
+function scheduleReadSkipIfNeeded() {
+  clearReadSkipTimer();
+  if (readSkipMode === "off") return;
+  const state = store.getState();
+  const scene = SCENES[currentSceneId];
+  if (!scene || !scene.choices?.length) return;
+  if (scene.choices.length !== 1) return;
+
+  const readScenes = state.flags.readScenes || {};
+  if (!readScenes[currentSceneId]) return;
+
+  const delay = readSkipMode === "fast" ? 80 : 320;
+  readSkipTimer = setTimeout(() => {
+    const btn = dom.choices.querySelector("button");
+    if (btn) btn.click();
+  }, delay);
+}
+
+function formatSaveState(payload) {
+  if (!payload) return "空";
+  return `Day${payload.state.day} / ${payload.sceneId} / 令呪${payload.state.master.commandSpells}画`;
+}
+
+function refreshSaveStatus(message) {
+  if (!dom.saveStatus) return;
+  if (message) {
+    dom.saveStatus.textContent = message;
+    return;
+  }
+  const summaries = [1, 2, 3].map((slot) => {
+    const raw = localStorage.getItem(`${SAVE_KEY_PREFIX}${slot}`);
+    if (!raw) return `S${slot}:空`;
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed.version !== SAVE_VERSION) return `S${slot}:旧ver`;
+      return `S${slot}:保存済`;
+    } catch {
+      return `S${slot}:破損`;
+    }
+  });
+  dom.saveStatus.textContent = summaries.join(" / ");
+}
+
+function saveToSlot(slot) {
+  const payload = {
+    version: SAVE_VERSION,
+    savedAt: new Date().toISOString(),
+    sceneId: currentSceneId,
+    readSkipMode,
+    state: structuredClone(store.getState()),
+  };
+  localStorage.setItem(`${SAVE_KEY_PREFIX}${slot}`, JSON.stringify(payload));
+  refreshSaveStatus(`SLOT ${slot} に保存: ${formatSaveState(payload)}`);
+}
+
+function loadFromSlot(slot) {
+  const raw = localStorage.getItem(`${SAVE_KEY_PREFIX}${slot}`);
+  if (!raw) {
+    refreshSaveStatus(`SLOT ${slot} は空です。`);
+    return;
+  }
+
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    refreshSaveStatus(`SLOT ${slot} のデータが破損しています。`);
+    return;
+  }
+
+  if (parsed.version !== SAVE_VERSION) {
+    refreshSaveStatus(`SLOT ${slot} は互換外データです（ver ${parsed.version ?? "?"}）。`);
+    return;
+  }
+
+  store = createStore(INITIAL_STATE);
+  store.update((draft) => {
+    Object.assign(draft, structuredClone(parsed.state));
+    draft.flags = draft.flags || {};
+    draft.flags.readScenes = draft.flags.readScenes || {};
+  });
+  currentSceneId = parsed.sceneId || "title";
+  readSkipMode = parsed.readSkipMode || "off";
+  updateReadSkipUi();
+  render();
+  refreshSaveStatus(`SLOT ${slot} から読込: ${formatSaveState(parsed)}`);
+}
+
 function createStore(initial) {
   let state = structuredClone(initial);
   return {
@@ -153,6 +293,8 @@ function createStore(initial) {
     },
     reset() {
       state = structuredClone(initial);
+      state.flags = state.flags || {};
+      state.flags.readScenes = {};
     },
   };
 }
@@ -173,6 +315,7 @@ function render() {
   renderLog(state);
   renderEnemyIntel(state, currentSceneId);
   if (dom.servantSheet?.classList.contains("open")) renderServantSheet(state);
+  scheduleReadSkipIfNeeded();
 }
 
 function renderStatus(state) {
@@ -209,13 +352,17 @@ function renderScene(state, scene) {
     button.type = "button";
     button.textContent = choice.label;
     button.addEventListener("click", () => {
+      clearReadSkipTimer();
+      const prevSceneId = currentSceneId;
       store.update((draft) => {
+        draft.flags.readScenes = draft.flags.readScenes || {};
+        draft.flags.readScenes[prevSceneId] = true;
         if (choice.effect) choice.effect(draft);
       });
       currentSceneId = typeof choice.next === "function" ? choice.next(store.getState()) : choice.next;
       if (currentSceneId === "title") {
         stopAutoplay();
-    store.reset();
+        store.reset();
       }
       render();
     });

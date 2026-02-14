@@ -88,6 +88,43 @@ h1 {
   font-weight: 600;
 }
 
+
+.save-controls {
+  margin-top: 14px;
+  border-top: 1px solid rgba(255,255,255,0.12);
+  padding-top: 10px;
+}
+
+.save-controls h3 {
+  margin: 0 0 8px;
+  font-size: 0.9rem;
+  color: var(--text-subtle);
+}
+
+.save-row {
+  display: grid;
+  grid-template-columns: 56px 1fr 1fr;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.save-row span {
+  font-size: 0.75rem;
+  color: var(--text-subtle);
+}
+
+.save-row .secondary {
+  margin-top: 0;
+  padding: 8px 6px;
+}
+
+.save-status {
+  margin: 8px 0 0;
+  font-size: 0.75rem;
+  color: var(--text-subtle);
+}
+
 .story {
   min-height: 520px;
   display: flex;

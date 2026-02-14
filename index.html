@@ -34,6 +34,14 @@
             <div><dt>結末判定</dt><dd id="status-ending">-</dd></div>
           </dl>
           <button id="open-servant-sheet" type="button">サーヴァント詳細</button>
+          <div class="save-controls">
+            <h3>セーブ / ロード</h3>
+            <div class="save-row"><span>SLOT 1</span><button id="save-slot-1" class="secondary" type="button">保存</button><button id="load-slot-1" class="secondary" type="button">読込</button></div>
+            <div class="save-row"><span>SLOT 2</span><button id="save-slot-2" class="secondary" type="button">保存</button><button id="load-slot-2" class="secondary" type="button">読込</button></div>
+            <div class="save-row"><span>SLOT 3</span><button id="save-slot-3" class="secondary" type="button">保存</button><button id="load-slot-3" class="secondary" type="button">読込</button></div>
+            <p id="save-status" class="save-status">保存データなし</p>
+          </div>
+          <button id="read-skip-toggle" class="secondary" type="button">既読スキップ: OFF（等速）</button>
           <button id="autoplay-toggle" class="secondary" type="button">Debug自動プレイ: OFF</button>
           <button id="restart-button" class="secondary" type="button">最初から</button>
         </aside>
