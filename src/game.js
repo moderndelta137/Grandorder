@@ -78,6 +78,28 @@ dom.sheetTabs.forEach((tab) => {
   });
 });
 
+dom.openServantSheet.addEventListener("click", () => {
+  dom.servantSheet.classList.add("open");
+  dom.servantSheet.setAttribute("aria-hidden", "false");
+  renderServantSheet(store.getState());
+});
+
+dom.closeServantSheet.addEventListener("click", closeServantSheet);
+
+dom.servantSheet.addEventListener("click", (event) => {
+  const target = event.target;
+  if (target instanceof HTMLElement && target.dataset.closeSheet === "true") {
+    closeServantSheet();
+  }
+});
+
+dom.sheetTabs.forEach((tab) => {
+  tab.addEventListener("click", () => {
+    activeSheetTab = tab.dataset.tab || "overview";
+    updateSheetTabs();
+  });
+});
+
 render();
 
 function createStore(initial) {
