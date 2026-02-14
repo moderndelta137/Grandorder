@@ -21,6 +21,51 @@ const FSN_SERVANTS = [
   { trueName: "ヘラクレス", className: "バーサーカー", altClasses: ["アーチャー"], stats: { 筋力: 5, 耐久: 5, 敏捷: 3, 魔力: 2, 幸運: 2, 宝具: 5 } },
 ];
 
+const SERVANT_COMBAT_EFFECTS = {
+  "アルトリア・ペンドラゴン": {
+    passiveLabel: "直感A",
+    npLabel: "約束された勝利の剣",
+    passive: { bonus: 2, damage: 8 },
+    np: { damage: 20 },
+  },
+  エミヤ: {
+    passiveLabel: "千里眼",
+    npLabel: "無限の剣製",
+    passive: { bonus: 1, enemyPower: -1 },
+    np: { bonus: 1, exposureDelta: -1 },
+  },
+  "クー・フーリン": {
+    passiveLabel: "戦闘続行",
+    npLabel: "刺し穿つ死棘の槍",
+    passive: { lowHpBonus: 3, backlashMaster: -4 },
+    np: { bonus: 2 },
+  },
+  "メドゥーサ": {
+    passiveLabel: "騎乗・機動戦",
+    npLabel: "騎英の手綱",
+    passive: { retreatBonus: 3, manaCost: -1 },
+    np: { damage: 10 },
+  },
+  "メディア": {
+    passiveLabel: "高速神言",
+    npLabel: "破戒すべき全ての符",
+    passive: { manaCost: -3 },
+    np: { bonus: 2, damage: 5, exposureDelta: -1 },
+  },
+  "佐々木小次郎": {
+    passiveLabel: "宗和の心得",
+    npLabel: "燕返し",
+    passive: { enemyPower: -2 },
+    np: { bonus: 3 },
+  },
+  "ヘラクレス": {
+    passiveLabel: "狂化・耐久",
+    npLabel: "射殺す百頭",
+    passive: { bonus: 1, backlashMaster: -6 },
+    np: { damage: 15, backlashMaster: -4 },
+  },
+};
+
 export const INITIAL_STATE = {
   day: 1,
   phase: "導入",
@@ -235,7 +280,13 @@ function resolveBattle(state, action) {
     return;
   }
 
-  const result = runCheck(state, enemy, action);
+  let actionForCheck = action;
+  if (action.includes("np") && state.servant.npUsedThisBattle) {
+    state.log.push("宝具はこの戦闘では既に解放済み。通常攻撃に切り替え。",);
+    actionForCheck = action.startsWith("final") ? "final_normal" : "normal";
+  }
+
+  const result = runCheck(state, enemy, actionForCheck);
   if (result.win) {
     enemy.hp -= result.damage;
     state.log.push(`${enemy.className} へ ${result.damage} ダメージ。`);
@@ -250,8 +301,9 @@ function resolveBattle(state, action) {
     state.log.push(`反撃で被害。マスターHP -${result.backlashMaster}。`);
   }
 
-  if (action.includes("np")) {
-    state.flags.trueNameExposure = Math.min(3, state.flags.trueNameExposure + 1);
+  if (actionForCheck.includes("np")) {
+    const exposureDelta = Math.max(0, 1 + (result.exposureDelta || 0));
+    state.flags.trueNameExposure = Math.min(3, state.flags.trueNameExposure + exposureDelta);
     state.servant.npUsedThisBattle = true;
     if (state.flags.trueNameExposure >= 3) {
       state.servant.trueNameRevealed = true;
@@ -259,11 +311,11 @@ function resolveBattle(state, action) {
     }
   }
 
-  if (action.startsWith("command") || action === "final_command") {
+  if (actionForCheck.startsWith("command") || actionForCheck === "final_command") {
     state.master.commandSpells = Math.max(0, state.master.commandSpells - 1);
   }
 
-  if (action === "command_escape") {
+  if (actionForCheck === "command_escape") {
     state.log.push("令呪で強制離脱。敵撃破はできなかった。",);
   }
 
@@ -281,24 +333,38 @@ function resolveBattle(state, action) {
 function runCheck(state, enemy, action) {
   const build = MASTER_BUILDS[state.master.buildType] || { 生存: 0, 情報: 0, 魔力: 0 };
   const base = state.servant.params.筋力 + state.servant.params.敏捷 + state.servant.params.耐久;
-  const enemyPower = classPower(enemy.className) + randomInt(1, 6) + (state.servant.trueNameRevealed ? 2 : 0);
 
-  let bonus = state.battle.tacticalAdvantage + (build.生存 || 0);
-  let manaCost = 8;
-  let damage = 35;
+  const passiveMod = getServantCombatModifier(state, "passive", action);
+  const npMod = action.includes("np") ? getServantCombatModifier(state, "np", action) : emptyModifier();
+  const mod = mergeModifiers(passiveMod, npMod);
+
+  const enemyPower = classPower(enemy.className) + randomInt(1, 6) + (state.servant.trueNameRevealed ? 2 : 0) + mod.enemyPower;
+
+  let bonus = state.battle.tacticalAdvantage + (build.生存 || 0) + mod.bonus;
+  let manaCost = Math.max(1, 8 + mod.manaCost);
+  let damage = 35 + mod.damage;
+
+  mod.logs.forEach((entry) => state.log.push(entry));
 
   if (action === "retreat") {
-    const retreatSuccess = base + randomInt(1, 6) + bonus >= enemyPower;
+    const retreatSuccess = base + randomInt(1, 6) + bonus + mod.retreatBonus >= enemyPower;
     if (retreatSuccess) {
-      return { win: true, damage: 0, manaCost: 4, backlashMaster: 0, backlashMana: 0 };
+      return { win: true, damage: 0, manaCost: 4, backlashMaster: 0, backlashMana: 0, exposureDelta: mod.exposureDelta };
     }
-    return { win: false, damage: 0, manaCost: 5, backlashMaster: 14, backlashMana: 10 };
+    return {
+      win: false,
+      damage: 0,
+      manaCost: 5,
+      backlashMaster: Math.max(0, 14 + mod.backlashMaster),
+      backlashMana: 10,
+      exposureDelta: mod.exposureDelta,
+    };
   }
 
   if (action.includes("np")) {
     bonus += state.servant.params.宝具 + 2;
-    damage = 60;
-    manaCost = 20;
+    damage += 25;
+    manaCost = Math.max(1, 20 + mod.manaCost);
   }
 
   if (action.includes("command")) {
@@ -306,8 +372,8 @@ function runCheck(state, enemy, action) {
       state.log.push("令呪が尽きている。通常行動として処理。",);
     } else {
       bonus += 4;
-      damage = 75;
-      manaCost = 12;
+      damage += 15;
+      manaCost = Math.max(1, 12 + mod.manaCost);
     }
   }
 
@@ -318,8 +384,63 @@ function runCheck(state, enemy, action) {
     damage += 10;
   }
 
-  if (win) return { win: true, damage, manaCost, backlashMaster: 0, backlashMana: 0 };
-  return { win: false, damage: 0, manaCost, backlashMaster: randomInt(12, 22), backlashMana: randomInt(8, 16) };
+  if (win) return { win: true, damage, manaCost, backlashMaster: 0, backlashMana: 0, exposureDelta: mod.exposureDelta };
+  return {
+    win: false,
+    damage: 0,
+    manaCost,
+    backlashMaster: Math.max(0, randomInt(12, 22) + mod.backlashMaster),
+    backlashMana: randomInt(8, 16),
+    exposureDelta: mod.exposureDelta,
+  };
+}
+
+function emptyModifier() {
+  return { bonus: 0, damage: 0, manaCost: 0, enemyPower: 0, backlashMaster: 0, retreatBonus: 0, exposureDelta: 0, logs: [] };
+}
+
+function mergeModifiers(a, b) {
+  return {
+    bonus: a.bonus + b.bonus,
+    damage: a.damage + b.damage,
+    manaCost: a.manaCost + b.manaCost,
+    enemyPower: a.enemyPower + b.enemyPower,
+    backlashMaster: a.backlashMaster + b.backlashMaster,
+    retreatBonus: a.retreatBonus + b.retreatBonus,
+    exposureDelta: a.exposureDelta + b.exposureDelta,
+    logs: [...a.logs, ...b.logs],
+  };
+}
+
+function getServantCombatModifier(state, mode, action) {
+  const sourceName = state.servant.sourceName;
+  const effect = SERVANT_COMBAT_EFFECTS[sourceName];
+  if (!effect) return emptyModifier();
+
+  const base = mode === "np" ? effect.np : effect.passive;
+  if (!base) return emptyModifier();
+
+  const modifier = {
+    bonus: base.bonus || 0,
+    damage: base.damage || 0,
+    manaCost: base.manaCost || 0,
+    enemyPower: base.enemyPower || 0,
+    backlashMaster: base.backlashMaster || 0,
+    retreatBonus: base.retreatBonus || 0,
+    exposureDelta: base.exposureDelta || 0,
+    logs: [],
+  };
+
+  if (base.lowHpBonus && state.master.hp <= 50) modifier.bonus += base.lowHpBonus;
+
+  if (mode === "passive" && effect.passiveLabel) {
+    modifier.logs.push(`固有スキル「${effect.passiveLabel}」が機能。`);
+  }
+  if (mode === "np" && effect.npLabel && action.includes("np")) {
+    modifier.logs.push(`宝具「${effect.npLabel}」を解放。`);
+  }
+
+  return modifier;
 }
 
 function postBattleScene(state) {
