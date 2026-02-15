@@ -114,6 +114,8 @@ Sprint 3では、Sprint 2で整備した章進行の受け皿に対して、**6�
 - `node scripts/generate_csv_data.mjs`
 - `node scripts/simulate_battle.mjs`
 - `node scripts/simulate_summon.mjs`
+- `node scripts/count_story_chars.mjs`
+- `node scripts/validate_sprint3_d2.mjs`
 
 ※本文投入後は、手動で以下を最低1周確認:
 - 第1章開始〜第2章同盟分岐まで
