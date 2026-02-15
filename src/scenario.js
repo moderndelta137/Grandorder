@@ -554,6 +554,144 @@ ${s.servant.className}は短く息を吐いた。
       },
     ],
   },
+  chapter5_main_001: {
+    phase: "章本文",
+    title: "第5章 本文: 裏切りと露見",
+    text: `終盤の会談は短い。言葉より沈黙の方が多かった。
+
+「同盟はここで解く」
+「理由は？」
+「聖杯前で背中は預けられない」
+「……正直で助かる」
+
+戦況図の上で、関係は一度切り替わる。敵味方の線を引き直す作業に、情は残らない。
+私は露見した情報と、まだ伏せられる情報を分けて書き込んだ。`,
+    choices: [
+      {
+        label: "同盟を維持して最終局面へ",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["5_001"] = true;
+          s.flags.allianceState = "allied";
+          s.flags.idealPoints += 1;
+          s.log.push("第5章方針: 同盟維持を選択。理想点+1。",);
+        },
+        next: "chapter5_main_002",
+      },
+      {
+        label: "先制裏切りで主導権を取る",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["5_001"] = true;
+          s.flags.allianceState = "betrayed";
+          s.battle.tacticalAdvantage = Math.max(s.battle.tacticalAdvantage || 0, 2);
+          s.flags.civilianDamage += 1;
+          s.log.push("第5章方針: 先制裏切りを選択。戦術優位+2、一般被害+1。",);
+        },
+        next: "chapter5_main_002",
+      },
+    ],
+  },
+  chapter5_main_002: {
+    phase: "章本文",
+    title: "第5章 本文: 決戦構図の固定",
+    text: `ここから先はやり直せない。誰を守り、誰を切るかは、もう結果でしか語られない。
+
+「真名露見は避けられない局面が来る」
+「なら、露見しても勝てる形を先に作る」
+
+私は記録を閉じる。最終夜までに残るのは、令呪と覚悟だけだ。`,
+    choices: [
+      {
+        label: "最終章へ進む",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["5_002"] = true;
+          s.flags.trueNameExposure = Math.min(3, s.flags.trueNameExposure + 1);
+          s.log.push("第5章本文を通過。最終章へ。",);
+        },
+        next: "dayAction",
+      },
+    ],
+  },
+  chapter6_main_001: {
+    phase: "章本文",
+    title: "第6章 本文: 聖杯前夜",
+    text: `最終夜。街は静まり、足音だけがやけに響く。
+
+「ここで勝っても、願いが正しいとは限らない」
+「だから選ぶ。勝ち方だけじゃなく、願いの形まで」
+
+私は残りの令呪を数える。看破情報、関係、被害。
+積み上げたものすべてが、最後の選択に重なっていた。`,
+    choices: [
+      {
+        label: "理想を優先する準備を固める",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["6_001"] = true;
+          s.flags.idealPoints += 1;
+          s.log.push("第6章準備: 理想優先を選択。理想点+1。",);
+        },
+        next: "chapter6_main_002",
+      },
+      {
+        label: "勝利優先で現実策を取る",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["6_001"] = true;
+          s.battle.tacticalAdvantage = Math.max(s.battle.tacticalAdvantage || 0, 2);
+          s.flags.idealPoints = Math.max(0, s.flags.idealPoints - 1);
+          s.log.push("第6章準備: 現実策を選択。戦術優位+2、理想点-1。",);
+        },
+        next: "chapter6_main_002",
+      },
+    ],
+  },
+  chapter6_main_002: {
+    phase: "章本文",
+    title: "第6章 本文: 願いの選択",
+    text: `聖杯は手の届く場所にある。だが、何を願うかで結末の意味は反転する。
+
+「理想を貫くか」
+「現実に折り合うか」
+「それとも、願いそのものを拒むか」
+
+私は一歩踏み出す。ここから先は、誰のせいにもできない。`,
+    choices: [
+      {
+        label: "理想を貫く",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["6_002"] = true;
+          s.flags.idealPoints += 1;
+          s.log.push("願い方針: 理想維持を選択。",);
+        },
+        next: "finalBattle",
+      },
+      {
+        label: "現実と妥協する",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["6_002"] = true;
+          s.flags.civilianDamage += 1;
+          s.log.push("願い方針: 現実妥協を選択。一般被害+1。",);
+        },
+        next: "finalBattle",
+      },
+      {
+        label: "願いを拒絶する",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["6_002"] = true;
+          s.master.commandSpells = Math.max(0, s.master.commandSpells - 1);
+          s.flags.idealPoints += 1;
+          s.log.push("願い方針: 願い拒絶を選択。令呪-1、理想点+1。",);
+        },
+        next: "finalBattle",
+      },
+    ],
+  },
   dayAction: {
     phase: "昼",
     title: "日中行動",
@@ -673,10 +811,10 @@ ${s.servant.className}は短く息を吐いた。
     title: "聖杯の審判",
     text: (s) => {
       decideEnding(s);
-      if (s.flags.endingType === "正統勝利") return "あなたは代償を最小限に抑え、聖杯に到達した。正統勝利。";
-      if (s.flags.endingType === "代償勝利") return "勝利は掴んだ。だが、救済の代償と露見した情報は未来に禍根を残す。";
-      if (s.flags.endingType === "救済生還") return "聖杯には届かなかったが、生き延びた。次の戦いに備える救済生還。";
-      return "契約は潰え、すべては夜に沈んだ。破滅エンド。";
+      if (s.flags.endingType === "正統勝利") return "あなたは被害を抑え、理想を曲げずに聖杯へ到達した。\n失ったものは少なくない。それでも、守れた命の重さが勝利を正統にした。";
+      if (s.flags.endingType === "代償勝利") return "勝利には届いた。だが代償は重い。\n露見した情報、破れた契約、残された傷は、次の時代まで尾を引く。";
+      if (s.flags.endingType === "救済生還") return "聖杯には届かなかった。けれど生き延びた。\n救済の代償を背負いながら、あなたは次の夜へ備える。";
+      return "契約は潰え、願いは届かず、すべては夜に沈んだ。\nここで終わる。だが、この敗北の記録だけは消えない。";
     },
     choices: [{ label: "もう一度挑む", next: "title" }],
   },
@@ -1319,6 +1457,8 @@ function getChapterContentEntryScene(state) {
   if (chapter === 2 && !shown["2_001"]) return "chapter2_main_001";
   if (chapter === 3 && !shown["3_001"]) return "chapter3_main_001";
   if (chapter === 4 && !shown["4_001"]) return "chapter4_main_001";
+  if (chapter === 5 && !shown["5_001"]) return "chapter5_main_001";
+  if (chapter === 6 && !shown["6_001"]) return "chapter6_main_001";
   return null;
 }
 
