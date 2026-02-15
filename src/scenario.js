@@ -260,17 +260,49 @@ export const SCENES = {
 
   chapter1_main_001: {
     phase: "章本文",
-    title: "第1章 本文: 契約直後の夜",
-    text: `【本文挿入口】第1章-必須シーン1。
-契約直後の緊張、初動方針、街への視線を描写する。
-（Sprint3で本文へ置換予定）`,
+    title: "第1章 本文: 契約の温度",
+    text: (s) => `召喚陣の残光が床に残る。静かな工房で、私だけが呼吸を浅くしていた。
+
+「契約は成立した。次は方針だ」
+「先に聞かせて。あなたは、私を道具として使われたい？」
+「使われるかどうかは、君の命令次第だ」
+「……そう。なら私も隠さない。勝つだけなら近道はある。でも、被害を見捨てたくない」
+「遅い道だ」
+「わかってる。遅くても、守れる数を増やしたい」
+
+${s.servant.className}は短く息を吐いた。
+「確認した。なら、今夜はその理想に付き合う」
+私は令呪の熱を握り込む。窓の向こうで夜気が鳴り、時計の針だけがやけに大きく聞こえた。ここで決めるのは命令じゃない。覚悟そのものだ。`,
     choices: [
       {
-        label: "次へ",
+        label: "対等契約で進む（信頼優先）",
         effect: (s) => {
           s.flags.chapterContentShown = s.flags.chapterContentShown || {};
           s.flags.chapterContentShown["1_001"] = true;
-          s.log.push("章本文プレースホルダ: chapter1_main_001 を通過。");
+          s.flags.idealPoints += 1;
+          s.master.mana = Math.max(0, s.master.mana - 4);
+          s.log.push("契約方針: 対等契約を選択。理想点+1、初動コストで魔力-4。");
+        },
+        next: "chapter1_main_002",
+      },
+      {
+        label: "指揮重視で進む（統制優先）",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["1_001"] = true;
+          s.battle.tacticalAdvantage = Math.max(s.battle.tacticalAdvantage || 0, 1);
+          s.log.push("契約方針: 指揮重視を選択。夜戦の戦術優位を確保。");
+        },
+        next: "chapter1_main_002",
+      },
+      {
+        label: "成果重視で進む（短期決着優先）",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["1_001"] = true;
+          s.master.mana = Math.min(100, s.master.mana + 6);
+          s.flags.civilianDamage += 1;
+          s.log.push("契約方針: 成果重視を選択。魔力+6、強引な準備で一般被害+1。");
         },
         next: "chapter1_main_002",
       },
@@ -278,17 +310,39 @@ export const SCENES = {
   },
   chapter1_main_002: {
     phase: "章本文",
-    title: "第1章 本文: 初接触の予兆",
-    text: `【本文挿入口】第1章-必須シーン2。
-敵影の気配、真名秘匿の価値、夜戦前の判断を描写する。
-（Sprint3で本文へ置換予定）`,
+    title: "第1章 本文: 初夜戦前、灯りの外",
+    text: `窓の外で結界が軋む。敵影は見えないのに、喉の奥だけが先に乾いた。
+
+「来る。距離は近い」
+「数は？」
+「まだ読めない。だが、こちらを試す気だ」
+「真名を隠している間に主導権を握る。被害を出さない形は作れる？」
+「作れる。だが時間は食う」
+「時間を買うための強襲も必要かもしれない」
+「その時は、君が決めろ。今夜は最初の夜戦だ」
+
+机上の地図には避難路、橋、封鎖できる路地。
+私は指先で進路をなぞり、被害抑制か短期決着か、先に切る札を決める。`,
     choices: [
       {
-        label: "日中行動へ",
+        label: "被害回避を優先して索敵する",
         effect: (s) => {
           s.flags.chapterContentShown = s.flags.chapterContentShown || {};
           s.flags.chapterContentShown["1_002"] = true;
-          s.log.push("章本文プレースホルダ: chapter1_main_002 を通過。");
+          s.flags.idealPoints += 1;
+          s.battle.tacticalAdvantage = Math.max(s.battle.tacticalAdvantage || 0, 1);
+          s.log.push("初夜戦方針: 被害回避を優先。理想点+1、索敵により戦術優位+1。");
+        },
+        next: "dayAction",
+      },
+      {
+        label: "短期決着を狙い、切り札の準備を進める",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["1_002"] = true;
+          s.master.mana = Math.min(100, s.master.mana + 8);
+          s.flags.trueNameExposure = Math.min(3, s.flags.trueNameExposure + 1);
+          s.log.push("初夜戦方針: 短期決着を選択。魔力+8、準備過程で情報露見+1。");
         },
         next: "dayAction",
       },
@@ -297,16 +351,38 @@ export const SCENES = {
   chapter2_main_001: {
     phase: "章本文",
     title: "第2章 本文: 偽装と同盟の駆け引き",
-    text: `【本文挿入口】第2章-必須シーン1。
-学園/市街地での偽装生活と、休戦交渉の火種を描写する。
-（Sprint3で本文へ置換予定）`,
+    text: `昼の校舎は平穏を装っている。だが、視線の温度だけが夜より正直だった。
+
+「監督役から連絡。第三交差点で会談だ」
+「休戦提案？」
+「形式はそうだ。実際は探り合いだろう」
+「罠の匂いは？」
+「ある。だが無視すれば、向こうに先手を渡す」
+「受ければ背中を見せることになる」
+「だからこそ、交渉そのものを戦場として使う」
+
+鞄の中の令呪が熱を持つ。
+私は呼吸を整え、会談で取るべき利得と失う可能性を同じ紙に並べた。`,
     choices: [
       {
-        label: "次へ",
+        label: "交渉の席を受ける（情報優先）",
         effect: (s) => {
           s.flags.chapterContentShown = s.flags.chapterContentShown || {};
           s.flags.chapterContentShown["2_001"] = true;
-          s.log.push("章本文プレースホルダ: chapter2_main_001 を通過。");
+          s.flags.idealPoints += 1;
+          s.flags.allianceState = s.flags.allianceState === "betrayed" ? "ceasefire" : "allied";
+          s.log.push("第2章交渉: 会談を受諾。理想点+1、同盟状態を調整。");
+        },
+        next: "chapter2_main_002",
+      },
+      {
+        label: "会談は偽装し、監視網を先に敷く（警戒優先）",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["2_001"] = true;
+          s.battle.tacticalAdvantage = Math.max(s.battle.tacticalAdvantage || 0, 1);
+          s.master.mana = Math.max(0, s.master.mana - 6);
+          s.log.push("第2章交渉: 監視網を優先。戦術優位+1、魔力-6。");
         },
         next: "chapter2_main_002",
       },
@@ -315,16 +391,41 @@ export const SCENES = {
   chapter2_main_002: {
     phase: "章本文",
     title: "第2章 本文: 取引の代償",
-    text: `【本文挿入口】第2章-必須シーン2。
-同盟維持か情報優先かの天秤を描写し、次の昼行動へ接続する。
-（Sprint3で本文へ置換予定）`,
+    text: `第三交差点。街灯の白さだけが、互いの嘘を照らしていた。
+
+「今夜は刃を引く」
+「期限は？」
+「明朝までだ」
+「短いね」
+「長い休戦は、裏切りの準備時間になる」
+「つまり、あなたも裏切る準備をする」
+「必要ならな」
+
+握手はした。だが、信頼は一歩も近づかない。
+帰路で私は被害予測を書き換える。守る範囲を広げれば手は足りない。
+「それでも守るのか」
+「守る。失う前提で線を引くのは、ここで終わらせる」
+それでも、失う前提だけは拒む。`,
     choices: [
       {
-        label: "日中行動へ",
+        label: "同盟維持を優先し、被害抑制を続ける",
         effect: (s) => {
           s.flags.chapterContentShown = s.flags.chapterContentShown || {};
           s.flags.chapterContentShown["2_002"] = true;
-          s.log.push("章本文プレースホルダ: chapter2_main_002 を通過。");
+          s.flags.idealPoints += 1;
+          if (s.flags.allianceState === "none") s.flags.allianceState = "ceasefire";
+          s.log.push("第2章方針: 同盟維持を優先。理想点+1。");
+        },
+        next: "dayAction",
+      },
+      {
+        label: "裏切りを警戒し、先制準備を進める",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["2_002"] = true;
+          s.battle.tacticalAdvantage = Math.max(s.battle.tacticalAdvantage || 0, 2);
+          s.flags.trueNameExposure = Math.min(3, s.flags.trueNameExposure + 1);
+          s.log.push("第2章方針: 先制準備を選択。戦術優位+2、情報露見+1。");
         },
         next: "dayAction",
       },
