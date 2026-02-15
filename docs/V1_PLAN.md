@@ -5,6 +5,7 @@
 章本文の具体設計は `docs/SCENARIO_CHAPTER_PLAN.md` を参照。
 章本文シーン命名規約は `docs/SCENE_NAMING_RULE.md` を参照。
 Sprint 2の具体タスクは `docs/SPRINT2_PLAN.md` を参照。
+Sprint 4の昼ランダムイベント拡張は `docs/SPRINT4_PLAN.md` を参照。
 
 ---
 
