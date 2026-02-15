@@ -1502,6 +1502,47 @@ function applyChapterDayEvent(state, actionType) {
     state.flags.allianceState = "betrayed";
     state.log.push("終盤で同盟が崩壊。裏切りフラグが成立。");
   }
+
+  if (chapter === 5) {
+    if (actionType === "intel") {
+      const prev = state.flags.trueNameExposure;
+      state.flags.trueNameExposure = Math.min(3, state.flags.trueNameExposure + 1);
+      if (state.flags.trueNameExposure > prev) {
+        state.log.push("露見局面の情報戦が進行。真名看破進行+1。");
+      }
+    }
+    if (actionType === "workshop") {
+      state.master.commandSpells = Math.max(0, state.master.commandSpells - 1);
+      state.master.mana = Math.min(100, state.master.mana + 8);
+      state.log.push("終盤の継戦を優先し令呪を消費。令呪-1 / 魔力+8。");
+    }
+    if (actionType === "position") {
+      state.battle.tacticalAdvantage += 1;
+      state.flags.civilianDamage += 1;
+      state.log.push("強行配置で決戦有利を確保。夜戦補正+1 / 一般被害+1。");
+    }
+  }
+
+  if (chapter === 6) {
+    if (actionType === "intel") {
+      if (state.flags.trueNameExposure >= 2) {
+        state.flags.idealPoints += 1;
+        state.log.push("最終局面の被害抑止策を優先。理想点+1。");
+      } else {
+        state.flags.trueNameExposure = Math.min(3, state.flags.trueNameExposure + 1);
+        state.log.push("終章の追加偵察で看破を進展。真名看破進行+1。");
+      }
+    }
+    if (actionType === "workshop") {
+      state.master.mana = Math.min(100, state.master.mana + 10);
+      state.flags.idealPoints = Math.max(0, state.flags.idealPoints - 1);
+      state.log.push("決戦準備を優先し現実策へ転換。魔力+10 / 理想点-1。");
+    }
+    if (actionType === "position") {
+      state.battle.tacticalAdvantage += 1;
+      state.log.push("聖杯戦終局の布陣を固定。夜戦補正+1。");
+    }
+  }
 }
 
 function remainingEnemies(state) {
