@@ -188,6 +188,7 @@ export const INITIAL_STATE = {
     midgameRecoveryUsed: false,
     allianceState: "none",
     finalLockState: null,
+    midgameRecoveryClosed: false,
     chapterContentShown: {},
   },
   factions: [],
@@ -260,17 +261,49 @@ export const SCENES = {
 
   chapter1_main_001: {
     phase: "章本文",
-    title: "第1章 本文: 契約直後の夜",
-    text: `【本文挿入口】第1章-必須シーン1。
-契約直後の緊張、初動方針、街への視線を描写する。
-（Sprint3で本文へ置換予定）`,
+    title: "第1章 本文: 契約の温度",
+    text: (s) => `召喚陣の残光が床に残る。工房は静かだ。静かすぎて、私の呼吸だけが浮いて聞こえる。
+
+「契約は成立した。次は方針だ」
+「先に聞かせて。私は道具として使われるの？」
+「使われるかどうかは、君の命令次第だ」
+「……なら隠さない。勝つだけなら近道はある。でも、被害は見捨てたくない」
+「遅い道だな」
+「わかってる。遅くても、守れる数を増やしたい」
+
+${s.servant.className}は短く息を吐いた。
+「確認した。今夜はその理想に付き合う」
+令呪を握り込む。夜気が窓を鳴らす。ここで決めるのは命令じゃない。覚悟だ。`,
     choices: [
       {
-        label: "次へ",
+        label: "対等契約で進む（信頼優先）",
         effect: (s) => {
           s.flags.chapterContentShown = s.flags.chapterContentShown || {};
           s.flags.chapterContentShown["1_001"] = true;
-          s.log.push("章本文プレースホルダ: chapter1_main_001 を通過。");
+          s.flags.idealPoints += 1;
+          s.master.mana = Math.max(0, s.master.mana - 4);
+          s.log.push("契約方針: 対等契約を選択。理想点+1、初動コストで魔力-4。");
+        },
+        next: "chapter1_main_002",
+      },
+      {
+        label: "指揮重視で進む（統制優先）",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["1_001"] = true;
+          s.battle.tacticalAdvantage = Math.max(s.battle.tacticalAdvantage || 0, 1);
+          s.log.push("契約方針: 指揮重視を選択。夜戦の戦術優位を確保。");
+        },
+        next: "chapter1_main_002",
+      },
+      {
+        label: "成果重視で進む（短期決着優先）",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["1_001"] = true;
+          s.master.mana = Math.min(100, s.master.mana + 6);
+          s.flags.civilianDamage += 1;
+          s.log.push("契約方針: 成果重視を選択。魔力+6、強引な準備で一般被害+1。");
         },
         next: "chapter1_main_002",
       },
@@ -278,17 +311,39 @@ export const SCENES = {
   },
   chapter1_main_002: {
     phase: "章本文",
-    title: "第1章 本文: 初接触の予兆",
-    text: `【本文挿入口】第1章-必須シーン2。
-敵影の気配、真名秘匿の価値、夜戦前の判断を描写する。
-（Sprint3で本文へ置換予定）`,
+    title: "第1章 本文: 初夜戦前、灯りの外",
+    text: `窓の外で結界が軋む。敵影は見えない。なのに喉の奥だけが先に乾いた。
+
+「来る。距離は近い」
+「数は？」
+「まだ読めない。だが、こちらを試す気だ」
+「真名を隠してる間に先手を取りたい。被害を減らす形は作れる？」
+「作れる。ただ、時間は食う」
+「時間稼ぎに、一発ぶつける手もある」
+「その時は君が決めろ。今夜は最初の夜戦だ」
+
+地図をなぞる。避難路、橋、封鎖できる路地。
+被害を抑えるか、早く終わらせるか。先に切る札を決めた。`,
     choices: [
       {
-        label: "日中行動へ",
+        label: "被害を抑えて索敵する",
         effect: (s) => {
           s.flags.chapterContentShown = s.flags.chapterContentShown || {};
           s.flags.chapterContentShown["1_002"] = true;
-          s.log.push("章本文プレースホルダ: chapter1_main_002 を通過。");
+          s.flags.idealPoints += 1;
+          s.battle.tacticalAdvantage = Math.max(s.battle.tacticalAdvantage || 0, 1);
+          s.log.push("初夜戦方針: 被害回避を優先。理想点+1、索敵により戦術優位+1。");
+        },
+        next: "dayAction",
+      },
+      {
+        label: "短期決着の準備を進める",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["1_002"] = true;
+          s.master.mana = Math.min(100, s.master.mana + 8);
+          s.flags.trueNameExposure = Math.min(3, s.flags.trueNameExposure + 1);
+          s.log.push("初夜戦方針: 短期決着を選択。魔力+8、準備過程で情報露見+1。");
         },
         next: "dayAction",
       },
@@ -297,16 +352,38 @@ export const SCENES = {
   chapter2_main_001: {
     phase: "章本文",
     title: "第2章 本文: 偽装と同盟の駆け引き",
-    text: `【本文挿入口】第2章-必須シーン1。
-学園/市街地での偽装生活と、休戦交渉の火種を描写する。
-（Sprint3で本文へ置換予定）`,
+    text: `昼の校舎は平穏を装っている。けれど視線の温度だけが夜より正直だ。
+
+「監督役から連絡。第三交差点で会談だ」
+「休戦提案？」
+「表向きはな。実際は探り合いだ」
+「罠の匂いは？」
+「ある。だが無視すれば向こうに先手を渡す」
+「受ければ背中を見せる」
+「だから交渉の場で逆に読む。戦場はひとつじゃない」
+
+鞄の中の令呪が熱い。
+深呼吸して、得られるものと失うものを書き出した。`,
     choices: [
       {
-        label: "次へ",
+        label: "会談に応じる（情報優先）",
         effect: (s) => {
           s.flags.chapterContentShown = s.flags.chapterContentShown || {};
           s.flags.chapterContentShown["2_001"] = true;
-          s.log.push("章本文プレースホルダ: chapter2_main_001 を通過。");
+          s.flags.idealPoints += 1;
+          s.flags.allianceState = s.flags.allianceState === "betrayed" ? "ceasefire" : "allied";
+          s.log.push("第2章交渉: 会談を受諾。理想点+1、同盟状態を調整。");
+        },
+        next: "chapter2_main_002",
+      },
+      {
+        label: "会談を偽装し監視を敷く（警戒）",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["2_001"] = true;
+          s.battle.tacticalAdvantage = Math.max(s.battle.tacticalAdvantage || 0, 1);
+          s.master.mana = Math.max(0, s.master.mana - 6);
+          s.log.push("第2章交渉: 監視網を優先。戦術優位+1、魔力-6。");
         },
         next: "chapter2_main_002",
       },
@@ -315,16 +392,163 @@ export const SCENES = {
   chapter2_main_002: {
     phase: "章本文",
     title: "第2章 本文: 取引の代償",
-    text: `【本文挿入口】第2章-必須シーン2。
-同盟維持か情報優先かの天秤を描写し、次の昼行動へ接続する。
-（Sprint3で本文へ置換予定）`,
+    text: `第三交差点。街灯の白さだけが、互いの嘘を照らす。
+
+「今夜は刃を引く」
+「期限は？」
+「明朝までだ」
+「短いね」
+「長い休戦は、裏切りの準備時間になる」
+「つまり、あなたも準備する」
+「必要ならな」
+
+握手はした。信頼は近づかない。
+帰り道で被害の見積もりを直す。守る範囲を広げれば手は足りない。
+「それでも守るのか」
+「守る。失う前提で線を引くのは、ここで終わりにする」
+それでも、失う前提だけは拒む。`,
     choices: [
       {
-        label: "日中行動へ",
+        label: "同盟を維持し被害を抑える",
         effect: (s) => {
           s.flags.chapterContentShown = s.flags.chapterContentShown || {};
           s.flags.chapterContentShown["2_002"] = true;
-          s.log.push("章本文プレースホルダ: chapter2_main_002 を通過。");
+          s.flags.idealPoints += 1;
+          if (s.flags.allianceState === "none") s.flags.allianceState = "ceasefire";
+          s.log.push("第2章方針: 同盟維持を優先。理想点+1。");
+        },
+        next: "dayAction",
+      },
+      {
+        label: "裏切りを警戒して先制準備する",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["2_002"] = true;
+          s.battle.tacticalAdvantage = Math.max(s.battle.tacticalAdvantage || 0, 2);
+          s.flags.trueNameExposure = Math.min(3, s.flags.trueNameExposure + 1);
+          s.log.push("第2章方針: 先制準備を選択。戦術優位+2、情報露見+1。");
+        },
+        next: "dayAction",
+      },
+    ],
+  },
+  chapter3_main_001: {
+    phase: "章本文",
+    title: "第3章 本文: 工房崩しの前夜",
+    text: `夜気の奥で霊脈が脈打つ。敵工房の位置は、ようやく一本の線で結べるところまで来た。
+
+「正面から叩くか、潜って核を潰すか」
+「潜入が通れば被害は抑えられる。失敗すれば囲まれる」
+「正面突破は？」
+「速い。だが、街も巻き込む」
+
+私は地図を折り直した。勝つだけなら答えは単純だ。
+問題は、勝った後に何を残すかだった。`,
+    choices: [
+      {
+        label: "潜入経路を選ぶ（被害抑制）",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["3_001"] = true;
+          s.flags.idealPoints += 1;
+          s.battle.tacticalAdvantage = Math.max(s.battle.tacticalAdvantage || 0, 1);
+          s.log.push("第3章侵攻: 潜入経路を選択。理想点+1、戦術優位+1。");
+        },
+        next: "chapter3_main_002",
+      },
+      {
+        label: "正面突破を選ぶ（速攻）",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["3_001"] = true;
+          s.master.mana = Math.max(0, s.master.mana - 10);
+          s.battle.tacticalAdvantage = Math.max(s.battle.tacticalAdvantage || 0, 2);
+          s.flags.civilianDamage += 1;
+          s.log.push("第3章侵攻: 正面突破を選択。戦術優位+2、魔力-10、一般被害+1。");
+        },
+        next: "chapter3_main_002",
+      },
+    ],
+  },
+  chapter3_main_002: {
+    phase: "章本文",
+    title: "第3章 本文: 侵攻後の呼吸",
+    text: `瓦礫の匂いが残る路地で、私は報告を聞き終える。
+敵の補給線は細くなった。けれど、こちらの手札も削れている。
+
+「次は河川域でぶつかる。相手は対軍宝具を切ってくる」
+「ここで立て直す。第4章で崩れたら終盤が重くなる」
+
+深呼吸をひとつ。勝利条件だけじゃなく、撤退線まで含めて作戦を引き直した。`,
+    choices: [
+      {
+        label: "第4章へ進む",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["3_002"] = true;
+          s.log.push("第3章本文を通過。河川決戦の準備へ。");
+        },
+        next: "dayAction",
+      },
+    ],
+  },
+  chapter4_main_001: {
+    phase: "章本文",
+    title: "第4章 本文: 河川決戦の布石",
+    text: `橋梁の下を流れる水音だけが妙に澄んでいる。
+ここでの選択が、リカバリー可能な最後の境目になる。
+
+「市街地を避ければ時間を失う。強行すれば被害が増える」
+「令呪を温存するか、今ここで切るか」
+
+私は住民避難の導線と、退路の確保を同じ紙に書いた。
+守るために遅れるか、終盤のために早めるか。判断はもう先送りできない。`,
+    choices: [
+      {
+        label: "市街地回避を優先する",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["4_001"] = true;
+          s.flags.idealPoints += 1;
+          s.master.mana = Math.max(0, s.master.mana - 6);
+          s.log.push("第4章決戦: 市街地回避を選択。理想点+1、魔力-6。");
+        },
+        next: "chapter4_main_002",
+      },
+      {
+        label: "決戦を強行する",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["4_001"] = true;
+          s.battle.tacticalAdvantage = Math.max(s.battle.tacticalAdvantage || 0, 2);
+          s.flags.civilianDamage += 1;
+          s.log.push("第4章決戦: 強行を選択。戦術優位+2、一般被害+1。");
+        },
+        next: "chapter4_main_002",
+      },
+    ],
+  },
+  chapter4_main_002: {
+    phase: "章本文",
+    title: "第4章 本文: 終端の宣言",
+    text: `決戦後、残った地図には破れた線と、まだ守れた線の両方が残った。
+
+「ここまでだ。次章からは、失敗を取り返せない」
+「わかってる。ここで選んだ代償は、最後まで持っていく」
+
+私は記録を閉じる。ここが中盤リカバリーの終端だ。
+第5章から先は不可逆。敗北時の再編は失われ、救済はより重い代償を伴う。`,
+    choices: [
+      {
+        label: "終盤へ進む",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["4_002"] = true;
+          if (!s.flags.finalLockState) {
+            s.flags.finalLockState = `露見:${s.flags.trueNameExposure}|同盟:${s.flags.allianceState}|被害:${s.flags.civilianDamage}`;
+          }
+          s.flags.midgameRecoveryClosed = true;
+          s.log.push("第4章本文を通過。ここから中盤リカバリー不可・終盤不可逆フェーズへ。",);
         },
         next: "dayAction",
       },
@@ -394,7 +618,7 @@ export const SCENES = {
   midgameRecovery: {
     phase: "深夜",
     title: "中盤リカバリー",
-    text: "致命的敗北。しかし中盤までは再編の余地がある。\n代償として一般被害と信用低下を受け、戦線へ復帰する。",
+    text: "致命的敗北。しかし中盤までは再編の余地がある。\n代償: 一般被害+1 / 同盟状態は停戦へ固定 / HPは35で再開 / 再編はこの周回で1回のみ。",
     choices: [
       {
         label: "代償を払って再編する",
@@ -1020,6 +1244,9 @@ function runNpcFactionPhase(state) {
 function postBattleScene(state) {
   if (state.master.hp <= 0) {
     if (canUseMidgameRecovery(state)) return "midgameRecovery";
+    if (state.progress.chapterIndex >= 5 || state.flags.midgameRecoveryClosed) {
+      state.log.push("終盤フェーズのため中盤リカバリーは使用できない。",);
+    }
     if (!state.flags.rescueUsed) return "rescue";
     return "gameOver";
   }
@@ -1090,6 +1317,8 @@ function getChapterContentEntryScene(state) {
   const shown = state.flags.chapterContentShown || {};
   if (chapter === 1 && !shown["1_001"]) return "chapter1_main_001";
   if (chapter === 2 && !shown["2_001"]) return "chapter2_main_001";
+  if (chapter === 3 && !shown["3_001"]) return "chapter3_main_001";
+  if (chapter === 4 && !shown["4_001"]) return "chapter4_main_001";
   return null;
 }
 
@@ -1098,7 +1327,7 @@ function shouldShowChapterIntro(state) {
 }
 
 function canUseMidgameRecovery(state) {
-  return state.progress.chapterIndex <= 4 && !state.flags.midgameRecoveryUsed;
+  return state.progress.chapterIndex <= 4 && !state.flags.midgameRecoveryUsed && !state.flags.midgameRecoveryClosed;
 }
 
 function applyChapterDayEvent(state, actionType) {
