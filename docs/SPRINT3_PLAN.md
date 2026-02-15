@@ -11,7 +11,7 @@
 - [x] C-1〜C-3: 第5章/第6章本文 + エンディング増補
 - [x] D-1: 文字数集計スクリプト追加（`scripts/count_story_chars.mjs`）
 - [x] D-2: `???`開示/看破連動/命名規約チェック追加（`scripts/validate_sprint3_d2.mjs`）
-- [ ] D-3: 既存進行との最終回帰（継続監視）
+- [x] D-3: 既存進行との最終回帰（`scripts/validate_sprint3_d3.mjs` 追加）
 
 ---
 
@@ -125,6 +125,7 @@ Sprint 3では、Sprint 2で整備した章進行の受け皿に対して、**6�
 - `node scripts/simulate_summon.mjs`
 - `node scripts/count_story_chars.mjs`
 - `node scripts/validate_sprint3_d2.mjs`
+- `node scripts/validate_sprint3_d3.mjs`
 
 ※本文投入後は、手動で以下を最低1周確認:
 - 第1章開始〜第2章同盟分岐まで
