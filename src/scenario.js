@@ -188,6 +188,7 @@ export const INITIAL_STATE = {
     midgameRecoveryUsed: false,
     allianceState: "none",
     finalLockState: null,
+    midgameRecoveryClosed: false,
     chapterContentShown: {},
   },
   factions: [],
@@ -535,8 +536,8 @@ ${s.servant.className}は短く息を吐いた。
 「ここまでだ。次章からは、失敗を取り返せない」
 「わかってる。ここで選んだ代償は、最後まで持っていく」
 
-私は記録を閉じる。第5章から先は不可逆。
-だからこそ、今ここで残したものを忘れない。`,
+私は記録を閉じる。ここが中盤リカバリーの終端だ。
+第5章から先は不可逆。敗北時の再編は失われ、救済はより重い代償を伴う。`,
     choices: [
       {
         label: "終盤へ進む",
@@ -546,7 +547,8 @@ ${s.servant.className}は短く息を吐いた。
           if (!s.flags.finalLockState) {
             s.flags.finalLockState = `露見:${s.flags.trueNameExposure}|同盟:${s.flags.allianceState}|被害:${s.flags.civilianDamage}`;
           }
-          s.log.push("第4章本文を通過。終盤不可逆フェーズへ。",);
+          s.flags.midgameRecoveryClosed = true;
+          s.log.push("第4章本文を通過。ここから中盤リカバリー不可・終盤不可逆フェーズへ。",);
         },
         next: "dayAction",
       },
@@ -616,7 +618,7 @@ ${s.servant.className}は短く息を吐いた。
   midgameRecovery: {
     phase: "深夜",
     title: "中盤リカバリー",
-    text: "致命的敗北。しかし中盤までは再編の余地がある。\n代償として一般被害と信用低下を受け、戦線へ復帰する。",
+    text: "致命的敗北。しかし中盤までは再編の余地がある。\n代償: 一般被害+1 / 同盟状態は停戦へ固定 / HPは35で再開 / 再編はこの周回で1回のみ。",
     choices: [
       {
         label: "代償を払って再編する",
@@ -1242,6 +1244,9 @@ function runNpcFactionPhase(state) {
 function postBattleScene(state) {
   if (state.master.hp <= 0) {
     if (canUseMidgameRecovery(state)) return "midgameRecovery";
+    if (state.progress.chapterIndex >= 5 || state.flags.midgameRecoveryClosed) {
+      state.log.push("終盤フェーズのため中盤リカバリーは使用できない。",);
+    }
     if (!state.flags.rescueUsed) return "rescue";
     return "gameOver";
   }
@@ -1322,7 +1327,7 @@ function shouldShowChapterIntro(state) {
 }
 
 function canUseMidgameRecovery(state) {
-  return state.progress.chapterIndex <= 4 && !state.flags.midgameRecoveryUsed;
+  return state.progress.chapterIndex <= 4 && !state.flags.midgameRecoveryUsed && !state.flags.midgameRecoveryClosed;
 }
 
 function applyChapterDayEvent(state, actionType) {
