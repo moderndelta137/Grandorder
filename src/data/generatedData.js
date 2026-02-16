@@ -816,6 +816,175 @@ export const DAY_EVENTS = [
     "log": "被害を抑え理想点が上昇した。"
   },
   {
+    "id": "common_leyline_echo_001",
+    "category": "common",
+    "weight": 7,
+    "minChapter": 1,
+    "maxChapter": 6,
+    "oncePerRun": false,
+    "requires": [],
+    "excludes": [],
+    "hasChoices": false,
+    "text": "霊脈の残響を観測して敵動向を読んだ",
+    "apply": [
+      "intel+1",
+      "mana+2"
+    ],
+    "log": "観測成果で看破と魔力がわずかに向上した。"
+  },
+  {
+    "id": "common_supply_cache_001",
+    "category": "common",
+    "weight": 6,
+    "minChapter": 1,
+    "maxChapter": 6,
+    "oncePerRun": false,
+    "requires": [],
+    "excludes": [],
+    "hasChoices": false,
+    "text": "使える補給物資を確保した",
+    "apply": [
+      "mana+5"
+    ],
+    "log": "戦闘準備に回せる魔力余剰を得た。"
+  },
+  {
+    "id": "common_refuge_delay_001",
+    "category": "common",
+    "weight": 5,
+    "minChapter": 1,
+    "maxChapter": 6,
+    "oncePerRun": false,
+    "requires": [
+      "enemyAlive>=3"
+    ],
+    "excludes": [],
+    "hasChoices": false,
+    "text": "避難誘導が遅れて市街に混乱が残った",
+    "apply": [
+      "civilianDamage+1"
+    ],
+    "log": "後方混乱により一般被害が増加した。"
+  },
+  {
+    "id": "common_watchpost_shift_001",
+    "category": "common",
+    "weight": 6,
+    "minChapter": 1,
+    "maxChapter": 6,
+    "oncePerRun": false,
+    "requires": [],
+    "excludes": [],
+    "hasChoices": false,
+    "text": "監視拠点を移し夜戦に有利な視界を確保した",
+    "apply": [
+      "tacticalAdvantage+1"
+    ],
+    "log": "先制配置に近い地形優位を確保した。"
+  },
+  {
+    "id": "common_medical_support_001",
+    "category": "common",
+    "weight": 5,
+    "minChapter": 1,
+    "maxChapter": 6,
+    "oncePerRun": false,
+    "requires": [],
+    "excludes": [],
+    "hasChoices": false,
+    "text": "協力医療班の応急処置を受けた",
+    "apply": [
+      "hp+5"
+    ],
+    "log": "負傷が軽減され行動継続が容易になった。"
+  },
+  {
+    "id": "common_false_alarm_001",
+    "category": "common",
+    "weight": 4,
+    "minChapter": 1,
+    "maxChapter": 6,
+    "oncePerRun": false,
+    "requires": [],
+    "excludes": [],
+    "hasChoices": false,
+    "text": "虚報に振り回されて時間を失った",
+    "apply": [
+      "mana-3"
+    ],
+    "log": "空振り対応で魔力が目減りした。"
+  },
+  {
+    "id": "common_public_praise_001",
+    "category": "common",
+    "weight": 4,
+    "minChapter": 2,
+    "maxChapter": 6,
+    "oncePerRun": false,
+    "requires": [],
+    "excludes": [],
+    "hasChoices": false,
+    "text": "被害抑止行動が評価され協力者が増えた",
+    "apply": [
+      "idealPoints+1"
+    ],
+    "log": "信頼が高まり理想点が上昇した。"
+  },
+  {
+    "id": "common_public_backlash_001",
+    "category": "common",
+    "weight": 4,
+    "minChapter": 3,
+    "maxChapter": 6,
+    "oncePerRun": false,
+    "requires": [],
+    "excludes": [],
+    "hasChoices": false,
+    "text": "隠密行動が誤解され地域の反発を招いた",
+    "apply": [
+      "idealPoints-1",
+      "civilianDamage+1"
+    ],
+    "log": "風評悪化で理想点低下と一般被害増加が発生した。"
+  },
+  {
+    "id": "common_ceasefire_mediator_001",
+    "category": "common",
+    "weight": 3,
+    "minChapter": 2,
+    "maxChapter": 6,
+    "oncePerRun": false,
+    "requires": [
+      "allianceState=none"
+    ],
+    "excludes": [],
+    "hasChoices": false,
+    "text": "仲介者が現れ限定停戦の余地が生まれた",
+    "apply": [
+      "allianceState=ceasefire"
+    ],
+    "log": "同盟未成立状態から停戦状態へ移行した。"
+  },
+  {
+    "id": "common_intel_breakthrough_001",
+    "category": "common",
+    "weight": 3,
+    "minChapter": 4,
+    "maxChapter": 6,
+    "oncePerRun": false,
+    "requires": [
+      "enemyAlive>=2"
+    ],
+    "excludes": [],
+    "hasChoices": false,
+    "text": "敵の行動パターンを突き止めた",
+    "apply": [
+      "intel+1",
+      "tacticalAdvantage+1"
+    ],
+    "log": "看破進行と夜戦優位を同時に獲得した。"
+  },
+  {
     "id": "build_bloodline_surge_001",
     "category": "masterBuild",
     "weight": 7,
