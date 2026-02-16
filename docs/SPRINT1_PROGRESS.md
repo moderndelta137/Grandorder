@@ -100,6 +100,26 @@
 - `scripts/validate_sprint3_d2.mjs` を追加し、命名規約・章入口・`???`開示と看破連動ルールを自動検証可能化。
 - `docs/SPRINT3_PLAN.md` の検証コマンドへ両スクリプトを追記。
 
+
+### 2.18 Sprint3 Step D-3 完了（最終回帰）
+- `scripts/validate_sprint3_d3.mjs` を追加し、以下3項目を自動回帰可能化。
+  - 第1章開始〜第2章同盟分岐
+  - 第4章失敗時の中盤リカバリー導線
+  - 第6章到達後の4エンディング出し分け
+- `docs/SPRINT3_PLAN.md` の進捗ステータスをD-3完了へ更新。
+
+
+### 2.19 Sprint4 Step A 完了（昼ランダムイベント基盤）
+- `data/csv/day_events.csv` を追加し、共通/ビルド専用/味方真名専用/敵生存真名専用の基礎イベント定義を投入。
+- `scripts/generate_csv_data.mjs` と `src/data/generatedData.js` に `DAY_EVENTS` 生成を追加。
+- `src/scenario.js` に日中ランダムイベント抽選・適用の基盤（カテゴリ重み + no-opフォールバック）を追加。
+- 現時点はStep A方針に合わせ、選択肢なしイベントの適用を先行実装。
+
+### 2.20 Sprint4 Step B-1 完了（共通イベント拡張）
+- `data/csv/day_events.csv` の共通イベントを12本以上へ拡張（no-opを除く）。
+- 章帯や敵残存数に応じた共通イベント条件（`enemyAlive>=n`, `allianceState=none` など）を追加。
+- 低リスク効果（看破/魔力/HP/理想点/一般被害/戦術優位/停戦遷移）の組み合わせを投入し、日中変化量を多様化。
+
 ---
 
 ## 3. 現在のファイル責務

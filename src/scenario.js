@@ -1,4 +1,4 @@
-import { CLASS_AFFINITY_TABLE, ENEMY_INTEL_RULES, FSN_SERVANTS, SERVANT_CHECK_TAG_SKILLS, SERVANT_COMBAT_EFFECTS } from "./data/generatedData.js";
+import { CLASS_AFFINITY_TABLE, DAY_EVENTS, ENEMY_INTEL_RULES, FSN_SERVANTS, SERVANT_CHECK_TAG_SKILLS, SERVANT_COMBAT_EFFECTS } from "./data/generatedData.js";
 
 const MASTER_BUILDS = {
   血統型: { 魔力: 2, 交渉: -1, 生存: 0, 情報: 0 },
@@ -190,6 +190,14 @@ export const INITIAL_STATE = {
     finalLockState: null,
     midgameRecoveryClosed: false,
     chapterContentShown: {},
+    dayEventSeen: {},
+    lastDayEventId: null,
+  },
+  dayEvent: {
+    id: null,
+    category: null,
+    text: null,
+    hasChoices: false,
   },
   factions: [],
   log: ["召喚準備を開始した。"],
@@ -709,6 +717,7 @@ ${s.servant.className}は短く息を吐いた。
           collectEnemyIntel(s, intelGain);
           s.master.mana = Math.min(100, s.master.mana + 6);
           s.battle.tacticalAdvantage = 0;
+          runDayRandomEvent(s);
           applyChapterDayEvent(s, "intel");
           runNpcFactionPhase(s);
         },
@@ -720,6 +729,7 @@ ${s.servant.className}は短く息を吐いた。
           s.master.mana = Math.min(100, s.master.mana + 18);
           s.battle.tacticalAdvantage = 0;
           s.log.push("工房を整備し魔力を回復。戦闘準備を優先した。");
+          runDayRandomEvent(s);
           applyChapterDayEvent(s, "workshop");
           runNpcFactionPhase(s);
         },
@@ -731,6 +741,7 @@ ${s.servant.className}は短く息を吐いた。
           s.master.mana = Math.max(0, s.master.mana - 8);
           s.battle.tacticalAdvantage = 2;
           s.log.push("先制陣地を構築。夜戦に有利な位置を確保した。");
+          runDayRandomEvent(s);
           applyChapterDayEvent(s, "position");
           runNpcFactionPhase(s);
         },
@@ -1468,6 +1479,161 @@ function shouldShowChapterIntro(state) {
 
 function canUseMidgameRecovery(state) {
   return state.progress.chapterIndex <= 4 && !state.flags.midgameRecoveryUsed && !state.flags.midgameRecoveryClosed;
+}
+
+
+const DAY_EVENT_CATEGORY_WEIGHTS = {
+  common: 50,
+  playerServant: 25,
+  masterBuild: 15,
+  enemyServant: 10,
+};
+
+function runDayRandomEvent(state) {
+  const event = selectDayEvent(state);
+  if (!event) {
+    state.log.push("日中ランダムイベント: 候補不足のためスキップ。");
+    return;
+  }
+
+  state.dayEvent = {
+    id: event.id,
+    category: event.category,
+    text: event.text || null,
+    hasChoices: Boolean(event.hasChoices),
+  };
+  state.flags.lastDayEventId = event.id;
+
+  if (event.text) state.log.push(`日中イベント発生: ${event.text}`);
+  applyDayEventOutcome(state, event.apply || []);
+  if (event.log) state.log.push(`日中イベント結果: ${event.log}`);
+
+  if (event.oncePerRun) {
+    state.flags.dayEventSeen = state.flags.dayEventSeen || {};
+    state.flags.dayEventSeen[event.id] = true;
+  }
+}
+
+function selectDayEvent(state) {
+  const chapter = state.progress.chapterIndex || 1;
+  const candidates = DAY_EVENTS.filter((event) => {
+    if (event.hasChoices) return false;
+    if (chapter < (event.minChapter || 1) || chapter > (event.maxChapter || 6)) return false;
+    if (event.oncePerRun && state.flags.dayEventSeen?.[event.id]) return false;
+    if (!evaluateEventConditions(state, event.requires || [])) return false;
+    if (evaluateEventConditions(state, event.excludes || [])) return false;
+    return true;
+  });
+
+  const byCategory = {
+    common: candidates.filter((e) => e.category === "common"),
+    playerServant: candidates.filter((e) => e.category === "playerServant"),
+    masterBuild: candidates.filter((e) => e.category === "masterBuild"),
+    enemyServant: candidates.filter((e) => e.category === "enemyServant"),
+  };
+
+  const availableCategoryWeights = {};
+  for (const [category, list] of Object.entries(byCategory)) {
+    if (list.length > 0) availableCategoryWeights[category] = DAY_EVENT_CATEGORY_WEIGHTS[category] || 0;
+  }
+
+  const selectedCategory = weightedPickByNumber(availableCategoryWeights);
+  if (selectedCategory) {
+    const picked = weightedPickDayEvent(byCategory[selectedCategory]);
+    if (picked) return picked;
+  }
+
+  const fallback = candidates.find((e) => e.id === "common_noop_001")
+    || weightedPickDayEvent(byCategory.common)
+    || weightedPickDayEvent(candidates);
+
+  if (!fallback) state.log.push("日中ランダムイベント: fallback候補が存在しない。");
+  return fallback || null;
+}
+
+function weightedPickDayEvent(events) {
+  if (!events || !events.length) return null;
+  const weights = Object.fromEntries(events.map((event) => [event.id, Math.max(0, Number(event.weight || 0))]));
+  const pickedId = weightedPickByNumber(weights);
+  return events.find((event) => event.id === pickedId) || events[0];
+}
+
+function weightedPickByNumber(weightMap) {
+  const entries = Object.entries(weightMap || {}).filter(([, weight]) => Number(weight) > 0);
+  if (!entries.length) return null;
+  const total = entries.reduce((sum, [, weight]) => sum + Number(weight), 0);
+  let roll = Math.random() * total;
+  for (const [key, weight] of entries) {
+    roll -= Number(weight);
+    if (roll <= 0) return key;
+  }
+  return entries[0][0];
+}
+
+function evaluateEventConditions(state, conditions) {
+  return (conditions || []).every((cond) => evaluateOneCondition(state, cond));
+}
+
+function evaluateOneCondition(state, conditionRaw) {
+  const condition = (conditionRaw || "").trim();
+  if (!condition) return true;
+
+  if (condition === "rescueUsed") return Boolean(state.flags.rescueUsed);
+  if (condition === "playerServantKnown=true") return Boolean(state.servant.sourceName);
+
+  const enemyAliveMatch = condition.match(/^enemyAlive>=(\d+)$/);
+  if (enemyAliveMatch) return remainingEnemies(state) >= Number(enemyAliveMatch[1]);
+
+  const masterBuildMatch = condition.match(/^masterBuild=(.+)$/);
+  if (masterBuildMatch) return state.master.buildType === masterBuildMatch[1];
+
+  const allianceMatch = condition.match(/^allianceState=(.+)$/);
+  if (allianceMatch) return state.flags.allianceState === allianceMatch[1];
+
+  return false;
+}
+
+function applyDayEventOutcome(state, effects) {
+  for (const token of effects || []) {
+    const effect = (token || "").trim();
+    if (!effect) continue;
+
+    if (effect.startsWith("allianceState=")) {
+      state.flags.allianceState = effect.split("=")[1] || state.flags.allianceState;
+      continue;
+    }
+
+    const match = effect.match(/^(intel|mana|hp|idealPoints|civilianDamage|tacticalAdvantage)([+-])(\d+)$/);
+    if (!match) continue;
+
+    const [, key, op, valueText] = match;
+    const value = Number(valueText);
+    const delta = op === "+" ? value : -value;
+
+    if (key === "intel") {
+      state.flags.trueNameExposure = clamp(state.flags.trueNameExposure + delta, 0, 3);
+      continue;
+    }
+    if (key === "mana") {
+      state.master.mana = clamp(state.master.mana + delta, 0, 100);
+      continue;
+    }
+    if (key === "hp") {
+      state.master.hp = clamp(state.master.hp + delta, 0, 100);
+      continue;
+    }
+    if (key === "idealPoints") {
+      state.flags.idealPoints = Math.max(0, state.flags.idealPoints + delta);
+      continue;
+    }
+    if (key === "civilianDamage") {
+      state.flags.civilianDamage = Math.max(0, state.flags.civilianDamage + delta);
+      continue;
+    }
+    if (key === "tacticalAdvantage") {
+      state.battle.tacticalAdvantage = Math.max(0, state.battle.tacticalAdvantage + delta);
+    }
+  }
 }
 
 function applyChapterDayEvent(state, actionType) {
