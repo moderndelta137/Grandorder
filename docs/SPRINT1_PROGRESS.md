@@ -109,6 +109,12 @@
 - `docs/SPRINT3_PLAN.md` の進捗ステータスをD-3完了へ更新。
 
 
+### 2.19 Sprint4 Step A 完了（昼ランダムイベント基盤）
+- `data/csv/day_events.csv` を追加し、共通/ビルド専用/味方真名専用/敵生存真名専用の基礎イベント定義を投入。
+- `scripts/generate_csv_data.mjs` と `src/data/generatedData.js` に `DAY_EVENTS` 生成を追加。
+- `src/scenario.js` に日中ランダムイベント抽選・適用の基盤（カテゴリ重み + no-opフォールバック）を追加。
+- 現時点はStep A方針に合わせ、選択肢なしイベントの適用を先行実装。
+
 ---
 
 ## 3. 現在のファイル責務
