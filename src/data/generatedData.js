@@ -1078,6 +1078,134 @@ export const DAY_EVENTS = [
     "log": "敵の工作により一般被害が増えた。"
   },
   {
+    "id": "player_artoria_oath_crossing_001",
+    "category": "playerServant",
+    "weight": 8,
+    "minChapter": 1,
+    "maxChapter": 6,
+    "oncePerRun": true,
+    "requires": [
+      "playerServant=アルトリア・ペンドラゴン"
+    ],
+    "excludes": [],
+    "hasChoices": false,
+    "text": "王は雑踏の中で短く問う。「守るべき順序を示せ、マスター」",
+    "apply": [
+      "civilianDamage-1",
+      "idealPoints+1"
+    ],
+    "log": "避難導線を優先し、騎士王は無言で先頭に立った。"
+  },
+  {
+    "id": "player_emiya_unsung_shift_001",
+    "category": "playerServant",
+    "weight": 8,
+    "minChapter": 1,
+    "maxChapter": 6,
+    "oncePerRun": true,
+    "requires": [
+      "playerServant=エミヤ"
+    ],
+    "excludes": [],
+    "hasChoices": false,
+    "text": "エミヤは工具箱を閉じて言う。「英雄ごっこじゃない、今日を回すぞ」",
+    "apply": [
+      "mana+7"
+    ],
+    "log": "補給導線の再編が成功し、継戦魔力に余裕が生まれた。"
+  },
+  {
+    "id": "player_cu_geis_checkpoint_001",
+    "category": "playerServant",
+    "weight": 8,
+    "minChapter": 1,
+    "maxChapter": 6,
+    "oncePerRun": true,
+    "requires": [
+      "playerServant=クー・フーリン"
+    ],
+    "excludes": [],
+    "hasChoices": false,
+    "text": "クー・フーリンは槍を肩に担ぐ。「約束の地点だ。行くか、捨てるか」",
+    "apply": [
+      "idealPoints+1",
+      "hp-3"
+    ],
+    "log": "約定を守る強行偵察で負傷したが、現地信頼を勝ち取った。"
+  },
+  {
+    "id": "player_medea_trust_workshop_001",
+    "category": "playerServant",
+    "weight": 8,
+    "minChapter": 1,
+    "maxChapter": 6,
+    "oncePerRun": true,
+    "requires": [
+      "playerServant=メディア"
+    ],
+    "excludes": [],
+    "hasChoices": false,
+    "text": "メディアは薄く笑う。「命令する？ それとも、私に預ける？」",
+    "apply": [
+      "mana+8"
+    ],
+    "log": "彼女の工房再編は完璧で、術式効率が大幅に改善した。"
+  },
+  {
+    "id": "player_medusa_blindside_escort_001",
+    "category": "playerServant",
+    "weight": 8,
+    "minChapter": 1,
+    "maxChapter": 6,
+    "oncePerRun": true,
+    "requires": [
+      "playerServant=メドゥーサ"
+    ],
+    "excludes": [],
+    "hasChoices": false,
+    "text": "メドゥーサは視線を伏せたまま囁く。「貴方は前に出ないで。私が道を開く」",
+    "apply": [
+      "intel+1"
+    ],
+    "log": "暗殺導線を追跡して敵斥候網の癖を掴んだ。"
+  },
+  {
+    "id": "player_kojirou_gate_bond_001",
+    "category": "playerServant",
+    "weight": 8,
+    "minChapter": 1,
+    "maxChapter": 6,
+    "oncePerRun": true,
+    "requires": [
+      "playerServant=佐々木小次郎"
+    ],
+    "excludes": [],
+    "hasChoices": false,
+    "text": "小次郎は笑って山門をなぞる。「背を預ける相手がいる門番も、悪くない」",
+    "apply": [
+      "tacticalAdvantage+1"
+    ],
+    "log": "間合い管理が冴え、夜戦の先制布陣を確保した。"
+  },
+  {
+    "id": "player_heracles_roar_vector_001",
+    "category": "playerServant",
+    "weight": 8,
+    "minChapter": 1,
+    "maxChapter": 6,
+    "oncePerRun": true,
+    "requires": [
+      "playerServant=ヘラクレス"
+    ],
+    "excludes": [],
+    "hasChoices": false,
+    "text": "ヘラクレスはあなたの前で低く吠える。咆哮は「守る方向」を待っている。",
+    "apply": [
+      "hp+6"
+    ],
+    "log": "護衛優先の指示が通じ、被害なく撤収路を確保した。"
+  },
+  {
     "id": "common_noop_001",
     "category": "common",
     "weight": 1,
