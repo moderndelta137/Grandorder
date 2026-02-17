@@ -1547,6 +1547,34 @@ const DAY_EVENT_OPTION_TEMPLATES = {
     { label: "共闘方針で士気を高める", apply: ["tacticalAdvantage+1", "idealPoints+1"], resultText: "連携訓練が噛み合い、戦術優位と理想の両立に成功。" },
     { label: "単独偵察を任せる", apply: ["intel+1", "civilianDamage+1"], resultText: "情報は得たが、囮行動の余波で一般被害が増えた。" },
   ],
+  player_artoria_oath_crossing_001: [
+    { label: "避難導線を最優先する", apply: ["civilianDamage-1", "idealPoints+1"], resultText: "「良い判断だ、マスター」騎士王は民間人の盾となった。" },
+    { label: "敵指揮系統を先に断つ", apply: ["tacticalAdvantage+1", "mana-4"], resultText: "勝機は近づいたが、王の視線はどこか厳しい。" },
+  ],
+  player_emiya_unsung_shift_001: [
+    { label: "補給と導線の整備を任せる", apply: ["mana+7"], resultText: "「英雄譚には載らないが、こういうのが効く」継戦態勢が整った。" },
+    { label: "危険区画の単独偵察を命じる", apply: ["intel+1", "hp-4"], resultText: "情報は得た。だが彼のコートには新しい裂傷が増えた。" },
+  ],
+  player_cu_geis_checkpoint_001: [
+    { label: "約定地点の救援を優先する", apply: ["idealPoints+1", "hp-3"], resultText: "「そう来ると思ったぜ」負傷と引き換えに信頼を繋いだ。" },
+    { label: "主戦場の勝率を優先する", apply: ["tacticalAdvantage+1", "civilianDamage+1"], resultText: "勝ち筋は太くなったが、置き去りにした悲鳴が残った。" },
+  ],
+  player_medea_trust_workshop_001: [
+    { label: "判断を彼女に委ねる", apply: ["mana+8"], resultText: "「ええ、では上品に片付けましょう」術式循環が洗練された。" },
+    { label: "手段不問で敵術式を潰す", apply: ["intel+1", "idealPoints-1"], resultText: "成果は高い。だが魔女の微笑には温度がなかった。" },
+  ],
+  player_medusa_blindside_escort_001: [
+    { label: "二人で追跡し、無理をさせない", apply: ["intel+1"], resultText: "「……了解」短い返答のあと、気配だけが敵の背後に現れた。" },
+    { label: "魔眼圧で即時排除を優先", apply: ["tacticalAdvantage+1", "mana-5"], resultText: "接敵前に排除成功。だが封印の反動で魔力が削れた。" },
+  ],
+  player_kojirou_gate_bond_001: [
+    { label: "正面を託し、背後を守る", apply: ["tacticalAdvantage+1"], resultText: "「背を預けるとは風流だ」門前の主導権を奪った。" },
+    { label: "陽動で敵列を崩させる", apply: ["intel+1", "mana-2"], resultText: "敵の癖を見抜いたが、仕掛けの維持で魔力を消耗した。" },
+  ],
+  player_heracles_roar_vector_001: [
+    { label: "護衛優先で抑制運用する", apply: ["hp+6"], resultText: "咆哮は壁となり、撤収路の全員が生還した。" },
+    { label: "突破優先で前線を粉砕する", apply: ["tacticalAdvantage+1", "civilianDamage+1"], resultText: "戦線は割れた。代わりに市街地の損耗が増えた。" },
+  ],
 };
 
 function prepareDayAction(state, actionType) {
@@ -1721,6 +1749,9 @@ function evaluateOneCondition(state, conditionRaw) {
 
   if (condition === "rescueUsed") return Boolean(state.flags.rescueUsed);
   if (condition === "playerServantKnown=true") return Boolean(state.servant.sourceName);
+
+  const playerServantMatch = condition.match(/^playerServant=(.+)$/);
+  if (playerServantMatch) return state.servant.sourceName === playerServantMatch[1];
 
   const enemyAliveMatch = condition.match(/^enemyAlive>=(\d+)$/);
   if (enemyAliveMatch) return remainingEnemies(state) >= Number(enemyAliveMatch[1]);
