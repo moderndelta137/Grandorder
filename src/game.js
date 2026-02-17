@@ -161,9 +161,11 @@ function stopAutoplay() {
 
 function runAutoplayStep() {
   const scene = SCENES[currentSceneId];
-  if (!scene || !scene.choices?.length) return false;
+  if (!scene) return false;
+  const choices = resolveSceneChoices(store.getState(), scene);
+  if (!choices.length) return false;
 
-  const choice = scene.choices[Math.floor(Math.random() * scene.choices.length)];
+  const choice = choices[Math.floor(Math.random() * choices.length)];
   store.update((draft) => {
     if (choice.effect) choice.effect(draft);
   });
@@ -202,8 +204,10 @@ function scheduleReadSkipIfNeeded() {
   if (readSkipMode === "off") return;
   const state = store.getState();
   const scene = SCENES[currentSceneId];
-  if (!scene || !scene.choices?.length) return;
-  if (scene.choices.length !== 1) return;
+  if (!scene) return;
+  const choices = resolveSceneChoices(state, scene);
+  if (!choices.length) return;
+  if (choices.length !== 1) return;
 
   const readScenes = state.flags.readScenes || {};
   if (!readScenes[currentSceneId]) return;
@@ -300,6 +304,12 @@ function createStore(initial) {
   };
 }
 
+
+function resolveSceneChoices(state, scene) {
+  const choices = typeof scene.choices === "function" ? scene.choices(state) : scene.choices;
+  return Array.isArray(choices) ? choices : [];
+}
+
 function render() {
   const state = store.getState();
   const scene = SCENES[currentSceneId];
@@ -386,7 +396,8 @@ function renderScene(state, scene) {
   if (storyCard) storyCard.classList.toggle("combat-layout", scene.phase === "夜");
 
   dom.choices.innerHTML = "";
-  scene.choices.forEach((choice) => {
+  const resolvedChoices = resolveSceneChoices(state, scene);
+  resolvedChoices.forEach((choice) => {
     const button = document.createElement("button");
     button.type = "button";
     button.textContent = choice.label;
