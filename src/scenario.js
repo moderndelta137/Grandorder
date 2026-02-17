@@ -198,7 +198,10 @@ export const INITIAL_STATE = {
     category: null,
     text: null,
     hasChoices: false,
+    active: null,
+    resultText: null,
   },
+  dayActionPlan: null,
   factions: [],
   log: ["召喚準備を開始した。"],
 };
@@ -711,41 +714,74 @@ ${s.servant.className}は短く息を吐いた。
     choices: [
       {
         label: "情報収集（敵情報を看破）",
-        effect: (s) => {
-          const intel = MASTER_BUILDS[s.master.buildType]?.情報 ?? 0;
-          const intelGain = 1 + (intel > 0 ? 1 : 0);
-          collectEnemyIntel(s, intelGain);
-          s.master.mana = Math.min(100, s.master.mana + 6);
-          s.battle.tacticalAdvantage = 0;
-          runDayRandomEvent(s);
-          applyChapterDayEvent(s, "intel");
-          runNpcFactionPhase(s);
-        },
-        next: "nightBattle",
+        effect: (s) => prepareDayAction(s, "intel"),
+        next: "dayEncounterCheck",
       },
       {
         label: "工房整備（魔力回復）",
-        effect: (s) => {
-          s.master.mana = Math.min(100, s.master.mana + 18);
-          s.battle.tacticalAdvantage = 0;
-          s.log.push("工房を整備し魔力を回復。戦闘準備を優先した。");
-          runDayRandomEvent(s);
-          applyChapterDayEvent(s, "workshop");
-          runNpcFactionPhase(s);
-        },
-        next: "nightBattle",
+        effect: (s) => prepareDayAction(s, "workshop"),
+        next: "dayEncounterCheck",
       },
       {
         label: "先制配置（夜戦補正）",
+        effect: (s) => prepareDayAction(s, "position"),
+        next: "dayEncounterCheck",
+      },
+    ],
+  },
+  dayEncounterCheck: {
+    phase: "昼",
+    title: "行動解決",
+    text: (s) => {
+      const actionLabel = s.dayActionPlan?.actionType === "intel"
+        ? "情報収集"
+        : s.dayActionPlan?.actionType === "workshop"
+          ? "工房整備"
+          : "先制配置";
+      const mode = s.dayActionPlan?.nextMode === "battle" ? "戦闘発生" : "ランダムイベント発生";
+      return `選択行動: ${actionLabel}
+解決結果: ${mode}`;
+    },
+    choices: [
+      {
+        label: "行動を確定する",
+        next: (s) => resolveDayEncounter(s),
+      },
+    ],
+  },
+  dayRandomEvent: {
+    phase: "昼",
+    title: "日中ランダムイベント",
+    text: (s) => {
+      const event = s.dayEvent?.active;
+      if (!event) return "イベントデータが見つからない。";
+      return `${event.text || event.id}
+カテゴリ: ${event.category}`;
+    },
+    choices: (s) => {
+      const event = s.dayEvent?.active;
+      if (!event || !event.options?.length) {
+        return [{ label: "次へ", next: "dayRandomEventResult" }];
+      }
+      return event.options.map((option) => ({
+        label: option.label,
+        effect: (draft) => applyDayEventOption(draft, option),
+        next: "dayRandomEventResult",
+      }));
+    },
+  },
+  dayRandomEventResult: {
+    phase: "昼",
+    title: "日中イベント結果",
+    text: (s) => s.dayEvent?.resultText || "特筆すべき変化はなかった。",
+    choices: [
+      {
+        label: "次の日中行動を選ぶ",
         effect: (s) => {
-          s.master.mana = Math.max(0, s.master.mana - 8);
-          s.battle.tacticalAdvantage = 2;
-          s.log.push("先制陣地を構築。夜戦に有利な位置を確保した。");
-          runDayRandomEvent(s);
-          applyChapterDayEvent(s, "position");
-          runNpcFactionPhase(s);
+          s.dayEvent.active = null;
+          s.dayActionPlan = null;
         },
-        next: "nightBattle",
+        next: "dayAction",
       },
     ],
   },
@@ -1492,35 +1528,134 @@ const DAY_EVENT_CATEGORY_WEIGHTS = {
   enemyServant: 10,
 };
 
-function runDayRandomEvent(state) {
-  const event = selectDayEvent(state);
-  if (!event) {
-    state.log.push("日中ランダムイベント: 候補不足のためスキップ。");
-    return;
-  }
+const DAY_ACTION_ENCOUNTER_RATE = {
+  intel: { battle: 0.5, randomCategoryBias: { common: 1.0, playerServant: 1.0, masterBuild: 1.0, enemyServant: 1.0 } },
+  workshop: { battle: 0.25, randomCategoryBias: { common: 0.8, playerServant: 1.5, masterBuild: 1.7, enemyServant: 1.0 } },
+  position: { battle: 0.72, randomCategoryBias: { common: 1.1, playerServant: 0.9, masterBuild: 0.8, enemyServant: 1.2 } },
+};
 
-  state.dayEvent = {
-    id: event.id,
-    category: event.category,
-    text: event.text || null,
-    hasChoices: Boolean(event.hasChoices),
+const DAY_EVENT_OPTION_TEMPLATES = {
+  common_public_praise_001: [
+    { label: "支援申し出を受け入れる", apply: ["idealPoints+1", "mana+2"], resultText: "支援網を取り込み、理想点と魔力に追い風が生まれた。" },
+    { label: "露出を避けて辞退する", apply: ["tacticalAdvantage+1"], resultText: "露出を抑え、夜戦向けの布陣に集中した。" },
+  ],
+  build_research_decode_001: [
+    { label: "解析結果を看破へ回す", apply: ["intel+1"], resultText: "解析成果を即時看破へ転用した。" },
+    { label: "解析結果を防御術式へ回す", apply: ["mana+5"], resultText: "工房術式の効率が上がり魔力余剰を得た。" },
+  ],
+  player_servant_pride_001: [
+    { label: "共闘方針で士気を高める", apply: ["tacticalAdvantage+1", "idealPoints+1"], resultText: "連携訓練が噛み合い、戦術優位と理想の両立に成功。" },
+    { label: "単独偵察を任せる", apply: ["intel+1", "civilianDamage+1"], resultText: "情報は得たが、囮行動の余波で一般被害が増えた。" },
+  ],
+};
+
+function prepareDayAction(state, actionType) {
+  state.dayActionPlan = {
+    actionType,
+    nextMode: null,
+    selectedEventId: null,
+    selectedEventCategory: null,
   };
-  state.flags.lastDayEventId = event.id;
 
-  if (event.text) state.log.push(`日中イベント発生: ${event.text}`);
-  applyDayEventOutcome(state, event.apply || []);
-  if (event.log) state.log.push(`日中イベント結果: ${event.log}`);
-
-  if (event.oncePerRun) {
-    state.flags.dayEventSeen = state.flags.dayEventSeen || {};
-    state.flags.dayEventSeen[event.id] = true;
+  if (actionType === "intel") {
+    const intel = MASTER_BUILDS[state.master.buildType]?.情報 ?? 0;
+    const intelGain = 1 + (intel > 0 ? 1 : 0);
+    collectEnemyIntel(state, intelGain);
+    state.master.mana = Math.min(100, state.master.mana + 6);
+    state.battle.tacticalAdvantage = 0;
   }
+
+  if (actionType === "workshop") {
+    state.master.mana = Math.min(100, state.master.mana + 18);
+    state.battle.tacticalAdvantage = 0;
+    state.log.push("工房を整備し魔力を回復。戦闘準備を優先した。");
+  }
+
+  if (actionType === "position") {
+    state.master.mana = Math.max(0, state.master.mana - 8);
+    state.battle.tacticalAdvantage = 2;
+    state.log.push("先制陣地を構築。夜戦に有利な位置を確保した。");
+  }
+
+  const rate = DAY_ACTION_ENCOUNTER_RATE[actionType] || DAY_ACTION_ENCOUNTER_RATE.intel;
+  state.dayActionPlan.nextMode = Math.random() < rate.battle ? "battle" : "random";
 }
 
-function selectDayEvent(state) {
+function resolveDayEncounter(state) {
+  const actionType = state.dayActionPlan?.actionType || "intel";
+
+  if (state.dayActionPlan?.nextMode === "battle") {
+    applyChapterDayEvent(state, actionType);
+    runNpcFactionPhase(state);
+    state.dayEvent.active = null;
+    state.dayEvent.resultText = null;
+    state.dayActionPlan = null;
+    return "nightBattle";
+  }
+
+  const event = selectDayEvent(state, actionType);
+  if (!event) {
+    state.log.push("日中ランダムイベント: 候補不足。通常進行へフォールバック。");
+    state.dayActionPlan = null;
+    return "dayAction";
+  }
+
+  const options = buildDayEventOptions(event);
+  state.dayEvent.id = event.id;
+  state.dayEvent.category = event.category;
+  state.dayEvent.text = event.text || null;
+  state.dayEvent.hasChoices = options.length > 1;
+  state.dayEvent.active = {
+    id: event.id,
+    category: event.category,
+    text: event.text || event.id,
+    options,
+  };
+  state.dayEvent.resultText = null;
+  state.flags.lastDayEventId = event.id;
+
+  state.dayActionPlan.selectedEventId = event.id;
+  state.dayActionPlan.selectedEventCategory = event.category;
+
+  state.log.push(`日中イベント発生: ${event.text || event.id}`);
+  return "dayRandomEvent";
+}
+
+function buildDayEventOptions(event) {
+  const template = DAY_EVENT_OPTION_TEMPLATES[event.id];
+  if (template && template.length > 0) return template;
+
+  return [
+    {
+      label: "対応する",
+      apply: event.apply || [],
+      resultText: event.log || "状況は静かに推移した。",
+      oncePerRun: event.oncePerRun,
+    },
+  ];
+}
+
+function applyDayEventOption(state, option) {
+  applyDayEventOutcome(state, option.apply || []);
+  state.dayEvent.resultText = option.resultText || "変化はなかった。";
+  if (state.dayEvent.active?.id) {
+    state.flags.lastDayEventId = state.dayEvent.active.id;
+  }
+
+  const currentId = state.dayEvent.active?.id;
+  const sourceEvent = currentId ? DAY_EVENTS.find((e) => e.id === currentId) : null;
+  const shouldMarkOnce = Boolean(option.oncePerRun) || Boolean(sourceEvent?.oncePerRun);
+  if (shouldMarkOnce && currentId) {
+    state.flags.dayEventSeen = state.flags.dayEventSeen || {};
+    state.flags.dayEventSeen[currentId] = true;
+  }
+
+  if (state.dayEvent.resultText) state.log.push(`日中イベント結果: ${state.dayEvent.resultText}`);
+}
+
+function selectDayEvent(state, actionType = "intel") {
   const chapter = state.progress.chapterIndex || 1;
   const candidates = DAY_EVENTS.filter((event) => {
-    if (event.hasChoices) return false;
     if (chapter < (event.minChapter || 1) || chapter > (event.maxChapter || 6)) return false;
     if (event.oncePerRun && state.flags.dayEventSeen?.[event.id]) return false;
     if (!evaluateEventConditions(state, event.requires || [])) return false;
@@ -1535,9 +1670,12 @@ function selectDayEvent(state) {
     enemyServant: candidates.filter((e) => e.category === "enemyServant"),
   };
 
+  const bias = DAY_ACTION_ENCOUNTER_RATE[actionType]?.randomCategoryBias || DAY_ACTION_ENCOUNTER_RATE.intel.randomCategoryBias;
   const availableCategoryWeights = {};
   for (const [category, list] of Object.entries(byCategory)) {
-    if (list.length > 0) availableCategoryWeights[category] = DAY_EVENT_CATEGORY_WEIGHTS[category] || 0;
+    if (list.length > 0) {
+      availableCategoryWeights[category] = (DAY_EVENT_CATEGORY_WEIGHTS[category] || 0) * (bias[category] || 1);
+    }
   }
 
   const selectedCategory = weightedPickByNumber(availableCategoryWeights);

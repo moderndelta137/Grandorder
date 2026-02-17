@@ -10,16 +10,21 @@ function cloneState() {
   return structuredClone(INITIAL_STATE);
 }
 
-function getChoice(sceneId, label) {
+function getSceneChoices(state, sceneId) {
   const scene = SCENES[sceneId];
   if (!scene) throw new Error(`scene not found: ${sceneId}`);
-  const choice = scene.choices?.find((c) => c.label === label);
+  const choices = typeof scene.choices === "function" ? scene.choices(state) : scene.choices;
+  return Array.isArray(choices) ? choices : [];
+}
+
+function getChoice(sceneId, label, state) {
+  const choice = getSceneChoices(state ?? INITIAL_STATE, sceneId).find((c) => c.label === label);
   if (!choice) throw new Error(`choice not found: ${sceneId} -> ${label}`);
   return choice;
 }
 
 function runChoice(state, sceneId, label) {
-  const choice = getChoice(sceneId, label);
+  const choice = getChoice(sceneId, label, state);
   if (choice.effect) choice.effect(state);
   return typeof choice.next === "function" ? choice.next(state) : choice.next;
 }
@@ -65,9 +70,13 @@ function checkChapter1To2Alliance() {
   next = runChoice(state, "chapter2_main_002", "同盟を維持し被害を抑える");
   assert(next === "dayAction", `chapter2_main_002 遷移不正: ${next}`);
 
-  // 第2章 intel行動で同盟状態が更新される（乱数固定でalliedへ）
+  // 第2章 intel行動で同盟状態が更新される（乱数固定で battle -> allied へ）
   withFixedRandom(0.1, () => {
-    runChoice(state, "dayAction", "情報収集（敵情報を看破）");
+    let scene = runChoice(state, "dayAction", "情報収集（敵情報を看破）");
+    if (scene === "dayEncounterCheck") {
+      scene = runChoice(state, "dayEncounterCheck", "行動を確定する");
+    }
+    assert(scene === "nightBattle", `第2章intel行動の戦闘遷移不正: ${scene}`);
   });
   assert(state.flags.allianceState === "allied", `第2章同盟分岐の更新失敗: ${state.flags.allianceState}`);
 }

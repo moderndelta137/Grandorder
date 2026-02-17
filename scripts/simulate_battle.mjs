@@ -14,16 +14,22 @@ function cloneState() {
   return structuredClone(INITIAL_STATE);
 }
 
-function pickChoice(sceneKey, label) {
+function getSceneChoices(state, sceneKey) {
   const scene = SCENES[sceneKey];
   if (!scene) throw new Error(`scene not found: ${sceneKey}`);
-  const choice = scene.choices?.find((c) => c.label === label);
+  const choices = typeof scene.choices === "function" ? scene.choices(state) : scene.choices;
+  return Array.isArray(choices) ? choices : [];
+}
+
+function pickChoice(sceneKey, label, stateForDynamic) {
+  const choices = getSceneChoices(stateForDynamic ?? INITIAL_STATE, sceneKey);
+  const choice = choices.find((c) => c.label === label);
   if (!choice) throw new Error(`choice not found: ${sceneKey} -> ${label}`);
   return choice;
 }
 
 function runChoice(state, sceneKey, label) {
-  const choice = pickChoice(sceneKey, label);
+  const choice = pickChoice(sceneKey, label, state);
   choice.effect?.(state);
   const next = typeof choice.next === 'function' ? choice.next(state) : choice.next;
   return next;
@@ -45,7 +51,35 @@ function setupToNightBattle(state) {
   runChoice(state, 'summonResult', '第1章へ進む');
   forceBenchmarkServant(state);
   runChoice(state, 'chapterIntro', '作戦会議を終えて行動開始');
-  runChoice(state, 'dayAction', '先制配置（夜戦補正）');
+
+  let guard = 0;
+  let sceneId = 'dayAction';
+  while (sceneId !== 'nightBattle' && guard < 120) {
+    guard += 1;
+    if (sceneId === 'dayAction') {
+      sceneId = runChoice(state, 'dayAction', '先制配置（夜戦補正）');
+      continue;
+    }
+    if (sceneId === 'dayEncounterCheck') {
+      sceneId = runChoice(state, 'dayEncounterCheck', '行動を確定する');
+      continue;
+    }
+    if (sceneId === 'dayRandomEvent') {
+      const choices = getSceneChoices(state, 'dayRandomEvent');
+      const label = choices[0]?.label;
+      if (!label) throw new Error('dayRandomEvent has no choices');
+      sceneId = runChoice(state, 'dayRandomEvent', label);
+      continue;
+    }
+    if (sceneId === 'dayRandomEventResult') {
+      sceneId = runChoice(state, 'dayRandomEventResult', '次の日中行動を選ぶ');
+      continue;
+    }
+    throw new Error(`unexpected scene while preparing battle: ${sceneId}`);
+  
+    
+  }
+  if (sceneId !== 'nightBattle') throw new Error('failed to reach nightBattle in setup');
 }
 
 function validateState(state, actionLabel) {
