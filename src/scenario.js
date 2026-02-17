@@ -1753,6 +1753,9 @@ function evaluateOneCondition(state, conditionRaw) {
   const playerServantMatch = condition.match(/^playerServant=(.+)$/);
   if (playerServantMatch) return state.servant.sourceName === playerServantMatch[1];
 
+  const enemyServantMatch = condition.match(/^enemyServant=(.+)$/);
+  if (enemyServantMatch) return state.factions.some((f) => f.alive && f.trueName === enemyServantMatch[1]);
+
   const enemyAliveMatch = condition.match(/^enemyAlive>=(\d+)$/);
   if (enemyAliveMatch) return remainingEnemies(state) >= Number(enemyAliveMatch[1]);
 

@@ -1040,6 +1040,63 @@ export const DAY_EVENTS = [
     "log": "解析成果で看破と魔力が改善した。"
   },
   {
+    "id": "build_bloodline_vow_002",
+    "category": "masterBuild",
+    "weight": 6,
+    "minChapter": 2,
+    "maxChapter": 6,
+    "oncePerRun": false,
+    "requires": [
+      "masterBuild=血統型"
+    ],
+    "excludes": [],
+    "hasChoices": false,
+    "text": "古い家系の誓約術式を再起動し契約維持を安定化した",
+    "apply": [
+      "mana+5",
+      "idealPoints+1"
+    ],
+    "log": "血統回路の同調により魔力効率と信義評価が向上した。"
+  },
+  {
+    "id": "build_field_network_002",
+    "category": "masterBuild",
+    "weight": 6,
+    "minChapter": 2,
+    "maxChapter": 6,
+    "oncePerRun": false,
+    "requires": [
+      "masterBuild=現場型"
+    ],
+    "excludes": [],
+    "hasChoices": false,
+    "text": "現場型の人脈を使って避難路と連絡網を即時再編した",
+    "apply": [
+      "hp+4",
+      "civilianDamage-1"
+    ],
+    "log": "応急導線が機能し負傷と被害の拡大を抑えた。"
+  },
+  {
+    "id": "build_research_counterplan_002",
+    "category": "masterBuild",
+    "weight": 6,
+    "minChapter": 3,
+    "maxChapter": 6,
+    "oncePerRun": false,
+    "requires": [
+      "masterBuild=研究型"
+    ],
+    "excludes": [],
+    "hasChoices": false,
+    "text": "研究型の逆算計画で敵術式の穴を突く対策を立案した",
+    "apply": [
+      "intel+1",
+      "tacticalAdvantage+1"
+    ],
+    "log": "解析結果を実戦配置へ反映し夜戦優位を得た。"
+  },
+  {
     "id": "player_servant_pride_001",
     "category": "playerServant",
     "weight": 9,
@@ -1204,6 +1261,116 @@ export const DAY_EVENTS = [
       "hp+6"
     ],
     "log": "護衛優先の指示が通じ、被害なく撤収路を確保した。"
+  },
+  {
+    "id": "enemy_artoria_aura_pressure_001",
+    "category": "enemyServant",
+    "weight": 6,
+    "minChapter": 2,
+    "maxChapter": 6,
+    "oncePerRun": false,
+    "requires": [
+      "enemyServant=アルトリア・ペンドラゴン"
+    ],
+    "excludes": [],
+    "hasChoices": false,
+    "text": "敵セイバーの威圧が前線全体に走り指揮系統が揺らぐ",
+    "apply": [
+      "mana-5"
+    ],
+    "log": "敵セイバーの圧力で術式維持に余計な魔力を割かれた。"
+  },
+  {
+    "id": "enemy_emiya_killzone_001",
+    "category": "enemyServant",
+    "weight": 6,
+    "minChapter": 2,
+    "maxChapter": 6,
+    "oncePerRun": false,
+    "requires": [
+      "enemyServant=エミヤ"
+    ],
+    "excludes": [],
+    "hasChoices": false,
+    "text": "敵アーチャーが高所射線を確保し移動経路が制限された",
+    "apply": [
+      "hp-4",
+      "intel+1"
+    ],
+    "log": "被弾したが狙撃パターンの一部を把握した。"
+  },
+  {
+    "id": "enemy_cu_breakthrough_001",
+    "category": "enemyServant",
+    "weight": 6,
+    "minChapter": 2,
+    "maxChapter": 6,
+    "oncePerRun": false,
+    "requires": [
+      "enemyServant=クー・フーリン"
+    ],
+    "excludes": [],
+    "hasChoices": false,
+    "text": "敵ランサーの強襲で外周防衛線が一時突破された",
+    "apply": [
+      "civilianDamage+1"
+    ],
+    "log": "突破対応が遅れ一般被害が増えた。"
+  },
+  {
+    "id": "enemy_medea_leyline_tamper_001",
+    "category": "enemyServant",
+    "weight": 6,
+    "minChapter": 2,
+    "maxChapter": 6,
+    "oncePerRun": false,
+    "requires": [
+      "enemyServant=メディア"
+    ],
+    "excludes": [],
+    "hasChoices": false,
+    "text": "敵キャスターが霊脈位相を撹乱し工房効率が低下した",
+    "apply": [
+      "mana-8"
+    ],
+    "log": "霊脈汚染により魔力循環が乱れた。"
+  },
+  {
+    "id": "enemy_medusa_shadow_hunt_001",
+    "category": "enemyServant",
+    "weight": 6,
+    "minChapter": 2,
+    "maxChapter": 6,
+    "oncePerRun": false,
+    "requires": [
+      "enemyServant=メドゥーサ"
+    ],
+    "excludes": [],
+    "hasChoices": false,
+    "text": "敵ライダーの高速追跡で偵察班が拘束され情報網が乱れる",
+    "apply": [
+      "idealPoints-1",
+      "intel+1"
+    ],
+    "log": "現場は混乱したが敵の行動癖を逆探知した。"
+  },
+  {
+    "id": "enemy_heracles_cityquake_001",
+    "category": "enemyServant",
+    "weight": 6,
+    "minChapter": 3,
+    "maxChapter": 6,
+    "oncePerRun": false,
+    "requires": [
+      "enemyServant=ヘラクレス"
+    ],
+    "excludes": [],
+    "hasChoices": false,
+    "text": "敵バーサーカーの突撃が市街地インフラに直撃した",
+    "apply": [
+      "civilianDamage+2"
+    ],
+    "log": "阻止は間に合わず都市被害が拡大した。"
   },
   {
     "id": "common_noop_001",
