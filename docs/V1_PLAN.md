@@ -190,7 +190,7 @@ Sprint 4の昼ランダムイベント拡張は `docs/SPRINT4_PLAN.md` を参照
 - Sprint 1: 完了
 - Sprint 2: 完了
 - Sprint 3: 完了（D-3回帰検証スクリプト導入済み）
-- Sprint 4: 進行中（Step B-3まで反映、B-2/C/Dが残）
+- Sprint 4: 進行中（Step Bまで完了、C/Dが残）
 
 
 ## 4.6 Sprint 4実装スコープ（昼ランダムイベント完全版）

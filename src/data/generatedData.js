@@ -1040,6 +1040,63 @@ export const DAY_EVENTS = [
     "log": "解析成果で看破と魔力が改善した。"
   },
   {
+    "id": "build_bloodline_vow_002",
+    "category": "masterBuild",
+    "weight": 6,
+    "minChapter": 2,
+    "maxChapter": 6,
+    "oncePerRun": false,
+    "requires": [
+      "masterBuild=血統型"
+    ],
+    "excludes": [],
+    "hasChoices": false,
+    "text": "古い家系の誓約術式を再起動し契約維持を安定化した",
+    "apply": [
+      "mana+5",
+      "idealPoints+1"
+    ],
+    "log": "血統回路の同調により魔力効率と信義評価が向上した。"
+  },
+  {
+    "id": "build_field_network_002",
+    "category": "masterBuild",
+    "weight": 6,
+    "minChapter": 2,
+    "maxChapter": 6,
+    "oncePerRun": false,
+    "requires": [
+      "masterBuild=現場型"
+    ],
+    "excludes": [],
+    "hasChoices": false,
+    "text": "現場型の人脈を使って避難路と連絡網を即時再編した",
+    "apply": [
+      "hp+4",
+      "civilianDamage-1"
+    ],
+    "log": "応急導線が機能し負傷と被害の拡大を抑えた。"
+  },
+  {
+    "id": "build_research_counterplan_002",
+    "category": "masterBuild",
+    "weight": 6,
+    "minChapter": 3,
+    "maxChapter": 6,
+    "oncePerRun": false,
+    "requires": [
+      "masterBuild=研究型"
+    ],
+    "excludes": [],
+    "hasChoices": false,
+    "text": "研究型の逆算計画で敵術式の穴を突く対策を立案した",
+    "apply": [
+      "intel+1",
+      "tacticalAdvantage+1"
+    ],
+    "log": "解析結果を実戦配置へ反映し夜戦優位を得た。"
+  },
+  {
     "id": "player_servant_pride_001",
     "category": "playerServant",
     "weight": 9,
