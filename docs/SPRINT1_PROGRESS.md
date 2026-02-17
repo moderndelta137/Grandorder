@@ -148,6 +148,14 @@
 
 
 
+### 2.25 Sprint4 Step C-1/C-2 完了（分岐期待値 + ログ可読化）
+- `src/scenario.js` の `DAY_EVENT_OPTION_TEMPLATES` を拡張し、B-2で追加したビルド専用3本にも2択分岐を付与。
+- 期待値の偏りが強すぎないよう、各分岐を「継戦安定」「夜戦優位」「被害抑制」系のトレードオフへ再設計。
+- `applyDayEventOutcome()` を拡張し、看破/被害/同盟を含む主要値の before/after 差分を `変動:` サマリとして自動生成。
+- `dayRandomEventResult` で結果本文に変動サマリを追記し、`state.log` にも同内容を保存して追跡性を向上。
+
+
+
 ---
 
 ## 3. 現在のファイル責務
@@ -183,7 +191,7 @@
 
 ### 4.3 再開手順（別スレッド向け）
 1. `docs/GDD.md` と `docs/V1_PLAN.md` を確認。
-2. 次期作業は `docs/SPRINT4_PLAN.md` の Step C（選択肢期待値調整）→ Step D（回帰確認）から着手。
+2. 次期作業は `docs/SPRINT4_PLAN.md` の Step D（回帰確認: D-1〜D-3）から着手。
 3. 変更後は本ファイルの「2.実装済み内容」と「4.技術負債」を更新。
 
 ---
