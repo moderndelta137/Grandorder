@@ -125,6 +125,19 @@
 - ランダムイベント発生時は `dayRandomEvent`（本文+選択肢）→`dayRandomEventResult`（結果表示）→`dayAction` に戻る流れを実装。
 - 行動別の発生率を導入（先制配置は戦闘寄り、工房整備はランダム寄り）し、工房整備時にビルド/サーヴァント関連カテゴリ比率が上がるようカテゴリバイアスを追加。
 
+
+### 2.22 Sprint4 Step B-3 完了（味方7 + 敵6）
+- `data/csv/day_events.csv` に味方真名専用7本・敵生存真名専用6本を追加。
+- 味方側は「マスターとの関係性」を主軸にした2択イベントを中心に構成し、敵側は生存敵真名に応じた圧力イベントを追加。
+- `scripts/generate_csv_data.mjs` 再生成により `src/data/generatedData.js` へ反映。
+
+### 2.23 日中イベント条件評価拡張（真名条件）
+- `src/scenario.js` の `evaluateOneCondition()` へ以下を追加。
+  - `playerServant=<trueName>`（自陣契約サーヴァントの真名一致）
+  - `enemyServant=<trueName>`（生存敵陣営に該当真名が存在）
+- これにより真名ベースでの味方/敵専用イベント抽選が成立。
+
+
 ---
 
 ## 3. 現在のファイル責務
@@ -160,7 +173,7 @@
 
 ### 4.3 再開手順（別スレッド向け）
 1. `docs/GDD.md` と `docs/V1_PLAN.md` を確認。
-2. 次期作業は `docs/SPRINT2_PLAN.md` のStep Aから着手。
+2. 次期作業は `docs/SPRINT4_PLAN.md` の Step B-2（ビルド専用6本の充足）→ Step C（期待値調整）から着手。
 3. 変更後は本ファイルの「2.実装済み内容」と「4.技術負債」を更新。
 
 ---
