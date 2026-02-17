@@ -754,7 +754,10 @@ ${s.servant.className}は短く息を吐いた。
     title: "夜戦フェーズ",
     text: (s) => {
       const enemy = getCurrentEnemy(s);
-      return `敵陣営と接敵。対象クラス: ${enemy?.className ?? "不明"}\n令呪: ${s.master.commandSpells}画 / 魔力: ${s.master.mana}\n※宝具は1戦闘1回`;
+      const dayEventSummary = s.dayEvent?.id
+        ? `直前の日中イベント: ${s.dayEvent.text || s.dayEvent.id}（${s.dayEvent.category}）`
+        : "直前の日中イベント: なし";
+      return `敵陣営と接敵。対象クラス: ${enemy?.className ?? "不明"}\n令呪: ${s.master.commandSpells}画 / 魔力: ${s.master.mana}\n${dayEventSummary}\n※宝具は1戦闘1回`;
     },
     choices: [
       { label: "通常攻撃", effect: (s) => resolveBattle(s, "normal"), next: (s) => postBattleScene(s) },
@@ -1521,7 +1524,7 @@ function selectDayEvent(state) {
     if (chapter < (event.minChapter || 1) || chapter > (event.maxChapter || 6)) return false;
     if (event.oncePerRun && state.flags.dayEventSeen?.[event.id]) return false;
     if (!evaluateEventConditions(state, event.requires || [])) return false;
-    if (evaluateEventConditions(state, event.excludes || [])) return false;
+    if ((event.excludes || []).length > 0 && evaluateEventConditions(state, event.excludes || [])) return false;
     return true;
   });
 
