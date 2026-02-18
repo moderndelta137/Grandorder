@@ -156,6 +156,36 @@
 
 
 
+### 2.26 Sprint4 Step D-1 完了（1000回分布検証）
+- `scripts/simulate_day_events.mjs` を新規追加し、日中イベント抽選を行動別に1000回×3（合計3000回）で検証。
+- 検証項目:
+  - カテゴリ分布が `共通 > 味方真名 > ビルド > 敵真名` を満たすこと
+  - 抽選失敗率 0%（`dayEvent.category` 未設定が発生しないこと）
+- 現行結果（合計3000回）:
+  - common: 1361（45.37%）
+  - playerServant: 810（27.0%）
+  - masterBuild: 499（16.63%）
+  - enemyServant: 330（11.0%）
+- 残タスクは Step D-2（セーブ/ロード互換確認）と D-3（既存エンド回帰）。
+
+
+
+### 2.27 Sprint4 Step D-2 完了（セーブ/ロード互換確認）
+- `scripts/validate_sprint4_d2.mjs` を追加。
+- 検証項目:
+  - 現行セーブJSONの round-trip 読込
+  - 旧形状（`dayEvent.deltaSummary` / `flags.readScenes` 欠落）の互換読込
+  - 互換外versionの拒否
+
+### 2.28 Sprint4 Step D-3 完了（既存エンド回帰）
+- `scripts/validate_sprint4_d3.mjs` を追加。
+- 検証項目:
+  - 4エンディング（正統勝利 / 代償勝利 / 救済生還 / 破滅）の判定回帰
+  - `scripts/validate_sprint3_d3.mjs` の基準チェックが引き続き通過すること
+- これにより Sprint4 Step D（D-1〜D-3）が完了。
+
+
+
 ---
 
 ## 3. 現在のファイル責務
@@ -191,7 +221,7 @@
 
 ### 4.3 再開手順（別スレッド向け）
 1. `docs/GDD.md` と `docs/V1_PLAN.md` を確認。
-2. 次期作業は `docs/SPRINT4_PLAN.md` の Step D（回帰確認: D-1〜D-3）から着手。
+2. 次期作業は Sprint4完了反映として、`docs/V1_PLAN.md` の受け入れ確認と最終RC調整へ移行。
 3. 変更後は本ファイルの「2.実装済み内容」と「4.技術負債」を更新。
 
 ---
