@@ -20,6 +20,7 @@ const dom = {
   sceneTitle: document.querySelector("#scene-title"),
   sceneDayPhase: document.querySelector("#scene-dayphase"),
   sceneText: document.querySelector("#scene-text"),
+  storyCard: document.querySelector(".story"),
   enemyIntelPanel: document.querySelector("#enemy-intel-panel"),
   enemyIntelText: document.querySelector("#enemy-intel-text"),
   choices: document.querySelector("#choices"),
@@ -102,9 +103,11 @@ if (dom.restartButton) {
 
 if (dom.openServantSheet && dom.servantSheet) {
   dom.openServantSheet.addEventListener("click", () => {
+    dom.servantSheet.classList.remove("closing");
     dom.servantSheet.classList.add("open");
     dom.servantSheet.setAttribute("aria-hidden", "false");
     renderServantSheet(store.getState());
+    requestAnimationFrame(() => dom.closeServantSheet?.focus());
   });
 }
 
@@ -125,6 +128,20 @@ dom.sheetTabs.forEach((tab) => {
     updateSheetTabs();
   });
 });
+
+[
+  dom.restartButton,
+  dom.autoplayToggle,
+  dom.readSkipToggle,
+  dom.saveSlot1,
+  dom.saveSlot2,
+  dom.saveSlot3,
+  dom.loadSlot1,
+  dom.loadSlot2,
+  dom.loadSlot3,
+  dom.openServantSheet,
+  dom.closeServantSheet,
+].forEach(bindButtonPressEffect);
 
 render();
 updateReadSkipUi();
@@ -310,6 +327,25 @@ function resolveSceneChoices(state, scene) {
   return Array.isArray(choices) ? choices : [];
 }
 
+
+function animateSceneTransition() {
+  if (!dom.sceneText) return;
+  dom.sceneText.classList.add("scene-enter");
+  requestAnimationFrame(() => {
+    dom.sceneText.classList.remove("scene-enter");
+  });
+}
+
+function bindButtonPressEffect(button) {
+  if (!(button instanceof HTMLButtonElement)) return;
+  const press = () => button.classList.add("is-pressed");
+  const release = () => button.classList.remove("is-pressed");
+  button.addEventListener("pointerdown", press);
+  button.addEventListener("pointerup", release);
+  button.addEventListener("pointerleave", release);
+  button.addEventListener("blur", release);
+}
+
 function render() {
   const state = store.getState();
   const scene = SCENES[currentSceneId];
@@ -392,7 +428,7 @@ function renderScene(state, scene) {
   const text = typeof scene.text === "function" ? scene.text(state) : scene.text;
   dom.sceneText.textContent = text;
   dom.choices.classList.toggle("choices-grid", scene.phase === "夜");
-  const storyCard = dom.sceneText.closest(".story");
+  const storyCard = dom.storyCard || dom.sceneText.closest(".story");
   if (storyCard) storyCard.classList.toggle("combat-layout", scene.phase === "夜");
 
   dom.choices.innerHTML = "";
@@ -401,6 +437,7 @@ function renderScene(state, scene) {
     const button = document.createElement("button");
     button.type = "button";
     button.textContent = choice.label;
+    bindButtonPressEffect(button);
     button.addEventListener("click", () => {
       clearReadSkipTimer();
       const prevSceneId = currentSceneId;
@@ -418,6 +455,8 @@ function renderScene(state, scene) {
     });
     dom.choices.appendChild(button);
   });
+
+  animateSceneTransition();
 }
 
 function renderLog(state) {
@@ -439,7 +478,11 @@ function renderLog(state) {
 function closeServantSheet() {
   if (!dom.servantSheet) return;
   dom.servantSheet.classList.remove("open");
+  dom.servantSheet.classList.add("closing");
   dom.servantSheet.setAttribute("aria-hidden", "true");
+  setTimeout(() => {
+    dom.servantSheet?.classList.remove("closing");
+  }, 220);
 }
 
 function updateSheetTabs() {
