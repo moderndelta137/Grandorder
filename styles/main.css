@@ -7,6 +7,7 @@
   --accent: #82a4ff;
   --accent-strong: #5d82ff;
   --danger: #ff6d89;
+  --ease-scene: cubic-bezier(0.2, 0.75, 0.25, 1);
 }
 
 * {
@@ -282,6 +283,14 @@ h1 {
   white-space: pre-line;
   overflow: auto;
   padding-right: 4px;
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 240ms var(--ease-scene), transform 260ms var(--ease-scene);
+}
+
+.scene-text.scene-enter {
+  opacity: 0;
+  transform: translateY(8px);
 }
 
 .choices {
@@ -354,11 +363,26 @@ button {
   color: #fff;
   font-weight: 600;
   cursor: pointer;
-  transition: 0.2s transform ease, 0.2s opacity ease;
+  position: relative;
+  overflow: hidden;
+  transition:
+    0.16s transform ease,
+    0.16s opacity ease,
+    0.16s box-shadow ease,
+    0.2s filter ease;
 }
 
 button:hover {
   transform: translateY(-1px);
+  filter: brightness(1.08);
+  box-shadow: 0 8px 18px rgba(93, 130, 255, 0.32);
+}
+
+button:active,
+button.is-pressed {
+  transform: translateY(1px) scale(0.985);
+  filter: brightness(0.94);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.24);
 }
 
 button:disabled {
@@ -431,16 +455,25 @@ button.secondary {
   inset: 0;
   z-index: 40;
   display: none;
+  opacity: 0;
 }
 
 .servant-sheet.open {
   display: block;
+  opacity: 1;
+}
+
+.servant-sheet.closing {
+  display: block;
+  opacity: 0;
 }
 
 .sheet-overlay {
   position: absolute;
   inset: 0;
   background: rgba(8, 5, 3, 0.72);
+  opacity: 0;
+  transition: opacity 180ms ease;
 }
 
 .sheet-card {
@@ -456,6 +489,18 @@ button.secondary {
     radial-gradient(circle at 20% 15%, rgba(255, 193, 125, 0.18), transparent 30%),
     linear-gradient(160deg, #4d2413 0%, #2d130d 55%, #1c0f0a 100%);
   box-shadow: 0 25px 80px rgba(0, 0, 0, 0.55);
+  opacity: 0;
+  transform: translateY(14px) scale(0.985);
+  transition: transform 220ms var(--ease-scene), opacity 200ms var(--ease-scene);
+}
+
+.servant-sheet.open .sheet-overlay {
+  opacity: 1;
+}
+
+.servant-sheet.open .sheet-card {
+  opacity: 1;
+  transform: translateY(0) scale(1);
 }
 
 .sheet-header {

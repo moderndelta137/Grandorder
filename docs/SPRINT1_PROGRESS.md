@@ -125,6 +125,73 @@
 - ランダムイベント発生時は `dayRandomEvent`（本文+選択肢）→`dayRandomEventResult`（結果表示）→`dayAction` に戻る流れを実装。
 - 行動別の発生率を導入（先制配置は戦闘寄り、工房整備はランダム寄り）し、工房整備時にビルド/サーヴァント関連カテゴリ比率が上がるようカテゴリバイアスを追加。
 
+
+### 2.22 Sprint4 Step B-3 完了（味方7 + 敵6）
+- `data/csv/day_events.csv` に味方真名専用7本・敵生存真名専用6本を追加。
+- 味方側は「マスターとの関係性」を主軸にした2択イベントを中心に構成し、敵側は生存敵真名に応じた圧力イベントを追加。
+- `scripts/generate_csv_data.mjs` 再生成により `src/data/generatedData.js` へ反映。
+
+### 2.23 日中イベント条件評価拡張（真名条件）
+- `src/scenario.js` の `evaluateOneCondition()` へ以下を追加。
+  - `playerServant=<trueName>`（自陣契約サーヴァントの真名一致）
+  - `enemyServant=<trueName>`（生存敵陣営に該当真名が存在）
+- これにより真名ベースでの味方/敵専用イベント抽選が成立。
+
+
+### 2.24 Sprint4 Step B-2 完了（ビルド専用6本）
+- `data/csv/day_events.csv` の `masterBuild` イベントを3本追加し、合計6本へ拡張。
+- 追加内訳:
+  - 血統型: 契約維持寄りの誓約術式イベント
+  - 現場型: 避難導線・連絡網再編イベント
+  - 研究型: 解析結果を夜戦配置へ転用する対策イベント
+- これにより Sprint4 Step B（B-1/B-2/B-3）が完了し、残タスクは Step C（期待値調整）以降。
+
+
+
+### 2.25 Sprint4 Step C-1/C-2 完了（分岐期待値 + ログ可読化）
+- `src/scenario.js` の `DAY_EVENT_OPTION_TEMPLATES` を拡張し、B-2で追加したビルド専用3本にも2択分岐を付与。
+- 期待値の偏りが強すぎないよう、各分岐を「継戦安定」「夜戦優位」「被害抑制」系のトレードオフへ再設計。
+- `applyDayEventOutcome()` を拡張し、看破/被害/同盟を含む主要値の before/after 差分を `変動:` サマリとして自動生成。
+- `dayRandomEventResult` で結果本文に変動サマリを追記し、`state.log` にも同内容を保存して追跡性を向上。
+
+
+
+### 2.26 Sprint4 Step D-1 完了（1000回分布検証）
+- `scripts/simulate_day_events.mjs` を新規追加し、日中イベント抽選を行動別に1000回×3（合計3000回）で検証。
+- 検証項目:
+  - カテゴリ分布が `共通 > 味方真名 > ビルド > 敵真名` を満たすこと
+  - 抽選失敗率 0%（`dayEvent.category` 未設定が発生しないこと）
+- 現行結果（合計3000回）:
+  - common: 1361（45.37%）
+  - playerServant: 810（27.0%）
+  - masterBuild: 499（16.63%）
+  - enemyServant: 330（11.0%）
+- 残タスクは Step D-2（セーブ/ロード互換確認）と D-3（既存エンド回帰）。
+
+
+
+### 2.27 Sprint4 Step D-2 完了（セーブ/ロード互換確認）
+- `scripts/validate_sprint4_d2.mjs` を追加。
+- 検証項目:
+  - 現行セーブJSONの round-trip 読込
+  - 旧形状（`dayEvent.deltaSummary` / `flags.readScenes` 欠落）の互換読込
+  - 互換外versionの拒否
+
+### 2.28 Sprint4 Step D-3 完了（既存エンド回帰）
+- `scripts/validate_sprint4_d3.mjs` を追加。
+- 検証項目:
+  - 4エンディング（正統勝利 / 代償勝利 / 救済生還 / 破滅）の判定回帰
+  - `scripts/validate_sprint3_d3.mjs` の基準チェックが引き続き通過すること
+- これにより Sprint4 Step D（D-1〜D-3）が完了。
+
+
+
+### 2.29 Sprint5計画着手（V1シナリオ完成スプリント）
+- `docs/SPRINT5_PLAN.md` を新規作成し、V1タスクとして「総文字数5万字管理 + 章本文補完 + 回帰確認」を定義。
+- Sprint4完了後の次段階を「V2機能追加」ではなく、まずV1本文密度の完成へ寄せる方針を明文化。
+
+
+
 ---
 
 ## 3. 現在のファイル責務
@@ -160,7 +227,7 @@
 
 ### 4.3 再開手順（別スレッド向け）
 1. `docs/GDD.md` と `docs/V1_PLAN.md` を確認。
-2. 次期作業は `docs/SPRINT2_PLAN.md` のStep Aから着手。
+2. 次期作業は `docs/SPRINT5_PLAN.md` の Step A（文字数再計測と不足分析）から着手。
 3. 変更後は本ファイルの「2.実装済み内容」と「4.技術負債」を更新。
 
 ---
