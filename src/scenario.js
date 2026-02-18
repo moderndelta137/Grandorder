@@ -271,51 +271,26 @@ export const SCENES = {
     ],
   },
 
+  // Writer note (non-player): Chapter1 is split into short beats (導入→状況→選択→戦況→最終判断→出撃).
+  // This note is for maintenance only and is not rendered to players.
+
   chapter1_main_001: {
     phase: "章本文",
-    title: "第1章 本文: 契約の温度",
-    text: (s) => `召喚陣の残光が床に残る。工房は静かだ。静かすぎて、私の呼吸だけが浮いて聞こえる。
+    title: "第1章 本文: 残光",
+    text: (s) => `召喚陣の赤い残光が、まだ床に滲んでいる。
+机の上には地図、触媒の欠片、走り書きの避難導線。
+さっきまで道具だったものが、今は全部「守る責任」に見えた。
 
-「契約は成立した。次は方針だ」
-「先に聞かせて。私は道具として使われるの？」
-「使われるかどうかは、君の命令次第だ」
-「……なら隠さない。勝つだけなら近道はある。でも、被害は見捨てたくない」
-「遅い道だな」
-「わかってる。遅くても、守れる数を増やしたい」
-
-${s.servant.className}は短く息を吐いた。
-「確認した。今夜はその理想に付き合う」
-令呪を握り込む。夜気が窓を鳴らす。ここで決めるのは命令じゃない。覚悟だ。`,
+「${s.servant.className}……聞こえるか」
+「はい、マスター。はっきり」
+「よかった。現実感がなくて、少しだけ怖かった」
+「怖さがあるなら、まだ判断を誤りにくい。悪くありません」`,
     choices: [
       {
-        label: "対等契約で進む（信頼優先）",
+        label: "方針確認を進める",
         effect: (s) => {
           s.flags.chapterContentShown = s.flags.chapterContentShown || {};
           s.flags.chapterContentShown["1_001"] = true;
-          s.flags.idealPoints += 1;
-          s.master.mana = Math.max(0, s.master.mana - 4);
-          s.log.push("契約方針: 対等契約を選択。理想点+1、初動コストで魔力-4。");
-        },
-        next: "chapter1_main_002",
-      },
-      {
-        label: "指揮重視で進む（統制優先）",
-        effect: (s) => {
-          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
-          s.flags.chapterContentShown["1_001"] = true;
-          s.battle.tacticalAdvantage = Math.max(s.battle.tacticalAdvantage || 0, 1);
-          s.log.push("契約方針: 指揮重視を選択。夜戦の戦術優位を確保。");
-        },
-        next: "chapter1_main_002",
-      },
-      {
-        label: "成果重視で進む（短期決着優先）",
-        effect: (s) => {
-          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
-          s.flags.chapterContentShown["1_001"] = true;
-          s.master.mana = Math.min(100, s.master.mana + 6);
-          s.flags.civilianDamage += 1;
-          s.log.push("契約方針: 成果重視を選択。魔力+6、強引な準備で一般被害+1。");
         },
         next: "chapter1_main_002",
       },
@@ -323,39 +298,134 @@ ${s.servant.className}は短く息を吐いた。
   },
   chapter1_main_002: {
     phase: "章本文",
-    title: "第1章 本文: 初夜戦前、灯りの外",
-    text: `窓の外で結界が軋む。敵影は見えない。なのに喉の奥だけが先に乾いた。
+    title: "第1章 本文: 地図の上",
+    text: (s) => `「${s.servant.className}、最初にどこを見る？」
+「北区画です、マスター。今夜いちばん先に揺れます」
+「根拠は？」
+「霊脈の癖と、さっきから続いている微弱な干渉。おそらく様子見です」
 
-「来る。距離は近い」
-「数は？」
-「まだ読めない。だが、こちらを試す気だ」
-「真名を隠してる間に先手を取りたい。被害を減らす形は作れる？」
-「作れる。ただ、時間は食う」
-「時間稼ぎに、一発ぶつける手もある」
-「その時は君が決めろ。今夜は最初の夜戦だ」
+${s.servant.className}は地図の端を指で押さえた。
+「始まったばかりの夜ほど、誰もが本性を隠します」`,
+    choices: [
+      {
+        label: "敵反応の速報を確認する",
+        next: "chapter1_main_003",
+      },
+    ],
+  },
+  chapter1_main_003: {
+    phase: "章本文",
+    title: "第1章 本文: 最初の札",
+    text: (s) => `監視札の速報。北側で魔力反応が二件、東側で通信断が一件。
+派手さはない。けれど、放っておけばこちらの手順だけが崩れる。
 
-地図をなぞる。避難路、橋、封鎖できる路地。
-被害を抑えるか、早く終わらせるか。先に切る札を決めた。`,
+「${s.servant.className}、最初の札を切る」
+「承知しました、マスター。どの札にも代償はあります」
+「わかってる。だから今、先に選ぶ」`,
+    choices: [
+      {
+        label: "対等契約で進む（信頼優先）",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["1_003"] = true;
+          s.flags.idealPoints += 1;
+          s.master.mana = Math.max(0, s.master.mana - 4);
+          s.log.push("契約方針: 対等契約を選択。理想点+1、初動コストで魔力-4。");
+        },
+        next: "chapter1_main_004",
+      },
+      {
+        label: "指揮重視で進む（統制優先）",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["1_003"] = true;
+          s.battle.tacticalAdvantage = Math.max(s.battle.tacticalAdvantage || 0, 1);
+          s.log.push("契約方針: 指揮重視を選択。夜戦の戦術優位を確保。");
+        },
+        next: "chapter1_main_004",
+      },
+      {
+        label: "成果重視で進む（短期決着優先）",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["1_003"] = true;
+          s.master.mana = Math.min(100, s.master.mana + 6);
+          s.flags.civilianDamage += 1;
+          s.log.push("契約方針: 成果重視を選択。魔力+6、強引な準備で一般被害+1。");
+        },
+        next: "chapter1_main_004",
+      },
+    ],
+  },
+  chapter1_main_004: {
+    phase: "章本文",
+    title: "第1章 本文: 夜は動き出す",
+    text: (s) => `北区画で結界が擦れる音。敵はまだ本命を出していない。
+病院区画の避難導線は辛うじて生きているが、封鎖まで時間がない。
+
+「マスター、相手は測ってきています」
+「なら、こちらも見せる。雑には勝たない」
+「ええ。その勝ち方なら、後から誰に問われても胸を張れます」`,
+    choices: [
+      {
+        label: "初夜戦前の最終判断へ",
+        next: "chapter1_main_005",
+      },
+    ],
+  },
+  chapter1_main_005: {
+    phase: "章本文",
+    title: "第1章 本文: 代償の秤",
+    text: (s) => `扉の向こうで、夜気がひとつ重くなる。
+速く終わらせる手もある。けれど、その速さは誰かの犠牲で成り立つかもしれない。
+
+「${s.servant.className}、最後に聞く。被害を抑えるか、短く叩き切るか」
+「どちらもできます、マスター。失うものが違うだけです」`,
     choices: [
       {
         label: "被害を抑えて索敵する",
         effect: (s) => {
           s.flags.chapterContentShown = s.flags.chapterContentShown || {};
           s.flags.chapterContentShown["1_002"] = true;
+          s.flags.chapterContentShown["1_005"] = true;
           s.flags.idealPoints += 1;
           s.battle.tacticalAdvantage = Math.max(s.battle.tacticalAdvantage || 0, 1);
           s.log.push("初夜戦方針: 被害回避を優先。理想点+1、索敵により戦術優位+1。");
         },
-        next: "dayAction",
+        next: "chapter1_main_006",
       },
       {
         label: "短期決着の準備を進める",
         effect: (s) => {
           s.flags.chapterContentShown = s.flags.chapterContentShown || {};
           s.flags.chapterContentShown["1_002"] = true;
+          s.flags.chapterContentShown["1_005"] = true;
           s.master.mana = Math.min(100, s.master.mana + 8);
           s.flags.trueNameExposure = Math.min(3, s.flags.trueNameExposure + 1);
           s.log.push("初夜戦方針: 短期決着を選択。魔力+8、準備過程で情報露見+1。");
+        },
+        next: "chapter1_main_006",
+      },
+    ],
+  },
+  chapter1_main_006: {
+    phase: "章本文",
+    title: "第1章 本文: 出撃",
+    text: (s) => `令呪が熱を帯びる。呼吸を整えると、さっきまでの迷いが少しだけ輪郭を失った。
+
+「行こう、${s.servant.className}」
+「はい、マスター。あなたが決めた順序で進みます」
+「崩れたら、すぐ切り替える」
+「その言葉があれば十分です」
+
+扉を開ける。夜の空気は冷たいのに、不思議と足は止まらなかった。`,
+    choices: [
+      {
+        label: "夜戦へ出る",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["1_006"] = true;
+          s.log.push("第1章本文を通過。初夜戦フェーズへ移行。");
         },
         next: "dayAction",
       },

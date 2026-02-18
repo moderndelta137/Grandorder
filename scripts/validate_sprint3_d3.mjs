@@ -50,11 +50,23 @@ function checkChapter1To2Alliance() {
   let next = runChoice(state, "chapterIntro", "作戦会議を終えて行動開始");
   assert(next === "chapter1_main_001", `第1章入口遷移不正: ${next}`);
 
-  next = runChoice(state, "chapter1_main_001", "対等契約で進む（信頼優先）");
+  next = runChoice(state, "chapter1_main_001", "方針確認を進める");
   assert(next === "chapter1_main_002", `chapter1_main_001 遷移不正: ${next}`);
 
-  next = runChoice(state, "chapter1_main_002", "被害を抑えて索敵する");
-  assert(next === "dayAction", `chapter1_main_002 遷移不正: ${next}`);
+  next = runChoice(state, "chapter1_main_002", "敵反応の速報を確認する");
+  assert(next === "chapter1_main_003", `chapter1_main_002 遷移不正: ${next}`);
+
+  next = runChoice(state, "chapter1_main_003", "対等契約で進む（信頼優先）");
+  assert(next === "chapter1_main_004", `chapter1_main_003 遷移不正: ${next}`);
+
+  next = runChoice(state, "chapter1_main_004", "初夜戦前の最終判断へ");
+  assert(next === "chapter1_main_005", `chapter1_main_004 遷移不正: ${next}`);
+
+  next = runChoice(state, "chapter1_main_005", "被害を抑えて索敵する");
+  assert(next === "chapter1_main_006", `chapter1_main_005 遷移不正: ${next}`);
+
+  next = runChoice(state, "chapter1_main_006", "夜戦へ出る");
+  assert(next === "dayAction", `chapter1_main_006 遷移不正: ${next}`);
 
   // 回帰用に第2章入口状態を再現して章導線と同盟分岐を確認
   state.progress.chapterIndex = 2;
