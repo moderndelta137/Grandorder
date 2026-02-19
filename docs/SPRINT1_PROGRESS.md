@@ -257,6 +257,72 @@
 - `shouldShowChapterIntro()` を拡張し、同章内でも未消化シーンがあれば再導入を表示。
 - `scripts/validate_sprint3_d3.mjs` は新しい「本文→通常処理→本文再開」導線へ同期。
 
+### 2.42 第1〜2章の通常処理挿入点を追加（ペース改善追補）
+- `src/scenario.js` で第1章は `chapter1_main_002` 後 / `chapter1_main_003` 後 / `chapter1_main_004` 後 / `chapter1_main_005` 後に `dayAction` を挿入し、固定本文の連続区間を短縮。
+- 第2章は `chapter2_main_002` 後 / `chapter2_main_003` 後 / `chapter2_main_004` 後 / `chapter2_main_005` 後に `dayAction` を挿入し、会談前後の通常イベント発生機会を拡張。
+- `docs/PLOT_MASTER.md` の第1章/第2章接続表と 3.1F / 3.2F を更新し、再接続運用を実装と同期。
+
+### 2.43 第1〜2章ペース再設計の方針転換（時間整合対応）
+- シーン間に `dayAction` を挟む方式は、同日内の時刻遷移と衝突するため再検討。
+- 同日内テンポ調整は `chapter*_branch_*` の強制遭遇シーン層（仮称 `chapterEncounter`）で扱う方針を提案。
+- 詳細は `docs/PACING_REWORK_PROPOSAL.md` に整理。
+
+---
+
+---
+
+### 2.44 第1〜2章の混在ペース運用をPLOTへ反映
+- `docs/PLOT_MASTER.md` の第1章/第2章を更新し、`chapterEncounter` と `dayAction` を章内で混在させる接続へ再設計。
+- 第1章は `chapter1_main_003` 後に `dayAction` を挟み、翌夜の監視点局面へ接続する構成へ修正。
+- 第2章は会談前を `chapterEncounter`、会談後を `dayAction` で更新し、翌夜の `chapter2_branch_002` へ再接続する構成へ修正。
+
+---
+
+### 2.45 第3章を混在ペース方針へ更新（PLOT反映）
+- `docs/PLOT_MASTER.md` の第3章（3.3A/D/E）を更新し、`chapter3_branch_001/002` を含む混在接続へ再設計。
+- 第3章は侵攻前を `chapterEncounter`、侵攻後の戦略更新を `dayAction`、翌夜の圧力局面を `chapter3_branch_002` で扱う運用を追加。
+- 第3章向けに 3.3F（登場人物とシーン間イベント挿入ルール）を新設し、再接続ポリシーを明文化。
+
+---
+
+### 2.46 chapterEncounter区間の登場人物明確化（敵陣営明記）
+- `docs/PLOT_MASTER.md` の第1〜3章 3.xF 表にて、`chapterEncounter` を挟む区間の登場人物へ敵サーヴァント/敵マスター（間接含む）を追記。
+- 併せて `PLOT_MASTER` に「システム層」運用定義（1.6）を追加し、ロジック層と登場人物記述のルールを明文化。
+
+---
+
+### 2.47 第4章を混在ペース方針へ更新（PLOT反映）
+- `docs/PLOT_MASTER.md` の第4章（3.4A/D/E）を更新し、`chapter4_branch_001` を含む混在接続へ再設計。
+- 第4章は決戦判断後に `dayAction` を挟んで終端前更新を行い、`chapter4_branch_001` で余波/追撃圧を処理して `chapter4_main_002` へ接続する運用へ変更。
+- 第4章向けに 3.4F（登場人物とシーン間イベント挿入ルール）を新設し、敵対軍級サーヴァントの関与と再接続ポリシーを明文化。
+
+---
+
+### 2.48 第4章シーン密度の増強（バランス調整）
+- `docs/PLOT_MASTER.md` の第4章を 3シーン相当から 6シーン相当（`chapter4_main_001`〜`004` + `chapter4_branch_001/002`）へ再編。
+- 決戦直後余波と再侵入阻止の2つの `chapterEncounter` を追加し、前3章と比べたシーン密度差を緩和。
+- `dayAction` は `chapter4_main_002` 後と章末に配置し、日次更新と不可逆固定の整合を維持。
+
+---
+
+### 2.49 全章向け因果駆動再設計の準備（登場人物固定 + 目的意図）
+- `docs/PLOT_MASTER.md` に全章共通の因果駆動テンプレート（1.7）と全章因果チェーン要約（2.3）を追加。
+- `docs/CAUSAL_STORY_REVIEW_PLAN.md` を新設し、全章見直し手順・章別補強点・要確認事項を整理。
+- 以後の章改修は「敵意図/主導者/代償/持越状態」を最低単位として更新する方針へ移行。
+
+---
+
+### 2.50 ARPGシナリオロジック規律の導入（本スレッド方針）
+- `docs/PLOT_MASTER.md` に 1.8/1.9 を追加し、戦闘を物語進行として扱う規律（WHY/WHATチェック）を全章共通化。
+- 第4章 3.4F の戦闘区間補足を WHY/WHAT 形式へ更新し、戦闘必然性と戦後状態変化を明示。
+- `docs/CAUSAL_STORY_REVIEW_PLAN.md` に戦闘シーン判定ゲート（2.5）を追加。
+
+---
+
+### 2.51 Character Logicプロファイル整備（全登場人物）
+- `docs/CHARACTER_LOGIC.md` を新設し、主要登場人物ごとに `Name / Identity / Core Desire / Fear / Secret / Never Do / Combat Philosophy / Relationship Bias` を定義。
+- `docs/PLOT_MASTER.md` の参照に `docs/CHARACTER_LOGIC.md` を追加し、章改修時の行動根拠を固定化。
+
 ---
 
 ## 3. 現在のファイル責務
