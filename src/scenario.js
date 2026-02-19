@@ -592,38 +592,18 @@ ${s.servant.className}は地図の北端を指で押さえた。
   },
   chapter3_main_001: {
     phase: "章本文",
-    title: "第3章 本文: 工房崩しの前夜",
-    text: `10月3日 19:15。旧工業区の外れで、夜気の奥を霊脈が脈打つ。
-敵工房の位置は、ようやく一本の線で結べるところまで来た。
+    title: "第3章 本文: 旧工業区の入口",
+    text: (s) => `10月3日 19:15。旧工業区の外縁に着くころ、空気の温度が一段落ちた。
+敵工房は近い。遠くで鳴る金属音だけが、妙に規則的だ。
 
-「サーヴァント、正面から叩くか、潜って核を潰すか」
-「潜入が通れば被害は抑えられます。失敗すれば囲まれます、マスター」
-「正面突破は？」
-「速い。ですが、街も巻き込む」
-
-私は地図を折り直した。勝つだけなら答えは単純だ。
-問題は、勝った後に何を残すかだった。`,
+「サーヴァント、ここから先は気配を切る」
+「了解です、マスター。まず監視の目を数えましょう」`,
     choices: [
       {
-        label: "潜入経路を選ぶ（被害抑制）",
+        label: "観測を優先して迂回路を探る",
         effect: (s) => {
           s.flags.chapterContentShown = s.flags.chapterContentShown || {};
           s.flags.chapterContentShown["3_001"] = true;
-          s.flags.idealPoints += 1;
-          s.battle.tacticalAdvantage = Math.max(s.battle.tacticalAdvantage || 0, 1);
-          s.log.push("第3章侵攻: 潜入経路を選択。理想点+1、戦術優位+1。");
-        },
-        next: "chapter3_main_002",
-      },
-      {
-        label: "正面突破を選ぶ（速攻）",
-        effect: (s) => {
-          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
-          s.flags.chapterContentShown["3_001"] = true;
-          s.master.mana = Math.max(0, s.master.mana - 10);
-          s.battle.tacticalAdvantage = Math.max(s.battle.tacticalAdvantage || 0, 2);
-          s.flags.civilianDamage += 1;
-          s.log.push("第3章侵攻: 正面突破を選択。戦術優位+2、魔力-10、一般被害+1。");
         },
         next: "chapter3_main_002",
       },
@@ -631,21 +611,110 @@ ${s.servant.className}は地図の北端を指で押さえた。
   },
   chapter3_main_002: {
     phase: "章本文",
-    title: "第3章 本文: 侵攻後の呼吸",
-    text: `10月3日 23:30。瓦礫の匂いが残る路地で、私は報告を聞き終える。
-敵の補給線は細くなった。けれど、こちらの手札も削れている。
+    title: "第3章 本文: 外周観測",
+    text: (s) => `10月3日 19:45。工業区外周の高架下で、監視札の反応を重ねる。
+北側に巡回二組、西側に結界杭。中央路は最短だが、読まれやすい。
 
-「次は河川域でぶつかる。相手は対軍宝具を切ってくる」
-「なら、夜明け前に一度工房へ戻る。撤退線を引き直す」
-「了解です、マスター。次は守り切る設計が要ります」
-
-深呼吸をひとつ。勝利条件だけじゃなく、撤退線まで含めて作戦を引き直した。`,
+「正面から叩くか、潜って核を潰すか」
+「潜入が通れば被害は抑えられます。失敗すれば囲まれます、マスター」`,
     choices: [
       {
-        label: "第4章へ進む",
+        label: "侵入前に補給線の位置を確定する",
         effect: (s) => {
           s.flags.chapterContentShown = s.flags.chapterContentShown || {};
           s.flags.chapterContentShown["3_002"] = true;
+        },
+        next: "chapter3_main_003",
+      },
+    ],
+  },
+  chapter3_main_003: {
+    phase: "章本文",
+    title: "第3章 本文: 最初の侵攻判断",
+    text: (s) => `10月3日 20:20。補給路の刻印が、廃倉庫の裏手で一本に繋がった。
+ここで選ぶ方針が、今夜の被害と明日の余力を決める。
+
+「サーヴァント、侵攻方法を決める」
+「はい、マスター。速さを取るか、損失を抑えるかです」`,
+    choices: [
+      {
+        label: "潜入経路を選ぶ（被害抑制）",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["3_003"] = true;
+          s.flags.idealPoints += 1;
+          s.battle.tacticalAdvantage = Math.max(s.battle.tacticalAdvantage || 0, 1);
+          s.log.push("第3章侵攻: 潜入経路を選択。理想点+1、戦術優位+1。");
+        },
+        next: "chapter3_main_004",
+      },
+      {
+        label: "正面突破を選ぶ（速攻）",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["3_003"] = true;
+          s.master.mana = Math.max(0, s.master.mana - 10);
+          s.battle.tacticalAdvantage = Math.max(s.battle.tacticalAdvantage || 0, 2);
+          s.flags.civilianDamage += 1;
+          s.log.push("第3章侵攻: 正面突破を選択。戦術優位+2、魔力-10、一般被害+1。");
+        },
+        next: "chapter3_main_004",
+      },
+    ],
+  },
+  chapter3_main_004: {
+    phase: "章本文",
+    title: "第3章 本文: 侵攻後の断片",
+    text: (s) => `10月3日 22:05。侵攻後の路地は、焦げた匂いと粉塵で視界が薄い。
+敵の補給線は細くなったが、こちらも余裕を削られた。
+
+「マスター、河川域への移動は避けられません」
+「わかってる。ここで立て直さないと、次で崩れる」`,
+    choices: [
+      {
+        label: "工房へ一度戻り、撤退線を再設定する",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["3_004"] = true;
+        },
+        next: "chapter3_main_005",
+      },
+    ],
+  },
+  chapter3_main_005: {
+    phase: "章本文",
+    title: "第3章 本文: 夜半の再設計",
+    text: (s) => `10月3日 23:30。工房へ戻り、撤退線と避難導線を重ねて引き直す。
+勝利条件だけを残せば、次の夜で誰かを取りこぼす。
+
+「サーヴァント、次は河川橋梁。対軍宝具が来る前提で組む」
+「了解です、マスター。守る順序を先に固定しましょう」`,
+    choices: [
+      {
+        label: "第4章へ進む準備を終える",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["3_005"] = true;
+        },
+        next: "chapter3_main_006",
+      },
+    ],
+  },
+  chapter3_main_006: {
+    phase: "章本文",
+    title: "第3章 本文: 河川域への移送",
+    text: (s) => `10月3日 23:55。必要最低限の装備だけを持ち、河川域へ向かう車列に乗る。
+車窓の街灯が流れていくたび、次の戦いの輪郭だけがはっきりしていった。
+
+「行くぞ、サーヴァント」
+「はい、マスター。次は守る線を折りません」`,
+    choices: [
+      {
+        label: "第3章を終え、次行動へ",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["3_002"] = true;
+          s.flags.chapterContentShown["3_006"] = true;
           s.log.push("第3章本文を通過。河川決戦の準備へ。");
         },
         next: "dayAction",
