@@ -438,39 +438,19 @@ ${s.servant.className}は地図の北端を指で押さえた。
   },
   chapter2_main_001: {
     phase: "章本文",
-    title: "第2章 本文: 偽装と同盟の駆け引き",
-    text: `10月2日 13:10。学園の廊下は平穏を装っている。けれど視線の温度だけが夜より正直だ。
+    title: "第2章 本文: 学園の昼、打診",
+    text: (s) => `10月2日 13:10。学園本棟の廊下は平穏を装っている。
+だが、昨日の夜戦を知る者の視線だけが妙に鋭い。
 
-「サーヴァント、監督役から連絡。第三交差点で会談だ」
-「休戦提案ですか、マスター？」
-「表向きはな。実際は探り合いだ」
-「罠の匂いは？」
-「ある。だが無視すれば向こうに先手を渡す」
-「受ければ背中を見せることになります」
-「だから交渉の場で逆に読む。戦場はひとつじゃない」
-
-鞄の中の令呪が熱い。
-15時までに学園を出て、交差点へ向かう。`,
+「サーヴァント、監督役から連絡だ。第三交差点で会談したいらしい」
+「休戦提案の形を取った探りですね、マスター」
+「だろうな。受けても罠、断っても不利だ」`,
     choices: [
       {
-        label: "会談に応じる（情報優先）",
+        label: "監督役室へ向かい、条件を確認する",
         effect: (s) => {
           s.flags.chapterContentShown = s.flags.chapterContentShown || {};
           s.flags.chapterContentShown["2_001"] = true;
-          s.flags.idealPoints += 1;
-          s.flags.allianceState = s.flags.allianceState === "betrayed" ? "ceasefire" : "allied";
-          s.log.push("第2章交渉: 会談を受諾。理想点+1、同盟状態を調整。");
-        },
-        next: "chapter2_main_002",
-      },
-      {
-        label: "会談を偽装し監視を敷く（警戒）",
-        effect: (s) => {
-          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
-          s.flags.chapterContentShown["2_001"] = true;
-          s.battle.tacticalAdvantage = Math.max(s.battle.tacticalAdvantage || 0, 1);
-          s.master.mana = Math.max(0, s.master.mana - 6);
-          s.log.push("第2章交渉: 監視網を優先。戦術優位+1、魔力-6。");
         },
         next: "chapter2_main_002",
       },
@@ -478,42 +458,133 @@ ${s.servant.className}は地図の北端を指で押さえた。
   },
   chapter2_main_002: {
     phase: "章本文",
-    title: "第2章 本文: 取引の代償",
+    title: "第2章 本文: 監督役室の温度差",
+    text: (s) => `10月2日 13:40。監督役室は静かすぎて、紙の擦れる音まで響いた。
+
+「会談は18時40分、第三交差点。期限付き休戦を議題にする」
+「期限は？」
+「明朝まで。双方、違反時は即時交戦再開」
+
+「サーヴァント、どう見る」
+「短い休戦です。情報を拾うには十分、信用するには短すぎます」`,
+    choices: [
+      {
+        label: "会談に応じる（情報優先）",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["2_002"] = true;
+          s.flags.idealPoints += 1;
+          s.flags.allianceState = s.flags.allianceState === "betrayed" ? "ceasefire" : "allied";
+          s.log.push("第2章交渉: 会談を受諾。理想点+1、同盟状態を調整。");
+        },
+        next: "chapter2_main_003",
+      },
+      {
+        label: "会談を偽装し監視を敷く（警戒）",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["2_002"] = true;
+          s.battle.tacticalAdvantage = Math.max(s.battle.tacticalAdvantage || 0, 1);
+          s.master.mana = Math.max(0, s.master.mana - 6);
+          s.log.push("第2章交渉: 監視網を優先。戦術優位+1、魔力-6。");
+        },
+        next: "chapter2_main_003",
+      },
+    ],
+  },
+  chapter2_main_003: {
+    phase: "章本文",
+    title: "第2章 本文: 夕刻への移動",
+    text: (s) => `10月2日 16:50。学園裏門を出て、市街地を南へ下る。
+交差点に近づくほど人通りは減り、代わりに監視の気配が増えた。
+
+「サーヴァント、尾行は？」
+「二組。直接介入はしない、観測優先です」
+「こちらの構えを見に来てるわけか」
+「ええ。会談前に怖じるかどうかを試しています」`,
+    choices: [
+      {
+        label: "第三交差点へ入り、会談を開始する",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["2_003"] = true;
+        },
+        next: "chapter2_main_004",
+      },
+    ],
+  },
+  chapter2_main_004: {
+    phase: "章本文",
+    title: "第2章 本文: 第三交差点の休戦",
     text: `10月2日 18:40。第三交差点の街灯が、互いの嘘だけを白く照らす。
 
 「今夜は刃を引く」
-「期限は？」
-「明朝までだ」
-「短いね」
+「期限は明朝まで、だったな」
 「長い休戦は、裏切りの準備時間になる」
 「つまり、あなたも準備する」
 「必要ならな」
 
 握手はした。信頼は近づかない。
-20時過ぎ、学園裏門へ戻る道で被害見積もりを引き直す。
-「それでも守るのか」
-「守る。失う前提で線を引くのは、ここで終わりにする」
-それでも、失う前提だけは拒む。`,
+だが、何を守るかの優先順位だけは、ここで決めて持ち帰る必要があった。`,
+    choices: [
+      {
+        label: "会談を終え、学園方面へ撤収する",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["2_004"] = true;
+        },
+        next: "chapter2_main_005",
+      },
+    ],
+  },
+  chapter2_main_005: {
+    phase: "章本文",
+    title: "第2章 本文: 帰路の再評価",
+    text: (s) => `10月2日 20:15。学園裏門へ戻る坂道で、私は被害見積もりを引き直す。
+守る範囲を広げれば手は足りない。先に勝てば、別の誰かが遅れる。
+
+「サーヴァント、ここで方針を固める」
+「はい、マスター。休戦は短い。今夜の準備が明日の主導権を決めます」`,
     choices: [
       {
         label: "同盟を維持し被害を抑える",
         effect: (s) => {
           s.flags.chapterContentShown = s.flags.chapterContentShown || {};
-          s.flags.chapterContentShown["2_002"] = true;
+          s.flags.chapterContentShown["2_005"] = true;
           s.flags.idealPoints += 1;
           if (s.flags.allianceState === "none") s.flags.allianceState = "ceasefire";
           s.log.push("第2章方針: 同盟維持を優先。理想点+1。");
         },
-        next: "dayAction",
+        next: "chapter2_main_006",
       },
       {
         label: "裏切りを警戒して先制準備する",
         effect: (s) => {
           s.flags.chapterContentShown = s.flags.chapterContentShown || {};
-          s.flags.chapterContentShown["2_002"] = true;
+          s.flags.chapterContentShown["2_005"] = true;
           s.battle.tacticalAdvantage = Math.max(s.battle.tacticalAdvantage || 0, 2);
           s.flags.trueNameExposure = Math.min(3, s.flags.trueNameExposure + 1);
           s.log.push("第2章方針: 先制準備を選択。戦術優位+2、情報露見+1。");
+        },
+        next: "chapter2_main_006",
+      },
+    ],
+  },
+  chapter2_main_006: {
+    phase: "章本文",
+    title: "第2章 本文: 夜への持ち越し",
+    text: (s) => `10月2日 21:05。工房へ戻ると、机の上には新しい監視ログが積まれていた。
+休戦は続いている。だが、静かな夜ほど次の裏切りは近い。
+
+「行こう、サーヴァント。明日は会談の言葉じゃなく、行動で答えが出る」
+「はい、マスター。今夜の準備をそのまま明朝へ繋げます」`,
+    choices: [
+      {
+        label: "第2章を終え、次行動へ",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["2_006"] = true;
+          s.log.push("第2章本文を通過。次の行動フェーズへ。");
         },
         next: "dayAction",
       },
