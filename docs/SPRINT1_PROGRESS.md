@@ -251,6 +251,12 @@
 - `docs/PLOT_MASTER.md` に 3.2F を追加し、第2章各区間（`chapter2_main_001`〜`006`）の登場人物と通常イベント挿入有無を表形式で明示。
 - 第2章も固定本文内は連続運用し、通常処理は `chapter2_main_006` 後の `dayAction` 側へ委譲する方針を明文化。
 
+### 2.41 第1〜2章ペース再調整（固定本文の連続抑制）
+- `src/scenario.js` で第1章/第2章の一部接続を `dayAction` へ切替し、固定本文の長尺連続を分割。
+- `getChapterContentEntryScene()` を未消化シーン再開型へ改修し、`chapterIntro` から章内途中シーンへ復帰可能化。
+- `shouldShowChapterIntro()` を拡張し、同章内でも未消化シーンがあれば再導入を表示。
+- `scripts/validate_sprint3_d3.mjs` は新しい「本文→通常処理→本文再開」導線へ同期。
+
 ---
 
 ## 3. 現在のファイル責務

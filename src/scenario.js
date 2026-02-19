@@ -311,6 +311,10 @@ ${s.servant.className}は地図の北端を指で押さえた。
     choices: [
       {
         label: "敵反応の速報を確認する",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["1_002"] = true;
+        },
         next: "chapter1_main_003",
       },
     ],
@@ -335,7 +339,7 @@ ${s.servant.className}は地図の北端を指で押さえた。
           s.master.mana = Math.max(0, s.master.mana - 4);
           s.log.push("契約方針: 対等契約を選択。理想点+1、初動コストで魔力-4。");
         },
-        next: "chapter1_main_004",
+        next: "dayAction",
       },
       {
         label: "指揮重視で進む（統制優先）",
@@ -345,7 +349,7 @@ ${s.servant.className}は地図の北端を指で押さえた。
           s.battle.tacticalAdvantage = Math.max(s.battle.tacticalAdvantage || 0, 1);
           s.log.push("契約方針: 指揮重視を選択。夜戦の戦術優位を確保。");
         },
-        next: "chapter1_main_004",
+        next: "dayAction",
       },
       {
         label: "成果重視で進む（短期決着優先）",
@@ -356,7 +360,7 @@ ${s.servant.className}は地図の北端を指で押さえた。
           s.flags.civilianDamage += 1;
           s.log.push("契約方針: 成果重視を選択。魔力+6、強引な準備で一般被害+1。");
         },
-        next: "chapter1_main_004",
+        next: "dayAction",
       },
     ],
   },
@@ -373,6 +377,10 @@ ${s.servant.className}は地図の北端を指で押さえた。
     choices: [
       {
         label: "初夜戦前の最終判断へ",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["1_004"] = true;
+        },
         next: "chapter1_main_005",
       },
     ],
@@ -390,25 +398,23 @@ ${s.servant.className}は地図の北端を指で押さえた。
         label: "被害を抑えて索敵する",
         effect: (s) => {
           s.flags.chapterContentShown = s.flags.chapterContentShown || {};
-          s.flags.chapterContentShown["1_002"] = true;
           s.flags.chapterContentShown["1_005"] = true;
           s.flags.idealPoints += 1;
           s.battle.tacticalAdvantage = Math.max(s.battle.tacticalAdvantage || 0, 1);
           s.log.push("初夜戦方針: 被害回避を優先。理想点+1、索敵により戦術優位+1。");
         },
-        next: "chapter1_main_006",
+        next: "dayAction",
       },
       {
         label: "短期決着の準備を進める",
         effect: (s) => {
           s.flags.chapterContentShown = s.flags.chapterContentShown || {};
-          s.flags.chapterContentShown["1_002"] = true;
           s.flags.chapterContentShown["1_005"] = true;
           s.master.mana = Math.min(100, s.master.mana + 8);
           s.flags.trueNameExposure = Math.min(3, s.flags.trueNameExposure + 1);
           s.log.push("初夜戦方針: 短期決着を選択。魔力+8、準備過程で情報露見+1。");
         },
-        next: "chapter1_main_006",
+        next: "dayAction",
       },
     ],
   },
@@ -509,7 +515,7 @@ ${s.servant.className}は地図の北端を指で押さえた。
           s.flags.chapterContentShown = s.flags.chapterContentShown || {};
           s.flags.chapterContentShown["2_003"] = true;
         },
-        next: "chapter2_main_004",
+        next: "dayAction",
       },
     ],
   },
@@ -555,7 +561,7 @@ ${s.servant.className}は地図の北端を指で押さえた。
           if (s.flags.allianceState === "none") s.flags.allianceState = "ceasefire";
           s.log.push("第2章方針: 同盟維持を優先。理想点+1。");
         },
-        next: "chapter2_main_006",
+        next: "dayAction",
       },
       {
         label: "裏切りを警戒して先制準備する",
@@ -566,7 +572,7 @@ ${s.servant.className}は地図の北端を指で押さえた。
           s.flags.trueNameExposure = Math.min(3, s.flags.trueNameExposure + 1);
           s.log.push("第2章方針: 先制準備を選択。戦術優位+2、情報露見+1。");
         },
-        next: "chapter2_main_006",
+        next: "dayAction",
       },
     ],
   },
@@ -1729,17 +1735,23 @@ function updateChapterProgress(state) {
 function getChapterContentEntryScene(state) {
   const chapter = state.progress.chapterIndex;
   const shown = state.flags.chapterContentShown || {};
-  if (chapter === 1 && !shown["1_001"]) return "chapter1_main_001";
-  if (chapter === 2 && !shown["2_001"]) return "chapter2_main_001";
-  if (chapter === 3 && !shown["3_001"]) return "chapter3_main_001";
-  if (chapter === 4 && !shown["4_001"]) return "chapter4_main_001";
-  if (chapter === 5 && !shown["5_001"]) return "chapter5_main_001";
-  if (chapter === 6 && !shown["6_001"]) return "chapter6_main_001";
+  const chapterSceneKeys = {
+    1: ["1_001", "1_002", "1_003", "1_004", "1_005", "1_006"],
+    2: ["2_001", "2_002", "2_003", "2_004", "2_005", "2_006"],
+    3: ["3_001", "3_002", "3_003", "3_004", "3_005", "3_006"],
+    4: ["4_001", "4_002"],
+    5: ["5_001", "5_002"],
+    6: ["6_001", "6_002"],
+  };
+  const keys = chapterSceneKeys[chapter] || [];
+  for (const key of keys) {
+    if (!shown[key]) return `chapter${chapter}_main_${key.split("_")[1]}`;
+  }
   return null;
 }
 
 function shouldShowChapterIntro(state) {
-  return state.progress.chapterIntroShown < state.progress.chapterIndex;
+  return state.progress.chapterIntroShown < state.progress.chapterIndex || Boolean(getChapterContentEntryScene(state));
 }
 
 function canUseMidgameRecovery(state) {
