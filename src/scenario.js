@@ -403,7 +403,7 @@ ${s.servant.className}は地図の北端を指で押さえた。
           s.battle.tacticalAdvantage = Math.max(s.battle.tacticalAdvantage || 0, 1);
           s.log.push("初夜戦方針: 被害回避を優先。理想点+1、索敵により戦術優位+1。");
         },
-        next: "dayAction",
+        next: "chapter1_main_006",
       },
       {
         label: "短期決着の準備を進める",
@@ -413,6 +413,29 @@ ${s.servant.className}は地図の北端を指で押さえた。
           s.master.mana = Math.min(100, s.master.mana + 8);
           s.flags.trueNameExposure = Math.min(3, s.flags.trueNameExposure + 1);
           s.log.push("初夜戦方針: 短期決着を選択。魔力+8、準備過程で情報露見+1。");
+        },
+        next: "chapter1_main_006",
+      },
+    ],
+  },
+  chapter1_main_006: {
+    phase: "章本文",
+    title: "第1章 本文: 出撃",
+    text: (s) => `令呪が熱を帯びる。呼吸を整えると、さっきまでの迷いが少しだけ輪郭を失った。
+
+「行こう、${s.servant.className}」
+「はい、マスター。あなたが決めた順序で進みます」
+「崩れたら、すぐ切り替える」
+「その言葉があれば十分です」
+
+扉を開ける。夜の空気は冷たいのに、不思議と足は止まらなかった。`,
+    choices: [
+      {
+        label: "夜戦へ出る",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["1_006"] = true;
+          s.log.push("第1章本文を通過。初夜戦フェーズへ移行。");
         },
         next: "dayAction",
       },
