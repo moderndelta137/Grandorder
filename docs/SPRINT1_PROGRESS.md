@@ -312,6 +312,19 @@
 
 ---
 
+### 2.50 ARPGシナリオロジック規律の導入（本スレッド方針）
+- `docs/PLOT_MASTER.md` に 1.8/1.9 を追加し、戦闘を物語進行として扱う規律（WHY/WHATチェック）を全章共通化。
+- 第4章 3.4F の戦闘区間補足を WHY/WHAT 形式へ更新し、戦闘必然性と戦後状態変化を明示。
+- `docs/CAUSAL_STORY_REVIEW_PLAN.md` に戦闘シーン判定ゲート（2.5）を追加。
+
+---
+
+### 2.51 Character Logicプロファイル整備（全登場人物）
+- `docs/CHARACTER_LOGIC.md` を新設し、主要登場人物ごとに `Name / Identity / Core Desire / Fear / Secret / Never Do / Combat Philosophy / Relationship Bias` を定義。
+- `docs/PLOT_MASTER.md` の参照に `docs/CHARACTER_LOGIC.md` を追加し、章改修時の行動根拠を固定化。
+
+---
+
 ## 3. 現在のファイル責務
 
 - `src/scenario.js`
