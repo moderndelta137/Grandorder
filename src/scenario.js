@@ -277,7 +277,7 @@ export const SCENES = {
   chapter1_main_001: {
     phase: "章本文",
     title: "第1章 本文: 残光",
-    text: (s) => `召喚陣の赤い残光が、まだ床に滲んでいる。
+    text: (s) => `10月1日 23:00。召喚陣の赤い残光が、まだ床に滲んでいる。
 机の上には地図、触媒の欠片、走り書きの避難導線。
 さっきまで道具だったものが、今は全部「守る責任」に見えた。
 
@@ -299,16 +299,22 @@ export const SCENES = {
   chapter1_main_002: {
     phase: "章本文",
     title: "第1章 本文: 地図の上",
-    text: (s) => `「${s.servant.className}、最初にどこを見る？」
+    text: (s) => `10月1日 23:12。工房の作戦机で、地図の端に新しい印を重ねる。
+
+「${s.servant.className}、最初にどこを見る？」
 「北区画です、マスター。今夜いちばん先に揺れます」
 「根拠は？」
 「霊脈の癖と、さっきから続いている微弱な干渉。おそらく様子見です」
 
-${s.servant.className}は地図の端を指で押さえた。
-「始まったばかりの夜ほど、誰もが本性を隠します」`,
+${s.servant.className}は地図の北端を指で押さえた。
+「ここで待つより、こちらから寄った方が被害を抑えやすい」`,
     choices: [
       {
         label: "敵反応の速報を確認する",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["1_002"] = true;
+        },
         next: "chapter1_main_003",
       },
     ],
@@ -316,7 +322,8 @@ ${s.servant.className}は地図の端を指で押さえた。
   chapter1_main_003: {
     phase: "章本文",
     title: "第1章 本文: 最初の札",
-    text: (s) => `監視札の速報。北側で魔力反応が二件、東側で通信断が一件。
+    text: (s) => `10月1日 23:24。北区画へ向かう路地で、監視札の速報が弾ける。
+北側で魔力反応が二件、東側で通信断が一件。
 派手さはない。けれど、放っておけばこちらの手順だけが崩れる。
 
 「${s.servant.className}、最初の札を切る」
@@ -332,7 +339,7 @@ ${s.servant.className}は地図の端を指で押さえた。
           s.master.mana = Math.max(0, s.master.mana - 4);
           s.log.push("契約方針: 対等契約を選択。理想点+1、初動コストで魔力-4。");
         },
-        next: "chapter1_main_004",
+        next: "dayAction",
       },
       {
         label: "指揮重視で進む（統制優先）",
@@ -342,7 +349,7 @@ ${s.servant.className}は地図の端を指で押さえた。
           s.battle.tacticalAdvantage = Math.max(s.battle.tacticalAdvantage || 0, 1);
           s.log.push("契約方針: 指揮重視を選択。夜戦の戦術優位を確保。");
         },
-        next: "chapter1_main_004",
+        next: "dayAction",
       },
       {
         label: "成果重視で進む（短期決着優先）",
@@ -353,15 +360,16 @@ ${s.servant.className}は地図の端を指で押さえた。
           s.flags.civilianDamage += 1;
           s.log.push("契約方針: 成果重視を選択。魔力+6、強引な準備で一般被害+1。");
         },
-        next: "chapter1_main_004",
+        next: "dayAction",
       },
     ],
   },
   chapter1_main_004: {
     phase: "章本文",
     title: "第1章 本文: 夜は動き出す",
-    text: (s) => `北区画で結界が擦れる音。敵はまだ本命を出していない。
-病院区画の避難導線は辛うじて生きているが、封鎖まで時間がない。
+    text: (s) => `10月1日 23:38。病院外周の監視点に着くと、結界が擦れる音が近い。
+敵はまだ本命を出していない。観測だけを積み上げている。
+避難導線は辛うじて生きているが、封鎖まで時間がない。
 
 「マスター、相手は測ってきています」
 「なら、こちらも見せる。雑には勝たない」
@@ -369,6 +377,10 @@ ${s.servant.className}は地図の端を指で押さえた。
     choices: [
       {
         label: "初夜戦前の最終判断へ",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["1_004"] = true;
+        },
         next: "chapter1_main_005",
       },
     ],
@@ -376,7 +388,7 @@ ${s.servant.className}は地図の端を指で押さえた。
   chapter1_main_005: {
     phase: "章本文",
     title: "第1章 本文: 代償の秤",
-    text: (s) => `扉の向こうで、夜気がひとつ重くなる。
+    text: (s) => `10月1日 23:52。封鎖線の手前で、夜気がひとつ重くなる。
 速く終わらせる手もある。けれど、その速さは誰かの犠牲で成り立つかもしれない。
 
 「${s.servant.className}、最後に聞く。被害を抑えるか、短く叩き切るか」
@@ -386,7 +398,6 @@ ${s.servant.className}は地図の端を指で押さえた。
         label: "被害を抑えて索敵する",
         effect: (s) => {
           s.flags.chapterContentShown = s.flags.chapterContentShown || {};
-          s.flags.chapterContentShown["1_002"] = true;
           s.flags.chapterContentShown["1_005"] = true;
           s.flags.idealPoints += 1;
           s.battle.tacticalAdvantage = Math.max(s.battle.tacticalAdvantage || 0, 1);
@@ -398,7 +409,6 @@ ${s.servant.className}は地図の端を指で押さえた。
         label: "短期決着の準備を進める",
         effect: (s) => {
           s.flags.chapterContentShown = s.flags.chapterContentShown || {};
-          s.flags.chapterContentShown["1_002"] = true;
           s.flags.chapterContentShown["1_005"] = true;
           s.master.mana = Math.min(100, s.master.mana + 8);
           s.flags.trueNameExposure = Math.min(3, s.flags.trueNameExposure + 1);
@@ -431,41 +441,45 @@ ${s.servant.className}は地図の端を指で押さえた。
       },
     ],
   },
-  chapter2_main_001: {
+  chapter1_main_006: {
     phase: "章本文",
-    title: "第2章 本文: 偽装と同盟の駆け引き",
-    text: `昼の校舎は平穏を装っている。けれど視線の温度だけが夜より正直だ。
+    title: "第1章 本文: 出撃",
+    text: (s) => `10月2日 00:05。接敵導線まで出ると、令呪が熱を帯びた。
+呼吸を整えると、さっきまでの迷いが少しだけ輪郭を失う。
 
-「監督役から連絡。第三交差点で会談だ」
-「休戦提案？」
-「表向きはな。実際は探り合いだ」
-「罠の匂いは？」
-「ある。だが無視すれば向こうに先手を渡す」
-「受ければ背中を見せる」
-「だから交渉の場で逆に読む。戦場はひとつじゃない」
+「行こう、${s.servant.className}」
+「はい、マスター。あなたが決めた順序で進みます」
+「崩れたら、すぐ切り替える」
+「その言葉があれば十分です」
 
-鞄の中の令呪が熱い。
-深呼吸して、得られるものと失うものを書き出した。`,
+夜の空気は冷たいのに、不思議と足は止まらなかった。`,
     choices: [
       {
-        label: "会談に応じる（情報優先）",
+        label: "夜戦へ出る",
         effect: (s) => {
           s.flags.chapterContentShown = s.flags.chapterContentShown || {};
-          s.flags.chapterContentShown["2_001"] = true;
-          s.flags.idealPoints += 1;
-          s.flags.allianceState = s.flags.allianceState === "betrayed" ? "ceasefire" : "allied";
-          s.log.push("第2章交渉: 会談を受諾。理想点+1、同盟状態を調整。");
+          s.flags.chapterContentShown["1_006"] = true;
+          s.log.push("第1章本文を通過。初夜戦フェーズへ移行。");
         },
-        next: "chapter2_main_002",
+        next: "dayAction",
       },
+    ],
+  },
+  chapter2_main_001: {
+    phase: "章本文",
+    title: "第2章 本文: 学園の昼、打診",
+    text: (s) => `10月2日 13:10。学園本棟の廊下は平穏を装っている。
+だが、昨日の夜戦を知る者の視線だけが妙に鋭い。
+
+「サーヴァント、監督役から連絡だ。第三交差点で会談したいらしい」
+「休戦提案の形を取った探りですね、マスター」
+「だろうな。受けても罠、断っても不利だ」`,
+    choices: [
       {
-        label: "会談を偽装し監視を敷く（警戒）",
+        label: "監督役室へ向かい、条件を確認する",
         effect: (s) => {
           s.flags.chapterContentShown = s.flags.chapterContentShown || {};
           s.flags.chapterContentShown["2_001"] = true;
-          s.battle.tacticalAdvantage = Math.max(s.battle.tacticalAdvantage || 0, 1);
-          s.master.mana = Math.max(0, s.master.mana - 6);
-          s.log.push("第2章交渉: 監視網を優先。戦術優位+1、魔力-6。");
         },
         next: "chapter2_main_002",
       },
@@ -473,28 +487,99 @@ ${s.servant.className}は地図の端を指で押さえた。
   },
   chapter2_main_002: {
     phase: "章本文",
-    title: "第2章 本文: 取引の代償",
-    text: `第三交差点。街灯の白さだけが、互いの嘘を照らす。
+    title: "第2章 本文: 監督役室の温度差",
+    text: (s) => `10月2日 13:40。監督役室は静かすぎて、紙の擦れる音まで響いた。
+
+「会談は18時40分、第三交差点。期限付き休戦を議題にする」
+「期限は？」
+「明朝まで。双方、違反時は即時交戦再開」
+
+「サーヴァント、どう見る」
+「短い休戦です。情報を拾うには十分、信用するには短すぎます」`,
+    choices: [
+      {
+        label: "会談に応じる（情報優先）",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["2_002"] = true;
+          s.flags.idealPoints += 1;
+          s.flags.allianceState = s.flags.allianceState === "betrayed" ? "ceasefire" : "allied";
+          s.log.push("第2章交渉: 会談を受諾。理想点+1、同盟状態を調整。");
+        },
+        next: "chapter2_main_003",
+      },
+      {
+        label: "会談を偽装し監視を敷く（警戒）",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["2_002"] = true;
+          s.battle.tacticalAdvantage = Math.max(s.battle.tacticalAdvantage || 0, 1);
+          s.master.mana = Math.max(0, s.master.mana - 6);
+          s.log.push("第2章交渉: 監視網を優先。戦術優位+1、魔力-6。");
+        },
+        next: "chapter2_main_003",
+      },
+    ],
+  },
+  chapter2_main_003: {
+    phase: "章本文",
+    title: "第2章 本文: 夕刻への移動",
+    text: (s) => `10月2日 16:50。学園裏門を出て、市街地を南へ下る。
+交差点に近づくほど人通りは減り、代わりに監視の気配が増えた。
+
+「サーヴァント、尾行は？」
+「二組。直接介入はしない、観測優先です」
+「こちらの構えを見に来てるわけか」
+「ええ。会談前に怖じるかどうかを試しています」`,
+    choices: [
+      {
+        label: "第三交差点へ入り、会談を開始する",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["2_003"] = true;
+        },
+        next: "dayAction",
+      },
+    ],
+  },
+  chapter2_main_004: {
+    phase: "章本文",
+    title: "第2章 本文: 第三交差点の休戦",
+    text: `10月2日 18:40。第三交差点の街灯が、互いの嘘だけを白く照らす。
 
 「今夜は刃を引く」
-「期限は？」
-「明朝までだ」
-「短いね」
+「期限は明朝まで、だったな」
 「長い休戦は、裏切りの準備時間になる」
 「つまり、あなたも準備する」
 「必要ならな」
 
 握手はした。信頼は近づかない。
-帰り道で被害の見積もりを直す。守る範囲を広げれば手は足りない。
-「それでも守るのか」
-「守る。失う前提で線を引くのは、ここで終わりにする」
-それでも、失う前提だけは拒む。`,
+だが、何を守るかの優先順位だけは、ここで決めて持ち帰る必要があった。`,
+    choices: [
+      {
+        label: "会談を終え、学園方面へ撤収する",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["2_004"] = true;
+        },
+        next: "chapter2_main_005",
+      },
+    ],
+  },
+  chapter2_main_005: {
+    phase: "章本文",
+    title: "第2章 本文: 帰路の再評価",
+    text: (s) => `10月2日 20:15。学園裏門へ戻る坂道で、私は被害見積もりを引き直す。
+守る範囲を広げれば手は足りない。先に勝てば、別の誰かが遅れる。
+
+「サーヴァント、ここで方針を固める」
+「はい、マスター。休戦は短い。今夜の準備が明日の主導権を決めます」`,
     choices: [
       {
         label: "同盟を維持し被害を抑える",
         effect: (s) => {
           s.flags.chapterContentShown = s.flags.chapterContentShown || {};
-          s.flags.chapterContentShown["2_002"] = true;
+          s.flags.chapterContentShown["2_005"] = true;
           s.flags.idealPoints += 1;
           if (s.flags.allianceState === "none") s.flags.allianceState = "ceasefire";
           s.log.push("第2章方針: 同盟維持を優先。理想点+1。");
@@ -505,7 +590,7 @@ ${s.servant.className}は地図の端を指で押さえた。
         label: "裏切りを警戒して先制準備する",
         effect: (s) => {
           s.flags.chapterContentShown = s.flags.chapterContentShown || {};
-          s.flags.chapterContentShown["2_002"] = true;
+          s.flags.chapterContentShown["2_005"] = true;
           s.battle.tacticalAdvantage = Math.max(s.battle.tacticalAdvantage || 0, 2);
           s.flags.trueNameExposure = Math.min(3, s.flags.trueNameExposure + 1);
           s.log.push("第2章方針: 先制準備を選択。戦術優位+2、情報露見+1。");
@@ -514,39 +599,40 @@ ${s.servant.className}は地図の端を指で押さえた。
       },
     ],
   },
-  chapter3_main_001: {
+  chapter2_main_006: {
     phase: "章本文",
-    title: "第3章 本文: 工房崩しの前夜",
-    text: `夜気の奥で霊脈が脈打つ。敵工房の位置は、ようやく一本の線で結べるところまで来た。
+    title: "第2章 本文: 夜への持ち越し",
+    text: (s) => `10月2日 21:05。工房へ戻ると、机の上には新しい監視ログが積まれていた。
+休戦は続いている。だが、静かな夜ほど次の裏切りは近い。
 
-「正面から叩くか、潜って核を潰すか」
-「潜入が通れば被害は抑えられる。失敗すれば囲まれる」
-「正面突破は？」
-「速い。だが、街も巻き込む」
-
-私は地図を折り直した。勝つだけなら答えは単純だ。
-問題は、勝った後に何を残すかだった。`,
+「行こう、サーヴァント。明日は会談の言葉じゃなく、行動で答えが出る」
+「はい、マスター。今夜の準備をそのまま明朝へ繋げます」`,
     choices: [
       {
-        label: "潜入経路を選ぶ（被害抑制）",
+        label: "第2章を終え、次行動へ",
         effect: (s) => {
           s.flags.chapterContentShown = s.flags.chapterContentShown || {};
-          s.flags.chapterContentShown["3_001"] = true;
-          s.flags.idealPoints += 1;
-          s.battle.tacticalAdvantage = Math.max(s.battle.tacticalAdvantage || 0, 1);
-          s.log.push("第3章侵攻: 潜入経路を選択。理想点+1、戦術優位+1。");
+          s.flags.chapterContentShown["2_006"] = true;
+          s.log.push("第2章本文を通過。次の行動フェーズへ。");
         },
-        next: "chapter3_main_002",
+        next: "dayAction",
       },
+    ],
+  },
+  chapter3_main_001: {
+    phase: "章本文",
+    title: "第3章 本文: 旧工業区の入口",
+    text: (s) => `10月3日 19:15。旧工業区の外縁に着くころ、空気の温度が一段落ちた。
+敵工房は近い。遠くで鳴る金属音だけが、妙に規則的だ。
+
+「サーヴァント、ここから先は気配を切る」
+「了解です、マスター。まず監視の目を数えましょう」`,
+    choices: [
       {
-        label: "正面突破を選ぶ（速攻）",
+        label: "観測を優先して迂回路を探る",
         effect: (s) => {
           s.flags.chapterContentShown = s.flags.chapterContentShown || {};
           s.flags.chapterContentShown["3_001"] = true;
-          s.master.mana = Math.max(0, s.master.mana - 10);
-          s.battle.tacticalAdvantage = Math.max(s.battle.tacticalAdvantage || 0, 2);
-          s.flags.civilianDamage += 1;
-          s.log.push("第3章侵攻: 正面突破を選択。戦術優位+2、魔力-10、一般被害+1。");
         },
         next: "chapter3_main_002",
       },
@@ -554,20 +640,110 @@ ${s.servant.className}は地図の端を指で押さえた。
   },
   chapter3_main_002: {
     phase: "章本文",
-    title: "第3章 本文: 侵攻後の呼吸",
-    text: `瓦礫の匂いが残る路地で、私は報告を聞き終える。
-敵の補給線は細くなった。けれど、こちらの手札も削れている。
+    title: "第3章 本文: 外周観測",
+    text: (s) => `10月3日 19:45。工業区外周の高架下で、監視札の反応を重ねる。
+北側に巡回二組、西側に結界杭。中央路は最短だが、読まれやすい。
 
-「次は河川域でぶつかる。相手は対軍宝具を切ってくる」
-「ここで立て直す。第4章で崩れたら終盤が重くなる」
-
-深呼吸をひとつ。勝利条件だけじゃなく、撤退線まで含めて作戦を引き直した。`,
+「正面から叩くか、潜って核を潰すか」
+「潜入が通れば被害は抑えられます。失敗すれば囲まれます、マスター」`,
     choices: [
       {
-        label: "第4章へ進む",
+        label: "侵入前に補給線の位置を確定する",
         effect: (s) => {
           s.flags.chapterContentShown = s.flags.chapterContentShown || {};
           s.flags.chapterContentShown["3_002"] = true;
+        },
+        next: "chapter3_main_003",
+      },
+    ],
+  },
+  chapter3_main_003: {
+    phase: "章本文",
+    title: "第3章 本文: 最初の侵攻判断",
+    text: (s) => `10月3日 20:20。補給路の刻印が、廃倉庫の裏手で一本に繋がった。
+ここで選ぶ方針が、今夜の被害と明日の余力を決める。
+
+「サーヴァント、侵攻方法を決める」
+「はい、マスター。速さを取るか、損失を抑えるかです」`,
+    choices: [
+      {
+        label: "潜入経路を選ぶ（被害抑制）",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["3_003"] = true;
+          s.flags.idealPoints += 1;
+          s.battle.tacticalAdvantage = Math.max(s.battle.tacticalAdvantage || 0, 1);
+          s.log.push("第3章侵攻: 潜入経路を選択。理想点+1、戦術優位+1。");
+        },
+        next: "chapter3_main_004",
+      },
+      {
+        label: "正面突破を選ぶ（速攻）",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["3_003"] = true;
+          s.master.mana = Math.max(0, s.master.mana - 10);
+          s.battle.tacticalAdvantage = Math.max(s.battle.tacticalAdvantage || 0, 2);
+          s.flags.civilianDamage += 1;
+          s.log.push("第3章侵攻: 正面突破を選択。戦術優位+2、魔力-10、一般被害+1。");
+        },
+        next: "chapter3_main_004",
+      },
+    ],
+  },
+  chapter3_main_004: {
+    phase: "章本文",
+    title: "第3章 本文: 侵攻後の断片",
+    text: (s) => `10月3日 22:05。侵攻後の路地は、焦げた匂いと粉塵で視界が薄い。
+敵の補給線は細くなったが、こちらも余裕を削られた。
+
+「マスター、河川域への移動は避けられません」
+「わかってる。ここで立て直さないと、次で崩れる」`,
+    choices: [
+      {
+        label: "工房へ一度戻り、撤退線を再設定する",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["3_004"] = true;
+        },
+        next: "chapter3_main_005",
+      },
+    ],
+  },
+  chapter3_main_005: {
+    phase: "章本文",
+    title: "第3章 本文: 夜半の再設計",
+    text: (s) => `10月3日 23:30。工房へ戻り、撤退線と避難導線を重ねて引き直す。
+勝利条件だけを残せば、次の夜で誰かを取りこぼす。
+
+「サーヴァント、次は河川橋梁。対軍宝具が来る前提で組む」
+「了解です、マスター。守る順序を先に固定しましょう」`,
+    choices: [
+      {
+        label: "第4章へ進む準備を終える",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["3_005"] = true;
+        },
+        next: "chapter3_main_006",
+      },
+    ],
+  },
+  chapter3_main_006: {
+    phase: "章本文",
+    title: "第3章 本文: 河川域への移送",
+    text: (s) => `10月3日 23:55。必要最低限の装備だけを持ち、河川域へ向かう車列に乗る。
+車窓の街灯が流れていくたび、次の戦いの輪郭だけがはっきりしていった。
+
+「行くぞ、サーヴァント」
+「はい、マスター。次は守る線を折りません」`,
+    choices: [
+      {
+        label: "第3章を終え、次行動へ",
+        effect: (s) => {
+          s.flags.chapterContentShown = s.flags.chapterContentShown || {};
+          s.flags.chapterContentShown["3_002"] = true;
+          s.flags.chapterContentShown["3_006"] = true;
           s.log.push("第3章本文を通過。河川決戦の準備へ。");
         },
         next: "dayAction",
@@ -577,11 +753,13 @@ ${s.servant.className}は地図の端を指で押さえた。
   chapter4_main_001: {
     phase: "章本文",
     title: "第4章 本文: 河川決戦の布石",
-    text: `橋梁の下を流れる水音だけが妙に澄んでいる。
+    text: `10月4日 20:10。河川橋梁の下を流れる水音だけが妙に澄んでいる。
 ここでの選択が、リカバリー可能な最後の境目になる。
 
-「市街地を避ければ時間を失う。強行すれば被害が増える」
-「令呪を温存するか、今ここで切るか」
+「サーヴァント、市街地を避ければ時間を失う。強行すれば被害が増える」
+「はい、マスター。どちらを選んでも終盤へ響きます」
+「令呪は温存すべきか？」
+「切るなら、勝ち筋より退路に使うべきです」
 
 私は住民避難の導線と、退路の確保を同じ紙に書いた。
 守るために遅れるか、終盤のために早めるか。判断はもう先送りできない。`,
@@ -613,13 +791,13 @@ ${s.servant.className}は地図の端を指で押さえた。
   chapter4_main_002: {
     phase: "章本文",
     title: "第4章 本文: 終端の宣言",
-    text: `決戦後、残った地図には破れた線と、まだ守れた線の両方が残った。
+    text: `10月5日 00:40。決戦後、残った地図には破れた線と、まだ守れた線の両方が残った。
 
-「ここまでだ。次章からは、失敗を取り返せない」
-「わかってる。ここで選んだ代償は、最後まで持っていく」
+「ここまでだ、サーヴァント。ここから先は、失敗を取り返せない」
+「承知しています、マスター。ここで払った代償は最後まで残ります」
 
-私は記録を閉じる。ここが中盤リカバリーの終端だ。
-第5章から先は不可逆。敗北時の再編は失われ、救済はより重い代償を伴う。`,
+私は記録を閉じる。中盤のリカバリーはここで終わる。
+次に失う時は、もっと重い形で返ってくる。`,
     choices: [
       {
         label: "終盤へ進む",
@@ -639,14 +817,14 @@ ${s.servant.className}は地図の端を指で押さえた。
   chapter5_main_001: {
     phase: "章本文",
     title: "第5章 本文: 裏切りと露見",
-    text: `終盤の会談は短い。言葉より沈黙の方が多かった。
+    text: `10月5日 19:20。終盤会談の場は古い礼拝堂跡。言葉より沈黙の方が多い。
 
 「同盟はここで解く」
 「理由は？」
 「聖杯前で背中は預けられない」
 「……正直で助かる」
 
-戦況図の上で、関係は一度切り替わる。敵味方の線を引き直す作業に、情は残らない。
+夜風の中で、戦況図の線を引き直す。敵味方の境界は、もう感情で保てない。
 私は露見した情報と、まだ伏せられる情報を分けて書き込んだ。`,
     choices: [
       {
@@ -677,7 +855,8 @@ ${s.servant.className}は地図の端を指で押さえた。
   chapter5_main_002: {
     phase: "章本文",
     title: "第5章 本文: 決戦構図の固定",
-    text: `ここから先はやり直せない。誰を守り、誰を切るかは、もう結果でしか語られない。
+    text: `10月5日 23:55。礼拝堂跡から工房へ戻る道で、街の灯りがひとつずつ落ちていく。
+ここから先はやり直せない。誰を守り、誰を切るかは結果でしか語られない。
 
 「真名露見は避けられない局面が来る」
 「なら、露見しても勝てる形を先に作る」
@@ -699,7 +878,7 @@ ${s.servant.className}は地図の端を指で押さえた。
   chapter6_main_001: {
     phase: "章本文",
     title: "第6章 本文: 聖杯前夜",
-    text: `最終夜。街は静まり、足音だけがやけに響く。
+    text: `10月6日 23:10。聖杯到達領域の手前、街は静まり、足音だけがやけに響く。
 
 「ここで勝っても、願いが正しいとは限らない」
 「だから選ぶ。勝ち方だけじゃなく、願いの形まで」
@@ -733,7 +912,7 @@ ${s.servant.className}は地図の端を指で押さえた。
   chapter6_main_002: {
     phase: "章本文",
     title: "第6章 本文: 願いの選択",
-    text: `聖杯は手の届く場所にある。だが、何を願うかで結末の意味は反転する。
+    text: `10月7日 00:02。聖杯は手の届く場所にある。だが、何を願うかで結末の意味は反転する。
 
 「理想を貫くか」
 「現実に折り合うか」
@@ -1579,17 +1758,23 @@ function updateChapterProgress(state) {
 function getChapterContentEntryScene(state) {
   const chapter = state.progress.chapterIndex;
   const shown = state.flags.chapterContentShown || {};
-  if (chapter === 1 && !shown["1_001"]) return "chapter1_main_001";
-  if (chapter === 2 && !shown["2_001"]) return "chapter2_main_001";
-  if (chapter === 3 && !shown["3_001"]) return "chapter3_main_001";
-  if (chapter === 4 && !shown["4_001"]) return "chapter4_main_001";
-  if (chapter === 5 && !shown["5_001"]) return "chapter5_main_001";
-  if (chapter === 6 && !shown["6_001"]) return "chapter6_main_001";
+  const chapterSceneKeys = {
+    1: ["1_001", "1_002", "1_003", "1_004", "1_005", "1_006"],
+    2: ["2_001", "2_002", "2_003", "2_004", "2_005", "2_006"],
+    3: ["3_001", "3_002", "3_003", "3_004", "3_005", "3_006"],
+    4: ["4_001", "4_002"],
+    5: ["5_001", "5_002"],
+    6: ["6_001", "6_002"],
+  };
+  const keys = chapterSceneKeys[chapter] || [];
+  for (const key of keys) {
+    if (!shown[key]) return `chapter${chapter}_main_${key.split("_")[1]}`;
+  }
   return null;
 }
 
 function shouldShowChapterIntro(state) {
-  return state.progress.chapterIntroShown < state.progress.chapterIndex;
+  return state.progress.chapterIntroShown < state.progress.chapterIndex || Boolean(getChapterContentEntryScene(state));
 }
 
 function canUseMidgameRecovery(state) {

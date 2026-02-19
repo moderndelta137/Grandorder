@@ -57,13 +57,19 @@ function checkChapter1To2Alliance() {
   assert(next === "chapter1_main_003", `chapter1_main_002 遷移不正: ${next}`);
 
   next = runChoice(state, "chapter1_main_003", "対等契約で進む（信頼優先）");
-  assert(next === "chapter1_main_004", `chapter1_main_003 遷移不正: ${next}`);
+  assert(next === "dayAction", `chapter1_main_003 遷移不正: ${next}`);
+
+  next = runChoice(state, "chapterIntro", "作戦会議を終えて行動開始");
+  assert(next === "chapter1_main_004", `chapter1_main_004 再開遷移不正: ${next}`);
 
   next = runChoice(state, "chapter1_main_004", "初夜戦前の最終判断へ");
   assert(next === "chapter1_main_005", `chapter1_main_004 遷移不正: ${next}`);
 
   next = runChoice(state, "chapter1_main_005", "被害を抑えて索敵する");
-  assert(next === "chapter1_main_006", `chapter1_main_005 遷移不正: ${next}`);
+  assert(next === "dayAction", `chapter1_main_005 遷移不正: ${next}`);
+
+  next = runChoice(state, "chapterIntro", "作戦会議を終えて行動開始");
+  assert(next === "chapter1_main_006", `chapter1_main_006 再開遷移不正: ${next}`);
 
   next = runChoice(state, "chapter1_main_006", "夜戦へ出る");
   assert(next === "dayAction", `chapter1_main_006 遷移不正: ${next}`);
@@ -76,11 +82,29 @@ function checkChapter1To2Alliance() {
   next = runChoice(state, "chapterIntro", "作戦会議を終えて行動開始");
   assert(next === "chapter2_main_001", `第2章入口遷移不正: ${next}`);
 
-  next = runChoice(state, "chapter2_main_001", "会談に応じる（情報優先）");
+  next = runChoice(state, "chapter2_main_001", "監督役室へ向かい、条件を確認する");
   assert(next === "chapter2_main_002", `chapter2_main_001 遷移不正: ${next}`);
 
-  next = runChoice(state, "chapter2_main_002", "同盟を維持し被害を抑える");
-  assert(next === "dayAction", `chapter2_main_002 遷移不正: ${next}`);
+  next = runChoice(state, "chapter2_main_002", "会談に応じる（情報優先）");
+  assert(next === "chapter2_main_003", `chapter2_main_002 遷移不正: ${next}`);
+
+  next = runChoice(state, "chapter2_main_003", "第三交差点へ入り、会談を開始する");
+  assert(next === "dayAction", `chapter2_main_003 遷移不正: ${next}`);
+
+  next = runChoice(state, "chapterIntro", "作戦会議を終えて行動開始");
+  assert(next === "chapter2_main_004", `chapter2_main_004 再開遷移不正: ${next}`);
+
+  next = runChoice(state, "chapter2_main_004", "会談を終え、学園方面へ撤収する");
+  assert(next === "chapter2_main_005", `chapter2_main_004 遷移不正: ${next}`);
+
+  next = runChoice(state, "chapter2_main_005", "同盟を維持し被害を抑える");
+  assert(next === "dayAction", `chapter2_main_005 遷移不正: ${next}`);
+
+  next = runChoice(state, "chapterIntro", "作戦会議を終えて行動開始");
+  assert(next === "chapter2_main_006", `chapter2_main_006 再開遷移不正: ${next}`);
+
+  next = runChoice(state, "chapter2_main_006", "第2章を終え、次行動へ");
+  assert(next === "dayAction", `chapter2_main_006 遷移不正: ${next}`);
 
   // 第2章 intel行動で同盟状態が更新される（乱数固定で battle -> allied へ）
   withFixedRandom(0.1, () => {
@@ -103,8 +127,10 @@ function checkChapter4Recovery() {
   state.flags.civilianDamage = 0;
   state.master.hp = 1;
 
-  const next = runChoice(state, "midgameRecovery", "代償を払って再編する");
-  assert(next === "dayAction", `中盤リカバリー遷移不正: ${next}`);
+  let next = runChoice(state, "midgameRecovery", "代償を払って再編する");
+  assert(next === "chapterIntro", `中盤リカバリー遷移不正: ${next}`);
+  next = runChoice(state, "chapterIntro", "作戦会議を終えて行動開始");
+  assert(next === "chapter4_main_001", `中盤リカバリー後の章再開遷移不正: ${next}`);
   assert(state.flags.midgameRecoveryUsed === true, "中盤リカバリー使用フラグが立たない");
   assert(state.master.hp === 35, `中盤リカバリー後HP不正: ${state.master.hp}`);
   assert(state.flags.allianceState === "ceasefire", `中盤リカバリー後同盟状態不正: ${state.flags.allianceState}`);
