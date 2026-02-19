@@ -257,6 +257,25 @@
 - `shouldShowChapterIntro()` を拡張し、同章内でも未消化シーンがあれば再導入を表示。
 - `scripts/validate_sprint3_d3.mjs` は新しい「本文→通常処理→本文再開」導線へ同期。
 
+### 2.42 第1〜2章の通常処理挿入点を追加（ペース改善追補）
+- `src/scenario.js` で第1章は `chapter1_main_002` 後 / `chapter1_main_003` 後 / `chapter1_main_004` 後 / `chapter1_main_005` 後に `dayAction` を挿入し、固定本文の連続区間を短縮。
+- 第2章は `chapter2_main_002` 後 / `chapter2_main_003` 後 / `chapter2_main_004` 後 / `chapter2_main_005` 後に `dayAction` を挿入し、会談前後の通常イベント発生機会を拡張。
+- `docs/PLOT_MASTER.md` の第1章/第2章接続表と 3.1F / 3.2F を更新し、再接続運用を実装と同期。
+
+### 2.43 第1〜2章ペース再設計の方針転換（時間整合対応）
+- シーン間に `dayAction` を挟む方式は、同日内の時刻遷移と衝突するため再検討。
+- 同日内テンポ調整は `chapter*_branch_*` の強制遭遇シーン層（仮称 `chapterEncounter`）で扱う方針を提案。
+- 詳細は `docs/PACING_REWORK_PROPOSAL.md` に整理。
+
+---
+
+---
+
+### 2.44 第1〜2章の混在ペース運用をPLOTへ反映
+- `docs/PLOT_MASTER.md` の第1章/第2章を更新し、`chapterEncounter` と `dayAction` を章内で混在させる接続へ再設計。
+- 第1章は `chapter1_main_003` 後に `dayAction` を挟み、翌夜の監視点局面へ接続する構成へ修正。
+- 第2章は会談前を `chapterEncounter`、会談後を `dayAction` で更新し、翌夜の `chapter2_branch_002` へ再接続する構成へ修正。
+
 ---
 
 ## 3. 現在のファイル責務
