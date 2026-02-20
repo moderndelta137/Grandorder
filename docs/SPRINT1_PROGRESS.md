@@ -325,6 +325,13 @@
 
 ---
 
+### 2.52 第1章ストーリー再検討（因果駆動 + Character Logic）
+- `docs/PLOT_MASTER.md` に 3.1G を追加し、第1章シーンごとの WHY/WHAT と駆動キャラ（Core Desire/Fear）を明示。
+- 第1章章末で固定する代償と第2章へ持越す主要状態（`idealPoints`/`civilianDamage`/`trueNameExposure`/`tacticalAdvantage`）を明文化。
+- `docs/CAUSAL_STORY_REVIEW_PLAN.md` に第1章再検討の反映結果を追記。
+
+---
+
 ## 3. 現在のファイル責務
 
 - `src/scenario.js`

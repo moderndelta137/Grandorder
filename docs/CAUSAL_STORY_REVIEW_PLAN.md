@@ -75,3 +75,9 @@
 - `docs/SPRINT1_PROGRESS.md`（履歴）
 - 必要に応じて `src/scenario.js`（接続・ログ）
 
+
+## 6. 第1章再検討アウトプット（今回反映）
+
+- `docs/PLOT_MASTER.md` へ 3.1G を追加済み。
+- 第1章7シーンそれぞれに WHY/WHAT と Character Logic 駆動元を紐付け。
+- 章末代償と第2章持越状態を明示し、交渉章への因果接続を強化。
